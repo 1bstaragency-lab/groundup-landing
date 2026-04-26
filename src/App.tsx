@@ -158,7 +158,7 @@ function App() {
                         type="button"
                         className={`platform-btn sp ${selectedPlatform === 'Spotify' ? 'active' : ''}`}
                         onClick={() => setSelectedPlatform('Spotify')}
-                      >SP</button>
+                      >SPOTIFY</button>
                     </div>
                     <input 
                       type="text" 
