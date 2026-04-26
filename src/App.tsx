@@ -31,6 +31,7 @@ function App() {
     artistName: '',
     socials: ''
   });
+  const [selectedPlatform, setSelectedPlatform] = useState('IG');
   const [isJoined, setIsJoined] = useState(false);
   const [position] = useState(232);
   const [referralLink, setReferralLink] = useState('');
@@ -145,14 +146,33 @@ function App() {
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
                     required
                   />
-                  <input 
-                    type="text" 
-                    placeholder="Socials (IG/TikTok/Handle)" 
-                    className="input-field"
-                    value={formData.socials}
-                    onChange={(e) => setFormData({...formData, socials: e.target.value})}
-                    required
-                  />
+                  <div className="social-platform-wrapper">
+                    <div className="platform-selector">
+                      <button 
+                        type="button"
+                        className={`platform-btn ig ${selectedPlatform === 'IG' ? 'active' : ''}`}
+                        onClick={() => setSelectedPlatform('IG')}
+                      >IG</button>
+                      <button 
+                        type="button"
+                        className={`platform-btn tt ${selectedPlatform === 'TikTok' ? 'active' : ''}`}
+                        onClick={() => setSelectedPlatform('TikTok')}
+                      >TT</button>
+                      <button 
+                        type="button"
+                        className={`platform-btn sp ${selectedPlatform === 'Spotify' ? 'active' : ''}`}
+                        onClick={() => setSelectedPlatform('Spotify')}
+                      >SP</button>
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder={`${selectedPlatform} Handle`} 
+                      className="input-field"
+                      value={formData.socials}
+                      onChange={(e) => setFormData({...formData, socials: e.target.value})}
+                      required
+                    />
+                  </div>
                 </div>
                 <button type="submit" className="chrome-btn w-full">Claim Your Spot</button>
               </form>

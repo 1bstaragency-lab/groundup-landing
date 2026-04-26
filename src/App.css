@@ -356,6 +356,38 @@
   margin-bottom: 12px;
 }
 
+.social-platform-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.platform-selector {
+  display: flex;
+  gap: 6px;
+}
+
+.platform-btn {
+  flex: 1;
+  padding: 6px 0;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.platform-btn.active.ig { background: #E1306C; color: white; border-color: #E1306C; }
+.platform-btn.active.tt { background: #000000; color: white; border-color: #ff0050; border-width: 2px; }
+.platform-btn.active.sp { background: #1DB954; color: black; border-color: #1DB954; }
+
+.platform-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .w-full {
   width: 100%;
   margin-top: 12px;
