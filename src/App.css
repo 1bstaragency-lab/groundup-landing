@@ -313,6 +313,11 @@
   letter-spacing: 0.02em;
 }
 
+.ticker-email {
+  opacity: 0.8;
+  font-weight: 300;
+}
+
 .ticker-badge {
   font-size: 0.65rem;
   background: #FFD700;

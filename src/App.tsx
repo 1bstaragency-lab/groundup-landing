@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from './supabaseClient';
 import logo from './assets/logo.png';
 import './App.css';
 
@@ -33,11 +34,12 @@ function App() {
   });
   const [selectedPlatform, setSelectedPlatform] = useState('IG');
   const [isJoined, setIsJoined] = useState(false);
-  const [position] = useState(232);
+  const [totalCount, setTotalCount] = useState(232);
   const [referralLink, setReferralLink] = useState('');
   const [tickerIndex, setTickerIndex] = useState(0);
 
   useEffect(() => {
+    fetchCount();
     const saved = localStorage.getItem('groundup_beta_user');
     if (saved) {
       setIsJoined(true);
@@ -51,16 +53,50 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  const fetchCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('waitlist')
+        .select('*', { count: 'exact', head: true });
+      
+      if (!error && count !== null) {
+        setTotalCount(232 + count);
+      }
+    } catch (err) {
+      console.error('Error fetching count:', err);
+    }
+  };
+
   const generateReferralLink = (emailStr: string) => {
     const hash = btoa(emailStr).substring(0, 8);
     setReferralLink(`${window.location.origin}?ref=${hash}`);
   };
 
-  const handleJoin = (e: React.FormEvent) => {
+  const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Save to Supabase
+    const { error } = await supabase
+      .from('waitlist')
+      .insert([
+        { 
+          email: formData.email, 
+          phone: formData.phone, 
+          artist_name: formData.artistName, 
+          platform: selectedPlatform,
+          social_handle: formData.socials 
+        }
+      ]);
+
+    if (error) {
+      console.error('Error saving to waitlist:', error.message);
+      // Even if DB fails, we let them see the dashboard for UX
+    }
+
     localStorage.setItem('groundup_beta_user', JSON.stringify(formData));
     setIsJoined(true);
     generateReferralLink(formData.email);
+    fetchCount(); // Update the number immediately
   };
 
   const copyToClipboard = () => {
@@ -196,7 +232,7 @@ function App() {
               <div className="stats-grid">
                 <div className="stat-card">
                   <span className="stat-label">Your Position</span>
-                  <span className="stat-value gold-text">#{position}</span>
+                  <span className="stat-value gold-text">#{totalCount}</span>
                 </div>
                 <div className="stat-card">
                   <span className="stat-label">Referrals</span>
@@ -216,7 +252,7 @@ function App() {
               <div className="leaderboard-section">
                 <div className="leaderboard-header">
                   <h3>Artist Leaderboard</h3>
-                  <span className="gold-text">232+ and counting</span>
+                  <span className="gold-text">{totalCount}+ and counting</span>
                 </div>
                 <div className="leaderboard-container">
                   <div className="leaderboard-scroll">
