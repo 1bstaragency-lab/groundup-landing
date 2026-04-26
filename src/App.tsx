@@ -72,10 +72,6 @@ function App() {
     <div className="landing-container">
       <div className="glow top-glow"></div>
       
-      <nav className="navbar">
-        <img src={logo} alt="GrounduP Logo" className="nav-logo" />
-      </nav>
-
       <main className="content">
         <AnimatePresence mode="wait">
           {!isJoined ? (
