@@ -164,6 +164,17 @@ function App() {
               animate={{ opacity: 1, scale: 1 }}
               className="referral-dashboard glass"
             >
+              <div className="dashboard-nav">
+                <button 
+                  onClick={() => {
+                    localStorage.removeItem('groundup_beta_user');
+                    window.location.reload();
+                  }} 
+                  className="back-btn"
+                >
+                  ← Back to Signup
+                </button>
+              </div>
               <h2 className="dashboard-title">Welcome, <span className="gold-text">{formData.artistName}</span></h2>
               
               <div className="stats-grid">
