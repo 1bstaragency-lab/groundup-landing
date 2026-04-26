@@ -146,8 +146,8 @@ function App() {
                     required
                   />
                   <input 
-                    type="url" 
-                    placeholder="Socials Link (IG/TikTok)" 
+                    type="text" 
+                    placeholder="Socials (IG/TikTok/Handle)" 
                     className="input-field"
                     value={formData.socials}
                     onChange={(e) => setFormData({...formData, socials: e.target.value})}
