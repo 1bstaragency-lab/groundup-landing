@@ -395,18 +395,27 @@ function App() {
       {/* Referral Popup */}
       <AnimatePresence>
         {showReferralPopup && (
-          <motion.div
-            className="referral-popup"
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 20 }}
-          >
-            <button className="referral-popup-close" onClick={() => setShowReferralPopup(false)}>✕</button>
-            <p className="referral-popup-ws">W's in the chat 🏆</p>
-            <p className="referral-popup-msg">You & your friend both received extra points for this referral.</p>
-            <p className="referral-popup-sub">Sign up below to lock in your spot.</p>
-          </motion.div>
+          <>
+            <motion.div
+              className="referral-popup-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowReferralPopup(false)}
+            />
+            <motion.div
+              className="referral-popup"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ type: 'spring', damping: 20 }}
+            >
+              <button className="referral-popup-close" onClick={() => setShowReferralPopup(false)}>✕</button>
+              <p className="referral-popup-ws">W's in the chat 🏆</p>
+              <p className="referral-popup-msg">You & your friend both received extra points for this referral.</p>
+              <p className="referral-popup-sub">Sign up below to lock in your spot.</p>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 

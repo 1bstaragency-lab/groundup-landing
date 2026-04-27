@@ -460,22 +460,29 @@
 }
 
 /* Referral Popup */
+.referral-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 9998;
+  backdrop-filter: blur(4px);
+}
+
 .referral-popup {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 48px);
+  max-width: 340px;
   background: rgba(14, 14, 14, 0.98);
-  border-top: 1px solid rgba(255, 215, 0, 0.2);
-  border-radius: 20px 20px 0 0;
-  padding: 24px 28px 36px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 20px;
+  padding: 32px 28px 28px;
   z-index: 9999;
   backdrop-filter: blur(24px);
   text-align: center;
-  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
 }
 
 .referral-popup-close {
