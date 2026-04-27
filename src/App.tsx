@@ -49,13 +49,22 @@ function App() {
   const [referralLink, setReferralLink] = useState('');
   const [tickerIndex, setTickerIndex] = useState(0);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(SEED_LEADERBOARD);
-  const [refCode, setRefCode] = useState(''); // the ?ref= from URL
+  const [refCode, setRefCode] = useState('');
+  const [showReferralPopup, setShowReferralPopup] = useState(false);
 
   useEffect(() => {
     // Read referral code from URL
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref');
-    if (ref) setRefCode(ref);
+    if (ref) {
+      setRefCode(ref);
+      // Show popup 2s after page load
+      setTimeout(() => {
+        setShowReferralPopup(true);
+        // Auto-dismiss after 6s
+        setTimeout(() => setShowReferralPopup(false), 6000);
+      }, 2000);
+    }
 
     fetchCount();
     fetchLeaderboard();
@@ -256,14 +265,8 @@ function App() {
                 <div className="ticker-label">Recently Joined GrounduP</div>
               </div>
 
-              {refCode && (
-                <div className="referral-notice">
-                  You were invited — claim your spot
-                </div>
-              )}
-
               <form onSubmit={handleJoin} className="signup-form-v2 glass">
-                <h3>Sign Up Now</h3>
+                <h3 className="form-title">Sign Up Now</h3>
                 <div className="input-group">
                   <input 
                     type="text" 
@@ -388,6 +391,25 @@ function App() {
       <footer className="footer">
         <p>&copy; 2026 GrounduP Artist Platform</p>
       </footer>
+
+      {/* Referral Popup */}
+      <AnimatePresence>
+        {showReferralPopup && (
+          <motion.div
+            className="referral-popup"
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 20 }}
+          >
+            <button className="referral-popup-close" onClick={() => setShowReferralPopup(false)}>✕</button>
+            <p className="referral-popup-ws">W's in the chat 🏆</p>
+            <p className="referral-popup-msg">You & your friend both received extra points for this referral.</p>
+            <p className="referral-popup-sub">Sign up below to lock in your spot.</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
