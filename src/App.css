@@ -371,15 +371,12 @@
 .signup-form-v2 h3 {
   margin-bottom: 0.5rem;
   margin-top: -0.25rem;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 900;
   text-align: center;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  background: var(--gold-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #FFD700;
 }
 
 .referral-notice {
@@ -453,34 +450,32 @@
 }
 
 .form-title {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 900;
   text-align: center;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  background: var(--gold-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #FFD700;
   margin-bottom: 0.25rem;
 }
 
 /* Referral Popup */
 .referral-popup {
   position: fixed;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 48px);
-  max-width: 360px;
-  background: rgba(18, 18, 18, 0.96);
-  border: 1px solid rgba(255, 215, 0, 0.25);
-  border-radius: 16px;
-  padding: 20px 24px 18px;
-  z-index: 1000;
-  backdrop-filter: blur(20px);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: rgba(14, 14, 14, 0.98);
+  border-top: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 20px 20px 0 0;
+  padding: 24px 28px 36px;
+  z-index: 9999;
+  backdrop-filter: blur(24px);
   text-align: center;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.7);
 }
 
 .referral-popup-close {
