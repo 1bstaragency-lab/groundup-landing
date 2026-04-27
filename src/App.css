@@ -298,13 +298,15 @@
 }
 
 .ticker-wrapper {
-  padding: 2px 6px;
+  padding: 6px 16px;
   margin-bottom: 0.8rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 180px;
-  max-width: 85%;
+  width: fit-content;
+  max-width: 90%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .ticker-item {
