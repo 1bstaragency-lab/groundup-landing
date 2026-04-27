@@ -31,9 +31,15 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 body {
   min-height: 100vh;
   overflow-x: hidden;
+  max-width: 100%;
   background: radial-gradient(circle at top center, #1a1a1a 0%, #050505 100%);
 }
 
