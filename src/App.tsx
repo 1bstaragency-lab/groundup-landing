@@ -258,7 +258,7 @@ function App() {
 
               {refCode && (
                 <div className="referral-notice">
-                  🎉 You were referred! Sign up to claim your spot.
+                  You were invited — claim your spot
                 </div>
               )}
 
