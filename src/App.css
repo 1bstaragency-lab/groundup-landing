@@ -298,37 +298,37 @@
 }
 
 .ticker-wrapper {
-  padding: 6px 16px;
-  margin-bottom: 0.8rem;
+  padding: 10px 24px;
+  margin-bottom: 1.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: fit-content;
-  max-width: 90%;
+  max-width: 95%;
   margin-left: auto;
   margin-right: auto;
 }
 
 .ticker-item {
   display: flex;
-  gap: 6px;
+  gap: 12px;
   align-items: center;
   font-weight: 400;
-  font-size: 0.5rem;
-  letter-spacing: 0.03em;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
 }
 
 .ticker-email {
-  opacity: 0.65;
+  opacity: 0.8;
   font-weight: 300;
 }
 
 .ticker-badge {
-  font-size: 0.4rem;
+  font-size: 0.75rem;
   background: #FFD700;
   color: #000;
-  padding: 0.5px 3px;
-  border-radius: 1px;
+  padding: 2px 10px;
+  border-radius: 4px;
   font-weight: 900;
   display: inline-block;
   white-space: nowrap;
@@ -336,12 +336,12 @@
 }
 
 .ticker-label {
-  font-size: 0.38rem;
+  font-size: 0.7rem;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  margin-top: 1px;
-  opacity: 0.5;
+  margin-top: 6px;
+  opacity: 0.6;
 }
 
 .signup-form-v2 {
