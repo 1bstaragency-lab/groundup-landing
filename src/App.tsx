@@ -4,6 +4,8 @@ import { supabase } from './supabaseClient';
 import logo from './assets/logo.png';
 import './App.css';
 
+const ROLES = ['(creator)', '(streamer)', '(content creator)'];
+
 const WAITLIST_DATA = [
   { email: 'a****@gmail.com', listeners: '5,542' },
   { email: 'j****@icloud.com', listeners: '1,423' },
@@ -12,7 +14,14 @@ const WAITLIST_DATA = [
   { email: 'k****@outlook.com', listeners: '3,112' },
 ];
 
-const LEADERBOARD_DATA = [
+type LeaderboardEntry = {
+  name: string;
+  referrals: number;
+  role?: string;
+};
+
+// Seed data merged with real DB data
+const SEED_LEADERBOARD: LeaderboardEntry[] = [
   { name: 'Alex M.', referrals: 181, role: '(creator)' },
   { name: 'Jordan K.', referrals: 165, role: '(streamer)' },
   { name: 'Sarah L.', referrals: 142, role: '(content creator)' },
@@ -35,16 +44,29 @@ function App() {
   const [selectedPlatform, setSelectedPlatform] = useState('IG');
   const [isJoined, setIsJoined] = useState(false);
   const [totalCount, setTotalCount] = useState(232);
+  const [myReferralCount, setMyReferralCount] = useState(0);
+  const [myPosition, setMyPosition] = useState(232);
   const [referralLink, setReferralLink] = useState('');
   const [tickerIndex, setTickerIndex] = useState(0);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(SEED_LEADERBOARD);
+  const [refCode, setRefCode] = useState(''); // the ?ref= from URL
 
   useEffect(() => {
+    // Read referral code from URL
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) setRefCode(ref);
+
     fetchCount();
+    fetchLeaderboard();
+
     const saved = localStorage.getItem('groundup_beta_user');
     if (saved) {
-      setIsJoined(true);
       const data = JSON.parse(saved);
+      setIsJoined(true);
       generateReferralLink(data.email);
+      fetchMyReferrals(data.email);
+      fetchMyPosition(data.email);
     }
 
     const interval = setInterval(() => {
@@ -58,12 +80,94 @@ function App() {
       const { count, error } = await supabase
         .from('waitlist')
         .select('*', { count: 'exact', head: true });
-      
-      if (!error && count !== null) {
-        setTotalCount(232 + count);
-      }
+      if (!error && count !== null) setTotalCount(232 + count);
     } catch (err) {
       console.error('Error fetching count:', err);
+    }
+  };
+
+  const fetchLeaderboard = async () => {
+    try {
+      // Get all rows, group by referral_code to count referrals
+      const { data, error } = await supabase
+        .from('waitlist')
+        .select('artist_name, referral_code, referred_by')
+        .not('referral_code', 'is', null);
+
+      if (error || !data) return;
+
+      // Count how many people used each referral_code as referred_by
+      const countMap: Record<string, { name: string; count: number }> = {};
+      data.forEach((row: { referral_code: string; artist_name: string; referred_by: string }) => {
+        if (row.referral_code) {
+          if (!countMap[row.referral_code]) {
+            countMap[row.referral_code] = { name: row.artist_name || 'Artist', count: 0 };
+          }
+        }
+      });
+      data.forEach((row: { referral_code: string; artist_name: string; referred_by: string }) => {
+        if (row.referred_by && countMap[row.referred_by]) {
+          countMap[row.referred_by].count += 1;
+        }
+      });
+
+      // Build real leaderboard entries from DB
+      const realEntries: LeaderboardEntry[] = Object.values(countMap)
+        .filter((e) => e.count > 0)
+        .sort((a, b) => b.count - a.count)
+        .map((e, i) => ({
+          name: e.name,
+          referrals: e.count,
+          role: e.count >= 10 ? ROLES[i % ROLES.length] : undefined,
+        }));
+
+      // Merge: seed entries shifted down, real entries at top
+      if (realEntries.length > 0) {
+        const merged = [
+          ...realEntries,
+          ...SEED_LEADERBOARD.map((s) => ({ ...s, referrals: s.referrals - realEntries.length })),
+        ]
+          .filter((e) => e.referrals > 0)
+          .sort((a, b) => b.referrals - a.referrals)
+          .slice(0, 15);
+        setLeaderboard(merged);
+      }
+    } catch (err) {
+      console.error('Leaderboard error:', err);
+    }
+  };
+
+  const fetchMyReferrals = async (email: string) => {
+    try {
+      const myCode = btoa(email).substring(0, 8);
+      const { count, error } = await supabase
+        .from('waitlist')
+        .select('*', { count: 'exact', head: true })
+        .eq('referred_by', myCode);
+      if (!error && count !== null) setMyReferralCount(count);
+    } catch (err) {
+      console.error('Error fetching my referrals:', err);
+    }
+  };
+
+  const fetchMyPosition = async (email: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('waitlist')
+        .select('created_at')
+        .eq('email', email)
+        .single();
+      if (error || !data) return;
+
+      // Count how many signed up before this user
+      const { count } = await supabase
+        .from('waitlist')
+        .select('*', { count: 'exact', head: true })
+        .lt('created_at', data.created_at);
+
+      if (count !== null) setMyPosition(232 + count + 1);
+    } catch (err) {
+      console.error('Error fetching position:', err);
     }
   };
 
@@ -74,29 +178,32 @@ function App() {
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Save to Supabase
+
+    const myCode = btoa(formData.email).substring(0, 8);
+
     const { error } = await supabase
       .from('waitlist')
-      .insert([
-        { 
-          email: formData.email, 
-          phone: formData.phone, 
-          artist_name: formData.artistName, 
-          platform: selectedPlatform,
-          social_handle: formData.socials 
-        }
-      ]);
+      .insert([{
+        email: formData.email,
+        phone: formData.phone,
+        artist_name: formData.artistName,
+        platform: selectedPlatform,
+        social_handle: formData.socials,
+        referral_code: myCode,
+        referred_by: refCode || null,  // track who referred them
+      }]);
 
     if (error) {
       console.error('Error saving to waitlist:', error.message);
-      // Even if DB fails, we let them see the dashboard for UX
     }
 
     localStorage.setItem('groundup_beta_user', JSON.stringify(formData));
     setIsJoined(true);
     generateReferralLink(formData.email);
-    fetchCount(); // Update the number immediately
+    fetchCount();
+    fetchLeaderboard();
+    fetchMyReferrals(formData.email);
+    fetchMyPosition(formData.email);
   };
 
   const copyToClipboard = () => {
@@ -149,6 +256,12 @@ function App() {
                 <div className="ticker-label">Recently Joined GrounduP</div>
               </div>
 
+              {refCode && (
+                <div className="referral-notice">
+                  🎉 You were referred! Sign up to claim your spot.
+                </div>
+              )}
+
               <form onSubmit={handleJoin} className="signup-form-v2 glass">
                 <h3>Sign Up Now</h3>
                 <div className="input-group">
@@ -162,49 +275,46 @@ function App() {
                   />
                   <input 
                     type="email" 
-                    placeholder="Email Address" 
+                    placeholder="Email" 
                     className="input-field"
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                     required
                   />
                 </div>
-                <div className="input-group">
+                <input 
+                  type="tel" 
+                  placeholder="Phone Number" 
+                  className="input-field"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                />
+                <div className="social-platform-wrapper">
+                  <div className="platform-selector">
+                    <button 
+                      type="button"
+                      className={`platform-btn ig ${selectedPlatform === 'IG' ? 'active' : ''}`}
+                      onClick={() => setSelectedPlatform('IG')}
+                    >IG</button>
+                    <button 
+                      type="button"
+                      className={`platform-btn tt ${selectedPlatform === 'TikTok' ? 'active' : ''}`}
+                      onClick={() => setSelectedPlatform('TikTok')}
+                    >TT</button>
+                    <button 
+                      type="button"
+                      className={`platform-btn sp ${selectedPlatform === 'Spotify' ? 'active' : ''}`}
+                      onClick={() => setSelectedPlatform('Spotify')}
+                    >SPOTIFY</button>
+                  </div>
                   <input 
-                    type="tel" 
-                    placeholder="Phone Number" 
+                    type="text" 
+                    placeholder={`${selectedPlatform} Handle`} 
                     className="input-field"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    value={formData.socials}
+                    onChange={(e) => setFormData({...formData, socials: e.target.value})}
                     required
                   />
-                  <div className="social-platform-wrapper">
-                    <div className="platform-selector">
-                      <button 
-                        type="button"
-                        className={`platform-btn ig ${selectedPlatform === 'IG' ? 'active' : ''}`}
-                        onClick={() => setSelectedPlatform('IG')}
-                      >IG</button>
-                      <button 
-                        type="button"
-                        className={`platform-btn tt ${selectedPlatform === 'TikTok' ? 'active' : ''}`}
-                        onClick={() => setSelectedPlatform('TikTok')}
-                      >TT</button>
-                      <button 
-                        type="button"
-                        className={`platform-btn sp ${selectedPlatform === 'Spotify' ? 'active' : ''}`}
-                        onClick={() => setSelectedPlatform('Spotify')}
-                      >SPOTIFY</button>
-                    </div>
-                    <input 
-                      type="text" 
-                      placeholder={`${selectedPlatform} Handle`} 
-                      className="input-field"
-                      value={formData.socials}
-                      onChange={(e) => setFormData({...formData, socials: e.target.value})}
-                      required
-                    />
-                  </div>
                 </div>
                 <button type="submit" className="chrome-btn w-full">Claim Your Spot</button>
               </form>
@@ -232,17 +342,17 @@ function App() {
               <div className="stats-grid">
                 <div className="stat-card">
                   <span className="stat-label">Your Position</span>
-                  <span className="stat-value gold-text">#{totalCount}</span>
+                  <span className="stat-value gold-text">#{myPosition}</span>
                 </div>
                 <div className="stat-card">
                   <span className="stat-label">Referrals</span>
-                  <span className="stat-value">0</span>
+                  <span className="stat-value">{myReferralCount}</span>
                 </div>
               </div>
 
               <div className="referral-box">
                 <h3 className="referral-highlight gold-text">BUMP YOUR RANK</h3>
-                <p>Refer friends to up your rank and get access earlier.</p>
+                <p>Refer friends to move up the list and get access earlier.</p>
                 <div className="link-container">
                   <input type="text" readOnly value={referralLink} className="input-field" />
                   <button onClick={copyToClipboard} className="chrome-btn">Copy</button>
@@ -256,7 +366,7 @@ function App() {
                 </div>
                 <div className="leaderboard-container">
                   <div className="leaderboard-scroll">
-                    {LEADERBOARD_DATA.map((entry, i) => (
+                    {leaderboard.map((entry, i) => (
                       <div key={i} className="leaderboard-row">
                         <span className="rank">#{i + 1}</span>
                         <div className="name-wrapper">
