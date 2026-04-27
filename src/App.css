@@ -322,11 +322,11 @@
 }
 
 .ticker-badge {
-  font-size: 0.44rem;
+  font-size: 0.4rem;
   background: #FFD700;
   color: #000;
-  padding: 1px 4px;
-  border-radius: 2px;
+  padding: 0.5px 3px;
+  border-radius: 1px;
   font-weight: 900;
   display: inline-block;
   white-space: nowrap;
