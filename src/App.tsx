@@ -118,6 +118,10 @@ function App() {
               exit={{ opacity: 0, y: -20 }}
               className="hero-section"
             >
+              <div className="artist-count-badge">
+                Early Beta Access
+              </div>
+
               <div className="logo-wrapper floating">
                 <img src={logo} alt="GrounduP" className="main-logo" />
               </div>
@@ -125,10 +129,6 @@ function App() {
               <h1 className="hero-title">
                 The Future of <span className="gold-text">Artist Growth</span>
               </h1>
-
-              <div className="artist-count-badge">
-                Early Beta Access
-              </div>
 
               {/* Waitlist Ticker */}
               <div className="ticker-wrapper glass">
