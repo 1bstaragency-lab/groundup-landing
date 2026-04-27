@@ -299,7 +299,7 @@
 
 .ticker-wrapper {
   padding: 10px 24px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -339,8 +339,8 @@
   font-size: 0.7rem;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.2em;
-  margin-top: 6px;
+  letter-spacing: 0.22em;
+  margin-top: 10px;
   opacity: 0.6;
 }
 
