@@ -95,6 +95,7 @@ function App() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4 }}
+            className="flex justify-center"
           >
             <button className="waitlist-btn-main" onClick={() => document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' })}>
               SIGN UP NOW <span className="opacity-40 font-normal ml-2">— Free to start →</span>
