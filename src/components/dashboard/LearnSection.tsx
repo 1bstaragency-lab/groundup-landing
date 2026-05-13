@@ -4,8 +4,8 @@ import { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Play, X, Upload, FolderOpen, File, ChevronRight,
-  TrendingUp, Music2, Truck, Megaphone, Globe, Folder,
-  Check, Plus, ExternalLink,
+  TrendingUp, Music2, Truck, Megaphone, Globe,
+  Check, ExternalLink,
 } from "lucide-react"
 
 // ─── Video playlists ──────────────────────────────────────────────────────────
