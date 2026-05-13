@@ -23,7 +23,7 @@ import {
   Layers,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { useAuth } from "../../context/AuthContext"
+import { useAuth } from "../../hooks/useAuth"
 import ImageGenerationForm from "./ImageGenerationForm"
 import ImageGallery from "./ImageGallery"
 import VideoGenerationForm from "./VideoGenerationForm"
@@ -78,13 +78,13 @@ export function StudioSection() {
   const [images, setImages] = useState<GeneratedImage[]>([])
   const [imgLoading, setImgLoading] = useState(false)
   const imageInputRef = useRef<HTMLInputElement>(null)
-  const [imageRef, setImageRef] = useState<string | null>(null)
+  const [, setImageRef] = useState<string | null>(null)
 
   // Video Studio state
   const [videos, setVideos] = useState<GeneratedVideo[]>([])
   const [vidLoading, setVidLoading] = useState(false)
   const videoInputRef = useRef<HTMLInputElement>(null)
-  const [videoRef, setVideoRef] = useState<string | null>(null)
+  const [, setVideoRef] = useState<string | null>(null)
 
   // Load images/videos lazily when tab is first opened
   const [imgLoaded, setImgLoaded] = useState(false)
