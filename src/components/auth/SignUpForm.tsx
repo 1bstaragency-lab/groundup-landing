@@ -53,9 +53,7 @@ export function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormProps) {
       className="w-full max-w-md"
     >
       <div className="text-center mb-10">
-        <div className="w-14 h-14 bg-[#FFD700] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(255,215,0,0.2)]">
-          <span className="font-black text-black text-lg hero-text">uP.</span>
-        </div>
+        <img src="/gu-logo.png" alt="GrounduP" className="h-14 w-auto mx-auto mb-6" />
         <h2 className="text-4xl font-black text-white tracking-tighter uppercase mb-2">
           Create Account
         </h2>
