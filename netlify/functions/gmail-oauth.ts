@@ -13,10 +13,13 @@ const supabase = createClient(
 
 const GOOGLE_CLIENT_ID     = process.env.GOOGLE_CLIENT_ID!
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!
-const APP_URL              = process.env.URL ?? 'http://localhost:5173'
-const REDIRECT_URI         = `${APP_URL}/.netlify/functions/gmail-oauth`
 
 export const handler: Handler = async (event) => {
+  // Derive redirect URI from the incoming request so it works on any domain
+  // (production, deploy preview, custom domain) without extra env var config
+  const host = event.headers['x-forwarded-host'] ?? event.headers['host'] ?? 'lively-torrone-79490f.netlify.app'
+  const REDIRECT_URI = `https://${host}/.netlify/functions/gmail-oauth`
+  const APP_URL = `https://${host}`
   const params = event.queryStringParameters ?? {}
 
   // ── Step 1: Initiate OAuth (called with ?init=1&user_id=xxx) ──────────────
