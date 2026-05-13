@@ -12,6 +12,7 @@ import { OnboardingFlow } from './components/ui/OnboardingFlow';
 import { SignUpPage } from './pages/SignUp';
 import { LoginPage } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
+import { JoinPage } from './pages/JoinPage';
 import { useAuth } from './hooks/useAuth';
 import { supabase } from './supabaseClient';
 import './App.css';
@@ -305,6 +306,8 @@ function App() {
           </RequireAuth>
         }
       />
+      {/* Team invite accept — public, no auth required */}
+      <Route path="/join/:token" element={<JoinPage />} />
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

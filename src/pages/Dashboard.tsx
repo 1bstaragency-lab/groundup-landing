@@ -12,6 +12,7 @@ import { RolloutsSection } from '../components/dashboard/RolloutsSection';
 import { AnalyticsSection } from '../components/dashboard/AnalyticsSection';
 import { TeamSection } from '../components/dashboard/TeamSection';
 import { CuratorSection } from '../components/dashboard/CuratorSection';
+import { InfluencerSection } from '../components/dashboard/InfluencerSection';
 
 const INDUSTRY_NEWS = [
   {
@@ -72,7 +73,8 @@ export function Dashboard() {
   }
 
   return (
-    <>
+    <>}
+
       {/* Email confirmed banner */}
       <AnimatePresence>
         {showBanner && (
@@ -158,6 +160,7 @@ export function Dashboard() {
           {activeTab === 'learn'     && <LearnSection />}
           {activeTab === 'scheduler' && <SchedulerSection />}
           {activeTab === 'studio'    && <StudioSection />}
+          {activeTab === 'influencers' && <motion.div key="influencers" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><InfluencerSection /></motion.div>}
           {activeTab === 'curator'   && <CuratorSection />}
           {activeTab === 'profile'   && <ProfileSection />}
 

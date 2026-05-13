@@ -3,11 +3,12 @@
 import { useState, type ReactNode } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  Home, BookOpen, Calendar, Layout, User, Settings,
-  Bell, Search, Zap, TrendingUp, Users, Rocket,
+  Home, BookOpen, Calendar, Layout, User,
+  Bell, TrendingUp, Users, Network,
   MoreHorizontal, X, Music2,
 } from "lucide-react"
 import { useAuth } from "../../hooks/useAuth"
+import { CdRocketIcon } from "../ui/CdRocketIcon"
 
 interface DashboardShellProps {
   children: ReactNode
@@ -17,15 +18,16 @@ interface DashboardShellProps {
 
 // isMain = highlighted top-4 with gold treatment in sidebar
 const MENU_ITEMS = [
-  { id: "home",      label: "Dashboard",     icon: Home,      mobileShow: true,  isMain: true },
-  { id: "rollouts",  label: "Rollouts",      icon: Rocket,    mobileShow: true,  isMain: true },
-  { id: "analytics", label: "Analytics",     icon: TrendingUp,mobileShow: true,  isMain: true },
-  { id: "learn",     label: "Learn & DB",    icon: BookOpen,  mobileShow: true,  isMain: true },
-  { id: "team",      label: "Team",          icon: Users,     mobileShow: false, isMain: false },
-  { id: "scheduler", label: "Scheduler",     icon: Calendar,  mobileShow: false, isMain: false },
-  { id: "studio",    label: "Content Studio",icon: Layout,    mobileShow: false, isMain: false },
-  { id: "curator",   label: "Curator",       icon: Music2,    mobileShow: false, isMain: false },
-  { id: "profile",   label: "Artist Profile",icon: User,      mobileShow: false, isMain: false },
+  { id: "home",        label: "Dashboard",          icon: Home,         mobileShow: true,  isMain: true },
+  { id: "rollouts",    label: "Releases",           icon: CdRocketIcon, mobileShow: true,  isMain: true },
+  { id: "analytics",   label: "Analytics",          icon: TrendingUp,   mobileShow: true,  isMain: true },
+  { id: "learn",       label: "Knowledge Base",     icon: BookOpen,     mobileShow: true,  isMain: true },
+  { id: "team",        label: "Team",               icon: Users,        mobileShow: false, isMain: false },
+  { id: "influencers", label: "Influencer Network", icon: Network,      mobileShow: false, isMain: false },
+  { id: "scheduler",   label: "Scheduler",          icon: Calendar,     mobileShow: false, isMain: false },
+  { id: "studio",      label: "Content Studio",     icon: Layout,       mobileShow: false, isMain: false },
+  { id: "curator",     label: "Curator",            icon: Music2,       mobileShow: false, isMain: false },
+  { id: "profile",     label: "Artist Profile",     icon: User,         mobileShow: false, isMain: false },
 ]
 
 const BOTTOM_NAV_ITEMS = MENU_ITEMS.filter(m => m.mobileShow)
@@ -221,7 +223,7 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
                 )}
                 <Icon size={22} className={`transition-colors ${active ? 'text-[#FFD700]' : 'text-white/30'}`} />
                 <span className={`text-[9px] font-black uppercase tracking-wide transition-colors ${active ? 'text-[#FFD700]' : 'text-white/20'}`}>
-                  {item.id === 'home' ? 'Home' : item.id === 'learn' ? 'Learn' : item.label.split(' ')[0]}
+                  {item.id === 'home' ? 'Home' : item.id === 'learn' ? 'Learn' : item.id === 'rollouts' ? 'Releases' : item.label.split(' ')[0]}
                 </span>
               </button>
             )
