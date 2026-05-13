@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { TeamDashboardMockup } from './components/ui/TeamDashboardMockup';
 import ShaderShowcase from './components/ui/hero';
 import { LiquidButton } from './components/ui/liquid-glass-button';
@@ -14,16 +13,17 @@ import { LearnSection } from './components/dashboard/LearnSection';
 import { SchedulerSection } from './components/dashboard/SchedulerSection';
 import { StudioSection } from './components/dashboard/StudioSection';
 import { ProfileSection } from './components/dashboard/ProfileSection';
+import { SignUpPage } from './pages/SignUp';
+import { LoginPage } from './pages/Login';
+import { Dashboard } from './pages/Dashboard';
+import { useAuth } from './hooks/useAuth';
+import { supabase } from './supabaseClient';
 import './App.css';
 
-// Initialize Supabase
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-type AppView = 'landing' | 'onboarding' | 'dashboard';
+type AppView = 'landing' | 'onboarding' | 'dashboard' | 'signup' | 'login';
 
 function App() {
+  const { user, loading: authLoading } = useAuth();
   const [view, setView] = useState<AppView>('landing');
   const [activeDashboardTab, setActiveDashboardTab] = useState('home');
   const [formData, setFormData] = useState({
@@ -38,6 +38,37 @@ function App() {
     const ref = params.get('ref');
     if (ref) setReferredBy(ref);
   }, []);
+
+  // If auth session exists, route to real dashboard
+  if (!authLoading && user && view !== 'signup') {
+    return <Dashboard />;
+  }
+
+  if (view === 'signup') {
+    return (
+      <SignUpPage
+        onComplete={() => setView('dashboard')}
+        onSwitchToLogin={() => setView('login')}
+      />
+    );
+  }
+
+  if (view === 'login') {
+    return (
+      <LoginPage
+        onSuccess={() => setView('dashboard')}
+        onSwitchToSignUp={() => setView('signup')}
+      />
+    );
+  }
+
+  if (authLoading) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center">
+        <div className="w-12 h-12 bg-[#FFD700] rounded-2xl animate-pulse" />
+      </div>
+    );
+  }
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,7 +141,10 @@ function App() {
           <div className="w-14 h-14 bg-[#FFD700] rounded-2xl flex items-center justify-center">
             <span className="block font-black text-white drop-shadow-[0_0_50px_rgba(255,215,0,0.3)] uppercase hero-text">uP.</span>
           </div>
-          <button className="nav-cta" onClick={() => setView('onboarding')}>
+          <button className="nav-cta" onClick={() => setView('login')} style={{ marginRight: '8px' }}>
+            Sign In
+          </button>
+          <button className="nav-cta" style={{ background: '#FFD700', color: '#000' }} onClick={() => setView('signup')}>
             Join Now
           </button>
         </div>
