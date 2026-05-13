@@ -46,17 +46,17 @@ body {
 }
 
 .waitlist-btn-main {
-  @apply bg-zinc-900 border border-white/10 px-8 py-5 rounded-full text-xs font-black tracking-widest uppercase flex items-center gap-4 hover:border-[#00FF85]/50 transition-all;
+  @apply bg-zinc-900 border border-white/10 px-8 py-5 rounded-full text-xs font-black tracking-widest uppercase flex items-center gap-4 hover:border-[#FFD700]/50 transition-all;
   @apply shadow-[0_0_30px_rgba(0,0,0,0.5)];
 }
 
 /* Forms */
 .wait-input {
-  @apply w-full bg-zinc-900/40 border border-white/5 rounded-2xl p-5 text-white focus:outline-none focus:border-[#00FF85]/30 transition-colors backdrop-blur-xl;
+  @apply w-full bg-zinc-900/40 border border-white/5 rounded-2xl p-5 text-white focus:outline-none focus:border-[#FFD700]/30 transition-colors backdrop-blur-xl;
 }
 
 .wait-submit-btn {
-  @apply w-full bg-white text-black font-black tracking-[0.2em] py-6 rounded-2xl hover:bg-[#00FF85] hover:text-black transition-all;
+  @apply w-full bg-white text-black font-black tracking-[0.2em] py-6 rounded-2xl hover:bg-[#FFD700] hover:text-black transition-all;
 }
 
 /* Features */

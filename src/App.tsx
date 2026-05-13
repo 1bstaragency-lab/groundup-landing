@@ -50,8 +50,8 @@ function App() {
     <div className="app-wrapper bg-black text-white font-sans overflow-x-hidden">
       {/* Background Glows */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#00FF85]/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#00FF85]/5 blur-[120px] rounded-full" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#FFD700]/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#FFD700]/5 blur-[120px] rounded-full" />
       </div>
 
       {/* Navigation */}
@@ -71,7 +71,7 @@ function App() {
 
       {/* Hero Section */}
       <section className="hero-section min-h-screen flex flex-col items-center justify-center pt-32 pb-20 relative">
-        <div className="hero-orb absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[#00FF85]/20 blur-[100px] rounded-full" />
+        <div className="hero-orb absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[#FFD700]/20 blur-[100px] rounded-full" />
         
         <div className="container relative z-10 text-center px-6">
           <motion.h1 
@@ -81,7 +81,7 @@ function App() {
           >
             The Artist OS <br />
             For Artists Who <br />
-            <span className="text-[#00FF85] italic">Own The uP.</span>
+            <span className="text-[#FFD700] italic">Own The uP.</span>
           </motion.h1>
           <motion.p 
             className="text-gray-400 text-lg md:text-xl max-w-xl mx-auto mb-12"
@@ -111,17 +111,17 @@ function App() {
           
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { label: 'CROSS-PLATFORM', title: 'The TikTok-to-Apple Music Pipeline', stat: '87%', users: '+186 artists using', icon: <TrendingUp className="w-5 h-5 text-[#00FF85]" /> },
-              { label: 'TIMING', title: "Spotify's Retention Revolution", stat: '91%', users: '+228 artists using', icon: <CheckCircle className="w-5 h-5 text-[#00FF85]" /> },
-              { label: 'CROSS-PLATFORM', title: 'The Discovery Ripple Effect', stat: '84%', users: '+194 artists using', icon: <Globe className="w-5 h-5 text-[#00FF85]" /> }
+              { label: 'CROSS-PLATFORM', title: 'The TikTok-to-Apple Music Pipeline', stat: '87%', users: '+186 artists using', icon: <TrendingUp className="w-5 h-5 text-[#FFD700]" /> },
+              { label: 'TIMING', title: "Spotify's Retention Revolution", stat: '91%', users: '+228 artists using', icon: <CheckCircle className="w-5 h-5 text-[#FFD700]" /> },
+              { label: 'CROSS-PLATFORM', title: 'The Discovery Ripple Effect', stat: '84%', users: '+194 artists using', icon: <Globe className="w-5 h-5 text-[#FFD700]" /> }
             ].map((card, i) => (
               <div key={i} className="feature-card-v3 p-8 rounded-3xl bg-zinc-900/40 border border-white/5 backdrop-blur-xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-[#00FF85]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-[#FFD700]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex justify-between items-start mb-12">
                   <span className="text-[10px] font-black tracking-widest text-gray-500 uppercase border border-white/10 px-2 py-1 rounded">{card.label}</span>
                   <div className="text-right">
                     <span className="block text-4xl font-black text-white">{card.stat}</span>
-                    <span className="text-[10px] font-black text-[#00FF85] uppercase tracking-widest">Success</span>
+                    <span className="text-[10px] font-black text-[#FFD700] uppercase tracking-widest">Success</span>
                   </div>
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-4 pr-10 leading-tight">{card.title}</h3>
@@ -143,12 +143,12 @@ function App() {
         <div className="container mx-auto grid md:grid-cols-2 items-center gap-20">
           <div className="relative order-2 md:order-1">
             <img src="/assets/team_collaboration_ui_mockup_1778625337223.png" alt="Team Sync" className="w-full rounded-3xl shadow-2xl border border-white/5" />
-            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[#00FF85]/10 blur-[60px] rounded-full" />
+            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[#FFD700]/10 blur-[60px] rounded-full" />
           </div>
           <div className="order-1 md:order-2">
             <h2 className="text-5xl md:text-6xl font-black mb-6 tracking-tighter">Your whole team.<br/><span className="text-gray-500 italic">One conversation.</span></h2>
             <p className="text-gray-400 text-lg leading-relaxed mb-10">Artists, managers, and collaborators stay in sync. uP keeps everyone aligned with real-time insights and shared context.</p>
-            <a href="#signup" className="text-[#00FF85] font-black tracking-widest uppercase text-sm flex items-center gap-2 group">
+            <a href="#signup" className="text-[#FFD700] font-black tracking-widest uppercase text-sm flex items-center gap-2 group">
               Connect your team <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </a>
           </div>
@@ -167,13 +167,13 @@ function App() {
                 <div>
                     <h3 className="text-4xl md:text-5xl font-black mb-6">Meet uP.<br/><span className="text-gray-500">Your Music Concierge.</span></h3>
                     <p className="text-gray-400 text-lg leading-relaxed mb-10">An AI that actually knows music. uP understands your career, remembers your goals, and speaks your language. Ask anything.</p>
-                    <a href="#signup" className="text-[#00FF85] font-black tracking-widest uppercase text-sm flex items-center gap-2 group">
+                    <a href="#signup" className="text-[#FFD700] font-black tracking-widest uppercase text-sm flex items-center gap-2 group">
                         Start a conversation <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </a>
                 </div>
                 <div className="relative">
                     <img src="/assets/up_assistant_chat_ui_1778628229052.png" alt="uP Assistant" className="w-full rounded-3xl shadow-2xl border border-white/5" />
-                    <div className="absolute -top-20 -right-20 w-60 h-60 bg-[#00FF85]/10 blur-[100px] rounded-full" />
+                    <div className="absolute -top-20 -right-20 w-60 h-60 bg-[#FFD700]/10 blur-[100px] rounded-full" />
                 </div>
             </div>
         </div>
@@ -184,12 +184,12 @@ function App() {
         <div className="container mx-auto grid md:grid-cols-2 items-center gap-20">
             <div className="relative">
                 <img src="/assets/groundup_dashboard_ui_v2_1778628772716.png" alt="uP Rollout" className="w-full rounded-3xl shadow-2xl border border-white/5" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#00FF85]/5 blur-[100px] rounded-full" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#FFD700]/5 blur-[100px] rounded-full" />
             </div>
             <div className="text-right flex flex-col items-end">
                 <h2 className="text-5xl md:text-6xl font-black mb-6 tracking-tighter">It just works.<br/><span className="text-gray-500 italic">Proactive, not reactive.</span></h2>
                 <p className="text-gray-400 text-lg leading-relaxed mb-10 text-right">uP doesn't wait for you to ask. It builds rollout plans, schedules releases, and creates assets before you need them.</p>
-                <a href="#signup" className="text-[#00FF85] font-black tracking-widest uppercase text-sm flex items-center gap-2 group">
+                <a href="#signup" className="text-[#FFD700] font-black tracking-widest uppercase text-sm flex items-center gap-2 group">
                     <span className="group-hover:-translate-x-1 transition-transform">←</span> See it in action
                 </a>
             </div>
@@ -217,9 +217,9 @@ function App() {
                 </div>
               </form>
             ) : (
-              <div className="text-center p-12 bg-zinc-900/40 rounded-3xl border border-[#00FF85]/20 backdrop-blur-xl">
+              <div className="text-center p-12 bg-zinc-900/40 rounded-3xl border border-[#FFD700]/20 backdrop-blur-xl">
                 <h3 className="text-3xl font-black text-white mb-6">You're in!</h3>
-                <p className="text-[#00FF85] text-xs font-black uppercase tracking-widest mb-2">Referral Link</p>
+                <p className="text-[#FFD700] text-xs font-black uppercase tracking-widest mb-2">Referral Link</p>
                 <code className="text-white text-sm break-all font-mono">{window.location.origin}/?ref={referralCode}</code>
                 <p className="text-gray-500 text-xs mt-6">Share to move up the waitlist. 🚀</p>
               </div>
@@ -244,9 +244,9 @@ function App() {
       <AnimatePresence>
         {showReferralPopup && (
           <motion.div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <motion.div className="bg-zinc-900 border border-[#00FF85]/30 p-8 rounded-3xl max-w-sm text-center shadow-[0_0_50px_rgba(0,255,133,0.1)]" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+            <motion.div className="bg-zinc-900 border border-[#FFD700]/30 p-8 rounded-3xl max-w-sm text-center shadow-[0_0_50px_rgba(0,255,133,0.1)]" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
               <button className="absolute top-4 right-4 text-gray-500 hover:text-white" onClick={() => setShowReferralPopup(false)}>✕</button>
-              <p className="text-[#00FF85] font-black text-xl mb-2">W's in the chat 🏆</p>
+              <p className="text-[#FFD700] font-black text-xl mb-2">W's in the chat 🏆</p>
               <p className="text-gray-400 text-sm">Your referral reward has been applied.</p>
             </motion.div>
           </motion.div>
