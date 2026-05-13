@@ -1,13 +1,15 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Search, TrendingUp, Users, Music2, Globe, ExternalLink, Zap } from 'lucide-react';
+import { Search, TrendingUp, Users, Music2, Globe, ExternalLink, Zap, Play, Radio } from 'lucide-react';
 import { INFLUENCERS, NETWORK_STATS, type Platform, type TikTokTier } from '../../data/influencers';
 
 const PLATFORM_TABS: { id: Platform | 'All'; label: string; icon: React.ReactNode }[] = [
-  { id: 'All',     label: 'All',             icon: <Globe size={13} /> },
-  { id: 'TikTok',  label: 'TikTok',          icon: <Zap size={13} /> },
-  { id: 'Twitter', label: 'Twitter / X',     icon: <TrendingUp size={13} /> },
-  { id: 'Spotify', label: 'Spotify Curators',icon: <Music2 size={13} /> },
+  { id: 'All',        label: 'All',             icon: <Globe size={13} /> },
+  { id: 'TikTok',     label: 'TikTok',          icon: <Zap size={13} /> },
+  { id: 'Twitter',    label: 'Twitter / X',     icon: <TrendingUp size={13} /> },
+  { id: 'Spotify',    label: 'Spotify Curators',icon: <Music2 size={13} /> },
+  { id: 'YouTube',    label: 'YouTube',          icon: <Play size={13} /> },
+  { id: 'SoundCloud', label: 'SoundCloud',       icon: <Radio size={13} /> },
 ];
 
 const TIKTOK_TIERS: { id: TikTokTier | 'All'; label: string; range: string }[] = [
@@ -24,10 +26,12 @@ const TIER_COLORS: Record<TikTokTier, string> = {
 };
 
 const PLATFORM_COLORS: Record<Platform, string> = {
-  TikTok:  'bg-sky-500/15 text-sky-400',
-  Twitter: 'bg-blue-500/15 text-blue-400',
-  Spotify: 'bg-green-500/15 text-green-400',
-  Blog:    'bg-purple-500/15 text-purple-400',
+  TikTok:     'bg-sky-500/15 text-sky-400',
+  Twitter:    'bg-blue-500/15 text-blue-400',
+  Spotify:    'bg-green-500/15 text-green-400',
+  Blog:       'bg-purple-500/15 text-purple-400',
+  YouTube:    'bg-red-500/15 text-red-400',
+  SoundCloud: 'bg-orange-500/15 text-orange-400',
 };
 
 function fmtFollowers(n: number): string {
@@ -61,12 +65,14 @@ export function InfluencerSection() {
       </div>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: 'Total Influencers', value: NETWORK_STATS.total.toLocaleString(), color: 'text-[#FFD700]' },
-          { label: 'TikTok Creators',   value: NETWORK_STATS.tiktok.toLocaleString(), color: 'text-sky-400' },
-          { label: 'Twitter / X',        value: NETWORK_STATS.twitter.toLocaleString(), color: 'text-blue-400' },
-          { label: 'Combined Reach',     value: NETWORK_STATS.totalReach, color: 'text-purple-400' },
+          { label: 'Total',       value: NETWORK_STATS.total.toLocaleString(),       color: 'text-[#FFD700]' },
+          { label: 'TikTok',      value: NETWORK_STATS.tiktok.toLocaleString(),      color: 'text-sky-400' },
+          { label: 'Twitter / X', value: NETWORK_STATS.twitter.toLocaleString(),     color: 'text-blue-400' },
+          { label: 'Spotify',     value: NETWORK_STATS.spotify.toLocaleString(),     color: 'text-green-400' },
+          { label: 'YouTube',     value: NETWORK_STATS.youtube.toLocaleString(),     color: 'text-red-400' },
+          { label: 'SoundCloud',  value: NETWORK_STATS.soundcloud.toLocaleString(),  color: 'text-orange-400' },
         ].map(stat => (
           <div key={stat.label} className="bg-zinc-900/40 border border-white/5 rounded-2xl p-4">
             <p className={`font-black text-2xl ${stat.color}`}>{stat.value}</p>
