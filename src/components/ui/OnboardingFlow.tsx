@@ -50,6 +50,13 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
       icon: <Users className="text-[#FFD700]" />,
       options: ["Solo", "2-5 People", "Full Agency", "Large Label"],
       key: "teamSize"
+    },
+    {
+      title: "The Mission",
+      subtitle: "We understand all the moving parts of the industry and just want to put it all in one place for artists to make careers easier and monetize your career!",
+      icon: <Sparkles className="text-[#FFD700]" />,
+      options: ["I'M READY TO BUILD"],
+      key: "mission"
     }
   ]
 
@@ -61,7 +68,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
       
       {/* Progress Bar */}
       <div className="w-full max-w-xl flex gap-2 mb-20 relative z-10">
-        {[1, 2, 3, 4].map(i => (
+        {[1, 2, 3, 4, 5].map(i => (
           <div 
             key={i} 
             className={`h-1 flex-1 rounded-full transition-all duration-500 ${i <= step ? "bg-[#FFD700]" : "bg-white/10"}`} 
@@ -111,10 +118,10 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             ) : <div />}
             
             <LiquidButton 
-              onClick={step === 4 ? () => onComplete(data) : next}
+              onClick={step === 5 ? () => onComplete(data) : next}
               className="px-12"
             >
-              {step === 4 ? "LAUNCH DASHBOARD" : "CONTINUE"} <ChevronRight size={16} />
+              {step === 5 ? "LAUNCH DASHBOARD" : "CONTINUE"} <ChevronRight size={16} />
             </LiquidButton>
           </div>
         </motion.div>
