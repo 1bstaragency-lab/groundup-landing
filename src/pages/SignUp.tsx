@@ -40,7 +40,7 @@ export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
   // Steps 2 & 3 stay full-screen (they have their own complex layouts)
   if (step !== 'signup') {
     return (
-      <div className="fixed inset-0 z-[200] bg-black overflow-y-auto">
+      <div className="fixed inset-0 z-[200] bg-black overflow-y-auto scroll-overlay">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.05)_0%,transparent_70%)] pointer-events-none" />
         <div className="min-h-full flex flex-col items-center justify-center px-6 py-10">
 

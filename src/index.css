@@ -30,6 +30,13 @@ a, button {
   gap: 0.5rem;
 }
 
+/* Onboarding / auth overlay scroll — must allow vertical pan on iOS in landscape */
+.scroll-overlay {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
+}
+
 /* Auth form inputs */
 .auth-input {
   width: 100%;
