@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Calendar, Trash2, ChevronRight, CheckSquare, Square, X,
   Disc3, Layers, Music, ListMusic, Sparkles, Upload, ChevronLeft,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../lib/supabaseClient';
 
 type ReleaseType  = 'Single' | 'EP' | 'Album' | 'Mixtape';
 type BudgetLevel  = 'DIY / Low' | 'Moderate' | 'Full Push';
@@ -18,6 +19,7 @@ interface Release {
   type: ReleaseType;
   date: string;
   coverArt?: string;
+  feature?: string;
   budget: BudgetLevel;
   focusAreas: FocusArea[];
   timeline: RolloutWeeks;
@@ -464,30 +466,80 @@ export function RolloutsSection() {
   const artistName = profile?.artist_name ?? user?.artistName ?? 'Artist';
 
   const [releases, setReleases] = useState<Release[]>([]);
+  const [_loading, setLoading] = useState(true);
   const [showWizard, setShowWizard] = useState(false);
   const [wizardInitialType, setWizardInitialType] = useState<ReleaseType | undefined>();
   const [selected, setSelected] = useState<string | null>(null);
+
+  const loadReleases = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from('releases')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('release_date', { ascending: true });
+    if (data) {
+      // Map DB columns → local Release shape
+      setReleases((data as any[]).map(r => ({
+        id: r.id,
+        title: r.title,
+        type: r.type as ReleaseType,
+        date: r.release_date,
+        coverArt: r.cover_art ?? undefined,
+        feature: r.feature ?? '',
+        budget: r.budget as BudgetLevel,
+        focusAreas: r.focus_areas as FocusArea[],
+        timeline: r.timeline as RolloutWeeks,
+        checklist: r.checklist as ChecklistItem[],
+      })));
+    }
+    setLoading(false);
+  }, [user]);
+
+  useEffect(() => { loadReleases(); }, [loadReleases]);
 
   function openWizard(type?: ReleaseType) {
     setWizardInitialType(type);
     setShowWizard(true);
   }
 
-  function handleCreate(release: Release) {
-    setReleases(prev => [...prev, release].sort((a, b) => a.date.localeCompare(b.date)));
+  async function handleCreate(release: Release) {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('releases')
+      .insert({
+        user_id: user.id,
+        title: release.title,
+        type: release.type,
+        release_date: release.date,
+        cover_art: release.coverArt ?? null,
+        feature: release.feature ?? null,
+        budget: release.budget,
+        focus_areas: release.focusAreas,
+        timeline: release.timeline,
+        checklist: release.checklist,
+      })
+      .select()
+      .single();
+    if (!error && data) {
+      const saved: Release = { ...release, id: (data as any).id };
+      setReleases(prev => [...prev, saved].sort((a, b) => a.date.localeCompare(b.date)));
+      setSelected(saved.id);
+    }
     setShowWizard(false);
-    setSelected(release.id);
   }
 
-  function toggleCheck(releaseId: string, itemId: string) {
-    setReleases(prev => prev.map(r =>
-      r.id === releaseId
-        ? { ...r, checklist: r.checklist.map(c => c.id === itemId ? { ...c, done: !c.done } : c) }
-        : r
-    ));
+  async function toggleCheck(releaseId: string, itemId: string) {
+    const release = releases.find(r => r.id === releaseId);
+    if (!release) return;
+    const updated = release.checklist.map(c => c.id === itemId ? { ...c, done: !c.done } : c);
+    setReleases(prev => prev.map(r => r.id === releaseId ? { ...r, checklist: updated } : r));
+    await supabase.from('releases').update({ checklist: updated }).eq('id', releaseId);
   }
 
-  function deleteRelease(id: string) {
+  async function deleteRelease(id: string) {
+    await supabase.from('releases').delete().eq('id', id);
     setReleases(prev => prev.filter(r => r.id !== id));
     if (selected === id) setSelected(null);
   }

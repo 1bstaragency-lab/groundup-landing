@@ -12,7 +12,7 @@ import { AnalyticsSection } from '../components/dashboard/AnalyticsSection';
 import { TeamSection } from '../components/dashboard/TeamSection';
 import { CuratorSection } from '../components/dashboard/CuratorSection';
 import { InfluencerSection } from '../components/dashboard/InfluencerSection';
-import { TeamDashboardMockup } from '../components/ui/TeamDashboardMockup';
+import { HomeDashboard } from '../components/dashboard/HomeDashboard';
 
 const INDUSTRY_NEWS = [
   {
@@ -120,8 +120,8 @@ export function Dashboard() {
                   <span className="hidden sm:inline">{loggingOut ? 'Signing out...' : 'Sign Out'}</span>
                 </button>
               </div>
-              {/* Main dashboard mockup */}
-              <TeamDashboardMockup interactive />
+              {/* Live dashboard */}
+              <HomeDashboard />
 
               {/* Industry news feed */}
               <div className="mt-8">
