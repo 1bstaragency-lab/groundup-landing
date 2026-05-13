@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { TrendingUp, CheckCircle, Globe, ChevronRight } from 'lucide-react';
 import { TeamDashboardMockup } from './components/ui/TeamDashboardMockup';
 import ShaderShowcase from './components/ui/hero';
+import { LiquidButton } from './components/ui/liquid-glass-button';
 import './App.css';
 
 // Initialize Supabase
@@ -186,7 +187,11 @@ function App() {
                         <input type="tel" placeholder="Phone" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="wait-input" />
                     </div>
                     <input type="text" placeholder="Social Handle (@...)" value={formData.socialHandle} onChange={(e) => setFormData({...formData, socialHandle: e.target.value})} className="wait-input" />
-                    <button type="submit" className="wait-submit-btn">GET EARLY ACCESS</button>
+                    <div className="pt-4">
+                      <LiquidButton type="submit" className="w-full">
+                        GET EARLY ACCESS
+                      </LiquidButton>
+                    </div>
                 </div>
               </form>
             ) : (

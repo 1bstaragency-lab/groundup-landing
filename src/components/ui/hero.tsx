@@ -2,6 +2,8 @@
 import { useRef } from "react"
 import { MeshGradient, PulsingBorder } from "@paper-design/shaders-react"
 import { motion } from "framer-motion"
+import { LiquidButton } from "./liquid-glass-button"
+import { AwardBadge } from "./award-badge"
 
 export default function ShaderShowcase() {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -127,19 +129,21 @@ export default function ShaderShowcase() {
           </motion.p>
 
           <motion.div
-            className="flex items-center justify-center gap-6 flex-wrap"
+            className="flex items-center justify-center gap-10 flex-wrap"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.0 }}
           >
-            <motion.button
-              className="px-10 py-5 rounded-full bg-zinc-900/80 border border-white/10 text-white font-black text-[10px] uppercase tracking-widest transition-all duration-300 hover:bg-[#FFD700] hover:text-black hover:border-transparent cursor-pointer backdrop-blur-sm shadow-[0_0_30px_rgba(0,0,0,0.5)]"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <div className="flex flex-col items-center gap-4">
+              <AwardBadge type="product-of-the-day" place={1} />
+              <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.3em]">Trusted by 2,000+ Artists</p>
+            </div>
+            
+            <LiquidButton 
               onClick={() => document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              Get Early Access
-            </motion.button>
+              Get Started
+            </LiquidButton>
           </motion.div>
         </div>
       </main>
