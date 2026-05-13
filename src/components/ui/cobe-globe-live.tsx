@@ -17,12 +17,12 @@ interface GlobeLiveProps {
 }
 
 const defaultMarkers: ArtistMarker[] = [
-  { id: "artist1", location: [34.05, -118.24], name: "KALIA", listeners: "850K" },
-  { id: "artist2", location: [51.51, -0.13], name: "J THOMPSON", listeners: "850K" },
-  { id: "artist3", location: [6.52, 3.37], name: "STUNNA SANDI", listeners: "850K" }, // Lagos, Nigeria
-  { id: "artist4", location: [40.71, -74.01], name: "CHE", listeners: "850K" },
-  { id: "artist5", location: [48.86, 2.35], name: "NOVA", listeners: "850K" },
-  { id: "artist6", location: [-33.87, 151.21], name: "ELARA", listeners: "850K" },
+  { id: "che", location: [40.71, -74.01], name: "CHE", listeners: "1.2M" },
+  { id: "slayer", location: [34.05, -118.24], name: "slayer", listeners: "997.6K" },
+  { id: "osamason", location: [51.51, -0.13], name: "OSAMASON", listeners: "1.8M" },
+  { id: "rich-amiri", location: [48.86, 2.35], name: "Rich Amiri", listeners: "4.1M" },
+  { id: "protect", location: [6.52, 3.37], name: "Protect", listeners: "420K" }, // Lagos, Nigeria
+  { id: "kalia", location: [-33.87, 151.21], name: "KALIA", listeners: "850K" },
 ]
 
 export function GlobeLive({

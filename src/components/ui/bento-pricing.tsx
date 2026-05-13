@@ -110,12 +110,12 @@ export function BentoPricing() {
 					</div>
 					<ul className="text-white/60 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 lg:w-[65%] text-[14px] font-bold">
 						{[
-							'6 Custom Content Pieces',
-							'2 High-End Visualizers',
-							'2 Dynamic Lyric Videos',
+							'Content Bundle (6 Content, 2 Viz, 2 Lyric)',
+							'OR 35 Credits to use across Infrastructure',
 							'Personalized Rollout Strategy',
                             'Real-time Performance Data',
-                            'Priority AI Processing'
+                            'Priority AI Processing',
+                            'Strategic Creative Tools'
 						].map((f, i) => (
 							<li key={i} className="flex items-center gap-4">
 								<FilledCheck />
@@ -146,8 +146,8 @@ export function BentoPricing() {
 				priceLabel="$50"
 				features={[
 					'What serious artists need.',
-					'10 Content Pieces',
-					'3 Visualizers & 3 Lyric Videos',
+					'Content Bundle (10 Content, 3 Viz, 3 Lyric)',
+                    '60 Infrastructure Credits',
                     'Priority Support & Recs',
                     'Annual: $500 (Save $100)'
 				]}
