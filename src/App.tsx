@@ -3,11 +3,17 @@ import { createClient } from '@supabase/supabase-js';
 import { TeamDashboardMockup } from './components/ui/TeamDashboardMockup';
 import ShaderShowcase from './components/ui/hero';
 import { LiquidButton } from './components/ui/liquid-glass-button';
-import { BentoPricing, PricingCard } from './components/ui/bento-pricing';
+import { BentoPricing } from './components/ui/bento-pricing';
 import { GlobeLive } from './components/ui/cobe-globe-live';
 import { SupportBot } from './components/ui/support-bot';
 import { CinematicFooter } from './components/ui/motion-footer';
 import { AwardBadge } from './components/ui/award-badge';
+import { OnboardingFlow } from './components/ui/OnboardingFlow';
+import { DashboardShell } from './components/layout/DashboardShell';
+import { LearnSection } from './components/dashboard/LearnSection';
+import { SchedulerSection } from './components/dashboard/SchedulerSection';
+import { StudioSection } from './components/dashboard/StudioSection';
+import { ProfileSection } from './components/dashboard/ProfileSection';
 import './App.css';
 
 // Initialize Supabase
@@ -15,7 +21,11 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+type AppView = 'landing' | 'onboarding' | 'dashboard';
+
 function App() {
+  const [view, setView] = useState<AppView>('landing');
+  const [activeDashboardTab, setActiveDashboardTab] = useState('home');
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', socialHandle: '', role: 'Artist'
   });
@@ -42,11 +52,37 @@ function App() {
       }]);
       if (error) throw error;
       setSubmitted(true);
+      // Automatically go to onboarding after a short delay
+      setTimeout(() => setView('onboarding'), 2000);
     } catch (err) {
       console.error('Error joining waitlist:', err);
       alert('Something went wrong. Please try again.');
     }
   };
+
+  if (view === 'onboarding') {
+    return <OnboardingFlow onComplete={() => setView('dashboard')} />;
+  }
+
+  if (view === 'dashboard') {
+    return (
+      <DashboardShell activeTab={activeDashboardTab} setActiveTab={setActiveDashboardTab}>
+        {activeDashboardTab === 'home' && (
+          <div className="space-y-12">
+            <div className="max-w-xl">
+              <h1 className="text-6xl font-black text-white tracking-tighter mb-4 uppercase">Welcome, ELARA</h1>
+              <p className="text-white/40 font-medium text-lg leading-relaxed">Your Artist OS is live. AI Concierge is processing your recent data trends.</p>
+            </div>
+            <TeamDashboardMockup />
+          </div>
+        )}
+        {activeDashboardTab === 'learn' && <LearnSection />}
+        {activeDashboardTab === 'scheduler' && <SchedulerSection />}
+        {activeDashboardTab === 'studio' && <StudioSection />}
+        {activeDashboardTab === 'profile' && <ProfileSection />}
+      </DashboardShell>
+    );
+  }
 
   return (
     <div className="app-wrapper bg-black text-white font-sans overflow-x-hidden">
@@ -71,7 +107,7 @@ function App() {
           <div className="w-14 h-14 bg-[#FFD700] rounded-2xl flex items-center justify-center">
             <span className="block font-black text-white drop-shadow-[0_0_50px_rgba(255,215,0,0.3)] uppercase hero-text">uP.</span>
           </div>
-          <button className="nav-cta" onClick={() => document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' })}>
+          <button className="nav-cta" onClick={() => setView('onboarding')}>
             Join Now
           </button>
         </div>
@@ -103,16 +139,17 @@ function App() {
                     <ul className="text-white/60 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 lg:w-[65%] text-[14px] font-bold">
 						{[
 							'Standard Management OS',
-							'Visual Bundle (6 Content, 2 Viz, 2 Lyric)',
+							'Content Bundle (6 Content, 2 Viz, 2 Lyric)',
 							'Personalized Rollout Strategy',
                             'Real-time Performance Data',
-                            'Priority AI Processing'
+                            'Priority AI Processing',
+                            '35 Infrastructure Credits'
 						].map((f, i) => (
                           <li key={i} className="flex items-center gap-2"><span>•</span> {f}</li>
                         ))}
                     </ul>
                     <div className="flex gap-4 pt-10">
-                        <LiquidButton onClick={() => document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' })}>Start Chatting</LiquidButton>
+                        <LiquidButton onClick={() => setView('onboarding')}>Start Chatting</LiquidButton>
                     </div>
                 </div>
                 <div className="relative">
@@ -145,9 +182,10 @@ function App() {
               <div>
                 <p className="text-5xl font-black text-white mb-1">12M+</p>
                 <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.3em]">Monthly Reach</p>
+                <p className="text-white/20 text-[9px] font-black uppercase tracking-widest mt-2">Playlists, Blogs, Infrastructure</p>
               </div>
               <div>
-                <p className="text-5xl font-black text-white mb-1">2.4K</p>
+                <p className="text-5xl font-black text-white mb-1">427</p>
                 <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.3em]">Elite Artists</p>
               </div>
             </div>
@@ -194,17 +232,7 @@ function App() {
                     </div>
                     <input type="text" placeholder="Social Handle (@...)" value={formData.socialHandle} onChange={(e) => setFormData({...formData, socialHandle: e.target.value})} className="wait-input" />
                     <div className="pt-6">
-                      <PricingCard
-                        titleBadge="BREAKOUT"
-                        priceLabel="$50"
-                        features={[
-                          'What serious artists need.',
-                          'Visual Bundle (10 Content, 3 Viz, 3 Lyric)',
-                          'Priority Support & Recs',
-                          'Annual: $500 (Save $100)'
-                        ]}
-                      />
-                      <LiquidButton type="submit" className="w-full mt-6">
+                      <LiquidButton type="submit" className="w-full">
                         GET EARLY ACCESS
                       </LiquidButton>
                     </div>
@@ -217,7 +245,7 @@ function App() {
                 <div className="bg-black/50 p-4 rounded-xl border border-white/10 mb-8 select-all">
                   <code className="text-white text-sm font-mono tracking-wider">{referralCode}</code>
                 </div>
-                <LiquidButton onClick={() => setSubmitted(false)} className="w-full">Back to Site</LiquidButton>
+                <LiquidButton onClick={() => setView('onboarding')} className="w-full">Proceed to Onboarding</LiquidButton>
               </div>
             )}
         </div>
