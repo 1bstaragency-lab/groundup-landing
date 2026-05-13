@@ -21,9 +21,9 @@ const MENU_ITEMS = [
   { id: "home",        label: "Dashboard",          icon: Home,         mobileShow: true,  isMain: true },
   { id: "rollouts",    label: "Releases",           icon: CdRocketIcon, mobileShow: true,  isMain: true },
   { id: "analytics",   label: "Analytics",          icon: TrendingUp,   mobileShow: true,  isMain: true },
-  { id: "learn",       label: "Knowledge Base",     icon: BookOpen,     mobileShow: true,  isMain: true },
+  { id: "learn",       label: "Knowledge Base",     icon: BookOpen,     mobileShow: true,  isMain: true,  small: true },
   { id: "team",        label: "Team",               icon: Users,        mobileShow: false, isMain: false },
-  { id: "influencers", label: "Influencer Network", icon: Network,      mobileShow: false, isMain: false },
+  { id: "influencers", label: "Influencer Network", icon: Network,      mobileShow: false, isMain: false, small: true },
   { id: "scheduler",   label: "Scheduler",          icon: Calendar,     mobileShow: false, isMain: false },
   { id: "studio",      label: "Content Studio",     icon: Layout,       mobileShow: false, isMain: false },
   { id: "curator",     label: "Curator",            icon: Music2,       mobileShow: false, isMain: false },
@@ -81,7 +81,7 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
             />
           )}
           <Icon size={18} className={active ? "text-black" : "text-[#FFD700]/60 group-hover:text-[#FFD700] transition-colors"} />
-          <span className="font-black text-[11px] uppercase tracking-widest">{item.label}</span>
+          <span className={`font-black uppercase tracking-widest ${item.small ? 'text-[9px]' : 'text-[11px]'}`}>{item.label}</span>
           {active && <motion.div layoutId="activeTab" className="ml-auto w-1.5 h-1.5 bg-black rounded-full" />}
         </motion.button>
       )
@@ -95,7 +95,7 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
         }`}
       >
         <Icon size={17} />
-        <span className="font-black text-[11px] uppercase tracking-widest">{item.label}</span>
+        <span className={`font-black uppercase tracking-widest ${item.small ? 'text-[9px]' : 'text-[11px]'}`}>{item.label}</span>
         {active && <div className="ml-auto w-1.5 h-1.5 bg-white/60 rounded-full" />}
       </button>
     )
