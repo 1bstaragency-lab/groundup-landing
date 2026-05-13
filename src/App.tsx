@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@supabase/supabase-js';
 import { TrendingUp, CheckCircle, Globe, ChevronRight } from 'lucide-react';
+import { TeamDashboardMockup } from './components/ui/TeamDashboardMockup';
 import './App.css';
 
 // Initialize Supabase
@@ -143,7 +144,7 @@ function App() {
       <section className="py-32 px-6">
         <div className="container mx-auto grid md:grid-cols-2 items-center gap-20">
           <div className="relative order-2 md:order-1">
-            <img src="/assets/team_collaboration_ui_mockup_1778625337223.png" alt="Team Sync" className="w-full rounded-3xl shadow-2xl border border-white/5" />
+            <TeamDashboardMockup />
             <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[#FFD700]/10 blur-[60px] rounded-full" />
           </div>
           <div className="order-1 md:order-2">
