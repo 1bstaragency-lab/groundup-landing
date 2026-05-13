@@ -11,6 +11,7 @@ import { ProfileSection } from '../components/dashboard/ProfileSection';
 import { RolloutsSection } from '../components/dashboard/RolloutsSection';
 import { AnalyticsSection } from '../components/dashboard/AnalyticsSection';
 import { TeamSection } from '../components/dashboard/TeamSection';
+import { CuratorSection } from '../components/dashboard/CuratorSection';
 
 export function Dashboard() {
   const { user, profile, signOut, emailJustConfirmed, clearEmailConfirmed } = useAuth();
@@ -92,6 +93,7 @@ export function Dashboard() {
           {activeTab === 'learn'     && <LearnSection />}
           {activeTab === 'scheduler' && <SchedulerSection />}
           {activeTab === 'studio'    && <StudioSection />}
+          {activeTab === 'curator'   && <CuratorSection />}
           {activeTab === 'profile'   && <ProfileSection />}
 
         </AnimatePresence>

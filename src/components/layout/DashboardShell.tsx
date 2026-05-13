@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   Home, BookOpen, Calendar, Layout, User, Settings,
   Bell, Search, Zap, TrendingUp, Users, Rocket,
-  MoreHorizontal, X,
+  MoreHorizontal, X, Music2,
 } from "lucide-react"
 import { useAuth } from "../../hooks/useAuth"
 
@@ -23,6 +23,7 @@ const MENU_ITEMS = [
   { id: "learn",     label: "Learn & DB",    icon: BookOpen,  mobileShow: false },
   { id: "scheduler", label: "Scheduler",     icon: Calendar,  mobileShow: false },
   { id: "studio",    label: "Content Studio",icon: Layout,    mobileShow: false },
+  { id: "curator",   label: "Curator",       icon: Music2,    mobileShow: false },
   { id: "profile",   label: "Artist Profile",icon: User,      mobileShow: false },
 ]
 
