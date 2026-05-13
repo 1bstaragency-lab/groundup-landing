@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Grid, Calendar, Users, TrendingUp, Plus, Rocket, BarChart2,
   CheckSquare, Square, Crown, Music2, Briefcase, Link2,
-  Disc3, Layers, Music, ListMusic, X, Check,
+  Disc3, Layers, Music, ListMusic, X, Check, MoreVertical,
+  Trash2, Edit2, Flag,
 } from 'lucide-react'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
@@ -19,6 +20,7 @@ interface CalEvent {
   title: string
   event_type: string
   event_date: string
+  priority: 'none' | 'low' | 'medium' | 'high'
 }
 
 interface Release {
@@ -42,22 +44,40 @@ interface TeamMember {
 
 const EVENT_TYPES = ['Release', 'Social', 'PR', 'Meeting', 'TikTok', 'Interview']
 
-function AddEventModal({ userId, onClose, onSaved }: { userId: string; onClose: () => void; onSaved: (ev: CalEvent) => void }) {
-  const [title, setTitle] = useState('')
-  const [date, setDate] = useState('')
-  const [type, setType] = useState(EVENT_TYPES[0])
+function EventFormModal({
+  userId, onClose, onSaved, existing,
+}: {
+  userId: string
+  onClose: () => void
+  onSaved: (ev: CalEvent) => void
+  existing?: CalEvent
+}) {
+  const [title, setTitle] = useState(existing?.title ?? '')
+  const [date,  setDate]  = useState(existing?.event_date ?? '')
+  const [type,  setType]  = useState(existing?.event_type ?? EVENT_TYPES[0])
   const [saving, setSaving] = useState(false)
 
   async function save() {
     if (!title || !date) return
     setSaving(true)
-    const { data, error } = await supabase
-      .from('calendar_events')
-      .insert({ user_id: userId, title, event_type: type, event_date: date })
-      .select()
-      .single()
-    setSaving(false)
-    if (!error && data) { onSaved(data as CalEvent); onClose() }
+    if (existing) {
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .update({ title, event_type: type, event_date: date })
+        .eq('id', existing.id)
+        .select()
+        .single()
+      setSaving(false)
+      if (!error && data) { onSaved(data as CalEvent); onClose() }
+    } else {
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .insert({ user_id: userId, title, event_type: type, event_date: date, priority: 'none' })
+        .select()
+        .single()
+      setSaving(false)
+      if (!error && data) { onSaved(data as CalEvent); onClose() }
+    }
   }
 
   return (
@@ -70,7 +90,9 @@ function AddEventModal({ userId, onClose, onSaved }: { userId: string; onClose: 
         className="bg-zinc-900 border border-white/10 rounded-3xl p-8 w-full max-w-md shadow-2xl"
       >
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-white font-black text-xl uppercase tracking-tighter">New Event</h3>
+          <h3 className="text-white font-black text-xl uppercase tracking-tighter">
+            {existing ? 'Edit Event' : 'New Event'}
+          </h3>
           <button onClick={onClose} className="text-white/30 hover:text-white transition-colors"><X size={20} /></button>
         </div>
         <div className="space-y-4">
@@ -102,7 +124,7 @@ function AddEventModal({ userId, onClose, onSaved }: { userId: string; onClose: 
             onClick={save} disabled={!title || !date || saving}
             className="w-full py-4 bg-[#FFD700] text-black font-black text-[11px] uppercase tracking-widest rounded-2xl hover:scale-105 transition-all disabled:opacity-30 disabled:pointer-events-none"
           >
-            {saving ? 'Saving...' : 'Add to Calendar'}
+            {saving ? 'Saving...' : existing ? 'Save Changes' : 'Add to Calendar'}
           </button>
         </div>
       </motion.div>
@@ -174,9 +196,19 @@ function DynamicCalendar({ events }: { events: CalEvent[] }) {
           const day     = i + 1
           const dayEvs  = byDay[day] ?? []
           const isToday = day === todayDate
+          // Highest priority on this day drives the cell color
+          const topPriority = dayEvs.find(e => e.priority === 'high')?.priority
+            ?? dayEvs.find(e => e.priority === 'medium')?.priority
+            ?? dayEvs.find(e => e.priority === 'low')?.priority
+            ?? 'none'
+          const priorityBg =
+            topPriority === 'high'   ? 'border-red-500/50 bg-red-500/15' :
+            topPriority === 'medium' ? 'border-amber-400/50 bg-amber-400/15' :
+            topPriority === 'low'    ? 'border-green-500/50 bg-green-500/15' : ''
           return (
             <div key={day} className={`${cellBase} border transition-all relative ${
               isToday    ? 'border-[#FFD700]/40 bg-[#FFD700]/8' :
+              priorityBg ? priorityBg :
               dayEvs.length ? 'border-white/10 bg-white/4' :
               'border-white/4 hover:border-white/10'
             }`}>
@@ -217,24 +249,160 @@ function DynamicCalendar({ events }: { events: CalEvent[] }) {
   )
 }
 
-function OverviewTab({ events, loadingEvents, userId, onEventAdded }: {
-  events: CalEvent[]
-  loadingEvents: boolean
-  userId: string
-  onEventAdded: (ev: CalEvent) => void
+const PRIORITY_CONFIG = {
+  none:   { label: 'None',   dot: '',                        row: '' },
+  low:    { label: 'Low',    dot: 'bg-green-400',            row: 'border-green-500/30 bg-green-500/5' },
+  medium: { label: 'Medium', dot: 'bg-amber-400',            row: 'border-amber-400/30 bg-amber-400/5' },
+  high:   { label: 'High',   dot: 'bg-red-400',              row: 'border-red-500/30 bg-red-500/5' },
+}
+
+function EventRow({
+  ev, onDelete, onEdit, onPriority,
+}: {
+  ev: CalEvent
+  onDelete: () => void
+  onEdit: () => void
+  onPriority: (p: CalEvent['priority']) => void
 }) {
-  const [showAdd, setShowAdd] = useState(false)
-  const today = new Date()
-  const upcoming = events
-    .filter(e => new Date(e.event_date + 'T00:00:00') >= today)
-    .sort((a, b) => a.event_date.localeCompare(b.event_date))
+  const [open, setOpen] = useState(false)
+  const pri = PRIORITY_CONFIG[ev.priority] ?? PRIORITY_CONFIG.none
 
   function formatDate(d: string) {
     return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
-  // How many list items to show based on event count
+  return (
+    <div className={`relative flex items-center gap-3 p-3 border rounded-2xl transition-all group ${
+      pri.row || 'bg-zinc-900/40 border-white/5 hover:border-white/10'
+    }`}>
+      {/* Priority dot on date box */}
+      <div className="w-11 h-11 bg-zinc-800 rounded-xl flex flex-col items-center justify-center shrink-0 relative">
+        <span className="text-[#FFD700] font-black text-[9px] uppercase leading-none">
+          {new Date(ev.event_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' })}
+        </span>
+        <span className="text-white font-black text-base leading-none mt-0.5">
+          {new Date(ev.event_date + 'T00:00:00').getDate()}
+        </span>
+        {ev.priority !== 'none' && (
+          <div className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-zinc-900 ${pri.dot}`} />
+        )}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p className="text-white font-bold text-sm tracking-tight truncate group-hover:text-[#FFD700] transition-colors">{ev.title}</p>
+        <p className="text-white/30 text-[10px] font-medium mt-0.5">{formatDate(ev.event_date)}</p>
+      </div>
+
+      <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wide shrink-0 ${TYPE_COLOR[ev.event_type] ?? 'bg-white/10 text-white'}`}>
+        {ev.event_type}
+      </span>
+
+      {/* Three-dot menu */}
+      <div className="relative">
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="p-1.5 rounded-lg text-white/20 hover:text-white hover:bg-white/5 transition-all"
+        >
+          <MoreVertical size={14} />
+        </button>
+
+        <AnimatePresence>
+          {open && (
+            <>
+              {/* Click-away overlay */}
+              <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: -4 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: -4 }}
+                transition={{ duration: 0.12 }}
+                className="absolute right-0 top-8 z-50 w-44 bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+              >
+                {/* Edit */}
+                <button
+                  onClick={() => { setOpen(false); onEdit() }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-white/70 hover:text-white hover:bg-white/5 transition-all text-[11px] font-black uppercase tracking-widest"
+                >
+                  <Edit2 size={12} /> Edit
+                </button>
+
+                {/* Priority divider */}
+                <div className="px-4 py-1.5 border-t border-white/5">
+                  <p className="text-white/20 text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                    <Flag size={9} /> Priority
+                  </p>
+                </div>
+
+                {(['low', 'medium', 'high'] as const).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => { setOpen(false); onPriority(p) }}
+                    className={`w-full flex items-center gap-2.5 px-4 py-2 transition-all text-[11px] font-black uppercase tracking-widest ${
+                      ev.priority === p ? 'bg-white/8 text-white' : 'text-white/50 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <div className={`w-2 h-2 rounded-full ${PRIORITY_CONFIG[p].dot}`} />
+                    {PRIORITY_CONFIG[p].label}
+                    {ev.priority === p && <Check size={10} className="ml-auto" />}
+                  </button>
+                ))}
+
+                {ev.priority !== 'none' && (
+                  <button
+                    onClick={() => { setOpen(false); onPriority('none') }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2 text-white/30 hover:text-white/60 hover:bg-white/5 transition-all text-[11px] font-black uppercase tracking-widest"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-white/20" /> Clear priority
+                  </button>
+                )}
+
+                {/* Delete */}
+                <div className="border-t border-white/5">
+                  <button
+                    onClick={() => { setOpen(false); onDelete() }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all text-[11px] font-black uppercase tracking-widest"
+                  >
+                    <Trash2 size={12} /> Delete
+                  </button>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  )
+}
+
+function OverviewTab({ events, setEvents, loadingEvents, userId, onEventAdded }: {
+  events: CalEvent[]
+  setEvents: React.Dispatch<React.SetStateAction<CalEvent[]>>
+  loadingEvents: boolean
+  userId: string
+  onEventAdded: (ev: CalEvent) => void
+}) {
+  const [showAdd, setShowAdd] = useState(false)
+  const [editing, setEditing] = useState<CalEvent | null>(null)
+  const today = new Date()
+  const upcoming = events
+    .filter(e => new Date(e.event_date + 'T00:00:00') >= today)
+    .sort((a, b) => a.event_date.localeCompare(b.event_date))
+
   const listLimit = events.length <= 4 ? events.length : events.length <= 9 ? 4 : 3
+
+  async function handleDelete(id: string) {
+    await supabase.from('calendar_events').delete().eq('id', id)
+    setEvents(prev => prev.filter(e => e.id !== id))
+  }
+
+  async function handlePriority(id: string, priority: CalEvent['priority']) {
+    await supabase.from('calendar_events').update({ priority }).eq('id', id)
+    setEvents(prev => prev.map(e => e.id === id ? { ...e, priority } : e))
+  }
+
+  function handleEdited(updated: CalEvent) {
+    setEvents(prev => prev.map(e => e.id === updated.id ? updated : e))
+  }
 
   return (
     <div className="space-y-4">
@@ -262,29 +430,16 @@ function OverviewTab({ events, loadingEvents, userId, onEventAdded }: {
         </div>
       ) : (
         <>
-          {/* Dynamic calendar — hidden for 1–4 events, appears at 5+ */}
           <DynamicCalendar events={events} />
-
-          {/* Event list */}
           <div className="space-y-2">
             {upcoming.slice(0, listLimit).map(ev => (
-              <div key={ev.id} className="flex items-center gap-3 p-3 bg-zinc-900/40 border border-white/5 rounded-2xl hover:border-white/10 transition-all group">
-                <div className="w-11 h-11 bg-zinc-800 rounded-xl flex flex-col items-center justify-center shrink-0">
-                  <span className="text-[#FFD700] font-black text-[9px] uppercase leading-none">
-                    {new Date(ev.event_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' })}
-                  </span>
-                  <span className="text-white font-black text-base leading-none mt-0.5">
-                    {new Date(ev.event_date + 'T00:00:00').getDate()}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-bold text-sm tracking-tight truncate group-hover:text-[#FFD700] transition-colors">{ev.title}</p>
-                  <p className="text-white/30 text-[10px] font-medium mt-0.5">{formatDate(ev.event_date)}</p>
-                </div>
-                <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wide shrink-0 ${TYPE_COLOR[ev.event_type] ?? 'bg-white/10 text-white'}`}>
-                  {ev.event_type}
-                </span>
-              </div>
+              <EventRow
+                key={ev.id}
+                ev={ev}
+                onDelete={() => handleDelete(ev.id)}
+                onEdit={() => setEditing(ev)}
+                onPriority={p => handlePriority(ev.id, p)}
+              />
             ))}
             {upcoming.length > listLimit && (
               <p className="text-white/20 text-[10px] font-black uppercase tracking-widest text-center pt-1">
@@ -296,7 +451,12 @@ function OverviewTab({ events, loadingEvents, userId, onEventAdded }: {
       )}
 
       <AnimatePresence>
-        {showAdd && <AddEventModal userId={userId} onClose={() => setShowAdd(false)} onSaved={onEventAdded} />}
+        {showAdd && (
+          <EventFormModal userId={userId} onClose={() => setShowAdd(false)} onSaved={onEventAdded} />
+        )}
+        {editing && (
+          <EventFormModal userId={userId} existing={editing} onClose={() => setEditing(null)} onSaved={handleEdited} />
+        )}
       </AnimatePresence>
     </div>
   )
@@ -653,7 +813,7 @@ export function HomeDashboard() {
             exit={{ opacity: 0, x: -8 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
           >
-            {activeTab === 'Overview'  && <OverviewTab events={events} loadingEvents={loadingEvents} userId={user.id} onEventAdded={ev => setEvents(prev => [...prev, ev])} />}
+            {activeTab === 'Overview'  && <OverviewTab events={events} setEvents={setEvents} loadingEvents={loadingEvents} userId={user.id} onEventAdded={ev => setEvents(prev => [...prev, ev])} />}
             {activeTab === 'Releases'  && <ReleasesTab releases={releases} loading={loadingReleases} onUpdate={loadReleases} />}
             {activeTab === 'Analytics' && <AnalyticsTab />}
             {activeTab === 'Team'      && <TeamTab members={members} loading={loadingTeam} />}
