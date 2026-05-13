@@ -18,8 +18,8 @@ const INDUSTRY_NEWS = [
     icon: <TrendingUp size={14} className="text-[#FFD700]" />,
     tag: 'TikTok',
     tagColor: 'text-sky-400 bg-sky-400/10',
-    headline: 'TikTok's "Add to Music App" feature now live for all creators',
-    sub: 'Direct DSP saves from TikTok videos — biggest conversion tool since pre-saves.',
+    headline: "TikTok's \"Add to Music App\" feature now live for all creators",
+    sub: "Direct DSP saves from TikTok videos — biggest conversion tool since pre-saves.",
     age: '2h ago',
   },
   {
