@@ -63,9 +63,10 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
   const current = STEPS[step - 1]
 
   return (
-    <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-start sm:justify-center p-6 overflow-y-auto">
+    <div className="fixed inset-0 z-[200] bg-black overflow-y-auto">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.05)_0%,transparent_70%)] pointer-events-none" />
-      
+      <div className="min-h-full flex flex-col items-center justify-center px-6 py-10">
+
       {/* Progress Bar */}
       <div className="w-full max-w-xl flex gap-2 mb-20 relative z-10">
         {[1, 2, 3, 4, 5].map(i => (
@@ -128,10 +129,12 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
       </AnimatePresence>
 
       {/* Footer Branding */}
-      <div className="absolute bottom-12 flex items-center gap-3 opacity-20 hover:opacity-50 transition-opacity">
+      <div className="flex items-center gap-3 opacity-20 hover:opacity-50 transition-opacity mt-12">
         <div className="w-8 h-8 bg-[#FFD700] rounded-xl flex items-center justify-center font-black text-black text-sm">uP</div>
         <span className="text-white font-black text-xs tracking-widest uppercase">GrounduP Onboarding</span>
       </div>
+
+      </div>{/* end min-h-full inner */}
     </div>
   )
 }

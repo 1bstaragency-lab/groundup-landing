@@ -1,108 +1,132 @@
-import { useState, type FormEvent } from 'react';
-import { motion } from 'framer-motion';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
-import { LiquidButton } from '../ui/liquid-glass-button';
+import { useState, type FormEvent } from 'react'
+import { motion } from 'framer-motion'
+import { Eye, EyeOff, Loader2, Mail, Lock } from 'lucide-react'
+import { useAuth } from '../../hooks/useAuth'
+import { LiquidButton } from '../ui/liquid-glass-button'
 
 interface LoginFormProps {
-  onSuccess: () => void;
-  onSwitchToSignUp: () => void;
+  onSuccess: () => void
+  onSwitchToSignUp: () => void
 }
 
 export function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProps) {
-  const { signIn } = useAuth();
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { signIn } = useAuth()
+  const [formData, setFormData] = useState({ email: '', password: '' })
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
 
     const { error: signInError } = await signIn({
       email: formData.email,
       password: formData.password,
-    });
+    })
 
-    setLoading(false);
+    setLoading(false)
 
     if (signInError) {
-      const msg = signInError.toLowerCase();
+      const msg = signInError.toLowerCase()
       if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
-        setError('Please confirm your email before signing in. Check your inbox.');
+        setError('Please confirm your email before signing in. Check your inbox.')
       } else if (msg.includes('invalid') || msg.includes('credentials') || msg.includes('password')) {
-        setError('Invalid email or password.');
+        setError('Invalid email or password.')
       } else if (msg.includes('fetch') || msg.includes('network') || msg.includes('load')) {
-        setError('Connection error — Supabase may not be configured on this deployment.');
+        setError('Connection error — Supabase may not be configured on this deployment.')
       } else {
-        setError(signInError);
+        setError(signInError)
       }
-      return;
+      return
     }
 
-    onSuccess();
+    onSuccess()
   }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="w-full max-w-md"
+      transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full"
     >
-      <div className="text-center mb-10">
-        <img src="/gu-logo.png" alt="GrounduP" className="h-14 w-auto mx-auto mb-6" />
-        <h2 className="text-4xl font-black text-white tracking-tighter uppercase mb-2">
-          Welcome Back
+      {/* Header */}
+      <div className="mb-10">
+        <img
+          src="/gu-logo.png"
+          alt="GrounduP"
+          className="h-12 w-auto mb-8 lg:hidden"
+          onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+        />
+        <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.35em] mb-3">
+          Welcome back
+        </p>
+        <h2 className="text-4xl font-black text-white tracking-tighter uppercase leading-none mb-2">
+          Sign In
         </h2>
-        <p className="text-white/40 font-medium text-sm">
+        <p className="text-white/30 text-sm font-medium">
           Your Artist OS is waiting.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="email"
-          placeholder="Email Address"
-          required
-          value={formData.email}
-          onChange={e => setFormData({ ...formData, email: e.target.value })}
-          className="wait-input"
-        />
-        <div className="relative">
+        {/* Email */}
+        <div className="relative group">
+          <Mail
+            size={14}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#FFD700] transition-colors"
+          />
+          <input
+            type="email"
+            placeholder="Email address"
+            required
+            value={formData.email}
+            onChange={e => setFormData({ ...formData, email: e.target.value })}
+            className="auth-input pl-11"
+          />
+        </div>
+
+        {/* Password */}
+        <div className="relative group">
+          <Lock
+            size={14}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#FFD700] transition-colors"
+          />
           <input
             type={showPassword ? 'text' : 'password'}
             placeholder="Password"
             required
             value={formData.password}
             onChange={e => setFormData({ ...formData, password: e.target.value })}
-            className="wait-input pr-14"
+            className="auth-input pl-11 pr-12"
           />
           <button
             type="button"
             onClick={() => setShowPassword(v => !v)}
-            className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/60 transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/60 transition-colors"
           >
-            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
           </button>
         </div>
 
+        {/* Error */}
         {error && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-red-400 text-xs font-bold uppercase tracking-widest text-center py-2"
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-red-500/10 border border-red-500/20"
           >
-            {error}
-          </motion.p>
+            <p className="text-red-400 text-xs font-bold">{error}</p>
+          </motion.div>
         )}
 
-        <div className="pt-4">
-          <LiquidButton type="submit" disabled={loading} className="w-full">
+        {/* Submit */}
+        <div className="pt-2">
+          <LiquidButton type="submit" disabled={loading} className="w-full justify-center">
             {loading ? (
-              <span className="flex items-center gap-2 justify-center">
+              <span className="flex items-center gap-2">
                 <Loader2 size={14} className="animate-spin" /> Signing In...
               </span>
             ) : (
@@ -112,15 +136,23 @@ export function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProps) {
         </div>
       </form>
 
-      <p className="text-center text-white/30 text-[10px] font-black uppercase tracking-widest mt-8">
+      {/* Divider */}
+      <div className="flex items-center gap-4 my-6">
+        <div className="flex-1 h-px bg-white/5" />
+        <span className="text-white/20 text-[10px] font-black uppercase tracking-widest">or</span>
+        <div className="flex-1 h-px bg-white/5" />
+      </div>
+
+      {/* Switch to sign up */}
+      <p className="text-center text-white/30 text-[11px] font-bold">
         Don't have an account?{' '}
         <button
           onClick={onSwitchToSignUp}
-          className="text-[#FFD700] hover:underline"
+          className="text-[#FFD700] hover:text-[#FFD700]/80 font-black uppercase tracking-widest text-[10px] transition-colors"
         >
-          Sign Up
+          Create one
         </button>
       </p>
     </motion.div>
-  );
+  )
 }
