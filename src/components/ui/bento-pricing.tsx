@@ -21,7 +21,7 @@ function FilledCheck() {
 	);
 }
 
-function PricingCard({
+export function PricingCard({
 	titleBadge,
 	priceLabel,
 	priceSuffix = '/month',

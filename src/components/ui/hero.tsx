@@ -116,7 +116,7 @@ export default function ShaderShowcase() {
             >
               Own The
             </motion.span>
-            <span className="block font-black text-white drop-shadow-[0_0_50px_rgba(255,215,0,0.15)] uppercase">uP.</span>
+            <span className="block font-black text-white drop-shadow-[0_0_50px_rgba(255,215,0,0.3)] uppercase hero-text">uP.</span>
           </motion.h1>
 
           <motion.p
@@ -135,8 +135,8 @@ export default function ShaderShowcase() {
             transition={{ duration: 0.6, delay: 1.0 }}
           >
             <div className="flex flex-col items-center gap-4">
-              <AwardBadge type="product-of-the-day" place={1} />
-              <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.3em]">Trusted by 2,000+ Artists</p>
+              <AwardBadge type="product-of-the-day" place={2} />
+              <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.3em] hero-text">Trusted by 2,000+ Artists</p>
             </div>
             
             <LiquidButton 

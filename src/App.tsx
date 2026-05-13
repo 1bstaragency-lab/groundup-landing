@@ -3,10 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 import { TeamDashboardMockup } from './components/ui/TeamDashboardMockup';
 import ShaderShowcase from './components/ui/hero';
 import { LiquidButton } from './components/ui/liquid-glass-button';
-import { BentoPricing } from './components/ui/bento-pricing';
+import { BentoPricing, PricingCard } from './components/ui/bento-pricing';
 import { GlobeLive } from './components/ui/cobe-globe-live';
 import { SupportBot } from './components/ui/support-bot';
 import { CinematicFooter } from './components/ui/motion-footer';
+import { AwardBadge } from './components/ui/award-badge';
 import './App.css';
 
 // Initialize Supabase
@@ -67,7 +68,9 @@ function App() {
         </nav>
 
         <div className="flex items-center gap-6">
-          <div className="w-14 h-14 bg-[#FFD700] rounded-2xl flex items-center justify-center font-black text-black text-2xl shadow-[0_0_30px_rgba(255,215,0,0.3)]">uP</div>
+          <div className="w-14 h-14 bg-[#FFD700] rounded-2xl flex items-center justify-center">
+            <span className="block font-black text-white drop-shadow-[0_0_50px_rgba(255,215,0,0.3)] uppercase hero-text">uP.</span>
+          </div>
           <button className="nav-cta" onClick={() => document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' })}>
             Join Now
           </button>
@@ -97,14 +100,26 @@ function App() {
             <div className="grid md:grid-cols-2 gap-20 items-center">
                 <div>
                     <h3 className="text-4xl md:text-5xl font-black mb-6 tracking-tighter leading-none">Meet uP.<br/><span className="text-white/40">Your Music Concierge.</span></h3>
-                    <p className="text-white/40 text-lg leading-relaxed mb-10 font-medium">An AI that actually knows music. uP understands your career, remembers your goals, and speaks your language. Ask anything.</p>
-                    <div className="flex gap-4">
+                    <ul className="text-white/60 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 lg:w-[65%] text-[14px] font-bold">
+						{[
+							'Standard Management OS',
+							'Visual Bundle (6 Content, 2 Viz, 2 Lyric)',
+							'Personalized Rollout Strategy',
+                            'Real-time Performance Data',
+                            'Priority AI Processing'
+						].map((f, i) => (
+                          <li key={i} className="flex items-center gap-2"><span>•</span> {f}</li>
+                        ))}
+                    </ul>
+                    <div className="flex gap-4 pt-10">
                         <LiquidButton onClick={() => document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' })}>Start Chatting</LiquidButton>
                     </div>
                 </div>
                 <div className="relative">
                     <img src="/assets/up_assistant_chat_ui_1778628229052.png" alt="uP Assistant" className="w-full rounded-3xl shadow-[0_0_50px_rgba(255,215,0,0.1)] border border-white/5" />
-                    <div className="absolute -top-20 -right-20 w-60 h-60 bg-[#FFD700]/10 blur-[100px] rounded-full" />
+                    <div className="absolute top-10 right-10 z-20 scale-75 md:scale-100">
+                      <AwardBadge type="product-of-the-day" place={2} />
+                    </div>
                 </div>
             </div>
         </div>
@@ -122,7 +137,11 @@ function App() {
             <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-8 leading-none">Scaling<br/><span className="text-[#FFD700]">Everywhere.</span></h2>
             <p className="text-white/40 text-xl font-medium mb-10 leading-relaxed max-w-md">Our active artists are dominating global charts. Real-time career management across 60+ territories.</p>
             
-            <div className="flex gap-12">
+            <div className="flex flex-col items-center gap-4">
+              <AwardBadge type="product-of-the-day" place={2} />
+              <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.3em] hero-text">Trusted by 2,000+ Artists</p>
+            </div>
+            <div className="flex gap-12 mt-10">
               <div>
                 <p className="text-5xl font-black text-white mb-1">12M+</p>
                 <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.3em]">Monthly Reach</p>
@@ -175,7 +194,17 @@ function App() {
                     </div>
                     <input type="text" placeholder="Social Handle (@...)" value={formData.socialHandle} onChange={(e) => setFormData({...formData, socialHandle: e.target.value})} className="wait-input" />
                     <div className="pt-6">
-                      <LiquidButton type="submit" className="w-full">
+                      <PricingCard
+                        titleBadge="BREAKOUT"
+                        priceLabel="$50"
+                        features={[
+                          'What serious artists need.',
+                          'Visual Bundle (10 Content, 3 Viz, 3 Lyric)',
+                          'Priority Support & Recs',
+                          'Annual: $500 (Save $100)'
+                        ]}
+                      />
+                      <LiquidButton type="submit" className="w-full mt-6">
                         GET EARLY ACCESS
                       </LiquidButton>
                     </div>
