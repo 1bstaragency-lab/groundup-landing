@@ -92,10 +92,10 @@ export const INFLUENCERS: Influencer[] = [
 
 // Network stats
 export const NETWORK_STATS = {
-  total: 320,
+  total: 620,
   tiktok: 245,
   twitter: 47,
   spotify: 28,
-  totalReach: '47.2M',
+  totalReach: '42.5M',
   topFollowers: 1_100_000,
 };

@@ -22,10 +22,10 @@ const MENU_ITEMS = [
   { id: "rollouts",    label: "Releases",           icon: CdRocketIcon, mobileShow: true,  isMain: true },
   { id: "analytics",   label: "Analytics",          icon: TrendingUp,   mobileShow: true,  isMain: true },
   { id: "learn",       label: "Knowledge Base",     icon: BookOpen,     mobileShow: true,  isMain: true,  small: true },
-  { id: "team",        label: "Team",               icon: Users,        mobileShow: false, isMain: false },
-  { id: "influencers", label: "Influencer Network", icon: Network,      mobileShow: false, isMain: false, small: true },
   { id: "scheduler",   label: "Scheduler",          icon: Calendar,     mobileShow: false, isMain: false },
   { id: "studio",      label: "Content Studio",     icon: Layout,       mobileShow: false, isMain: false },
+  { id: "influencers", label: "Influencer Network", icon: Network,      mobileShow: false, isMain: false, small: true },
+  { id: "team",        label: "Team",               icon: Users,        mobileShow: false, isMain: false },
   { id: "curator",     label: "Curator",            icon: Music2,       mobileShow: false, isMain: false },
   { id: "profile",     label: "Artist Profile",     icon: User,         mobileShow: false, isMain: false },
 ]

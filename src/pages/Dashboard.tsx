@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut, CheckCircle, TrendingUp, Zap, Globe, Music2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { DashboardShell } from '../components/layout/DashboardShell';
-import { TeamDashboardMockup } from '../components/ui/TeamDashboardMockup';
 import { LearnSection } from '../components/dashboard/LearnSection';
 import { SchedulerSection } from '../components/dashboard/SchedulerSection';
 import { StudioSection } from '../components/dashboard/StudioSection';
@@ -120,8 +119,6 @@ export function Dashboard() {
                   <span className="hidden sm:inline">{loggingOut ? 'Signing out...' : 'Sign Out'}</span>
                 </button>
               </div>
-              <TeamDashboardMockup interactive />
-
               {/* Industry news feed */}
               <div className="mt-8">
                 <div className="flex items-center gap-2 mb-4">
