@@ -118,7 +118,7 @@ export function Dashboard() {
                   <span className="hidden sm:inline">{loggingOut ? 'Signing out...' : 'Sign Out'}</span>
                 </button>
               </div>
-              <TeamDashboardMockup />
+              <TeamDashboardMockup interactive />
 
               {/* Industry news feed */}
               <div className="mt-8">

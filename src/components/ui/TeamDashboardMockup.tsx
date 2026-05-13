@@ -102,8 +102,8 @@ function AddEventModal({ onClose, onSave }: { onClose: () => void; onSave: (ev: 
   );
 }
 
-function DashboardTab() {
-  const allEvents = MOCK_EVENTS;
+function DashboardTab({ interactive, onAddEvent, extraEvents }: { interactive: boolean; onAddEvent: () => void; extraEvents: CalendarEvent[] }) {
+  const allEvents = [...MOCK_EVENTS, ...extraEvents];
 
   return (
     <div className="flex flex-col sm:flex-row gap-6">
@@ -154,9 +154,18 @@ function DashboardTab() {
             </div>
           ))}
         </div>
-        <div className="w-full py-3 rounded-2xl bg-zinc-900/60 border border-white/5 text-white/20 text-[10px] font-black uppercase tracking-widest text-center">
-          View Only
-        </div>
+        {interactive ? (
+          <button
+            onClick={onAddEvent}
+            className="w-full py-3 bg-[#FFD700] rounded-2xl text-black font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_8px_20px_rgba(255,215,0,0.15)] flex items-center justify-center gap-2"
+          >
+            <Plus size={12} /> Add Event
+          </button>
+        ) : (
+          <div className="w-full py-3 rounded-2xl bg-zinc-900/60 border border-white/5 text-white/20 text-[10px] font-black uppercase tracking-widest text-center">
+            Preview Only
+          </div>
+        )}
       </div>
     </div>
   );
@@ -295,8 +304,10 @@ function TeamTab() {
   );
 }
 
-export function TeamDashboardMockup() {
+export function TeamDashboardMockup({ interactive = false }: { interactive?: boolean }) {
   const [activeTab, setActiveTab] = useState<MockTab>('Dashboard');
+  const [showAddEvent, setShowAddEvent] = useState(false);
+  const [extraEvents, setExtraEvents] = useState<CalendarEvent[]>([]);
 
   const TABS: MockTab[] = ['Dashboard', 'Rollouts', 'Analytics', 'Team'];
 
@@ -380,6 +391,14 @@ export function TeamDashboardMockup() {
             {activeTab === 'Dashboard' && (
               <div className="flex gap-2 sm:gap-3">
                 <button className="hidden sm:block px-5 py-3 bg-zinc-900 border border-white/10 rounded-2xl text-white text-[11px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-all">Export</button>
+                {interactive && (
+                  <button
+                    onClick={() => setShowAddEvent(true)}
+                    className="px-3 sm:px-5 py-2.5 sm:py-3 bg-[#FFD700] rounded-xl sm:rounded-2xl text-black text-[10px] sm:text-[11px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,215,0,0.2)] flex items-center gap-1.5"
+                  >
+                    <Plus size={12} /> <span className="hidden sm:inline">Add Event</span><span className="sm:hidden">Add</span>
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -393,7 +412,7 @@ export function TeamDashboardMockup() {
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
               {activeTab === 'Dashboard' && (
-                <DashboardTab />
+                <DashboardTab interactive={interactive} onAddEvent={() => setShowAddEvent(true)} extraEvents={extraEvents} />
               )}
               {activeTab === 'Rollouts'  && <RolloutsTab />}
               {activeTab === 'Analytics' && <AnalyticsTab />}
@@ -403,6 +422,14 @@ export function TeamDashboardMockup() {
         </div>
       </div>
 
+      <AnimatePresence>
+        {showAddEvent && (
+          <AddEventModal
+            onClose={() => setShowAddEvent(false)}
+            onSave={ev => setExtraEvents(prev => [...prev, ev])}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
