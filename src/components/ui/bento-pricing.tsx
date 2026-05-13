@@ -11,6 +11,7 @@ type PricingCardProps = {
 	cta?: string;
 	className?: string;
     isPrimary?: boolean;
+	onSelect?: () => void;
 };
 
 function FilledCheck() {
@@ -28,7 +29,8 @@ export function PricingCard({
 	features,
 	cta = 'Subscribe',
 	className,
-    isPrimary = false
+    isPrimary = false,
+	onSelect,
 }: PricingCardProps) {
 	return (
 		<div
@@ -42,7 +44,7 @@ export function PricingCard({
 			<div className="flex items-center gap-3 p-6">
 				<Badge variant={isPrimary ? "default" : "secondary"}>{titleBadge}</Badge>
 				<div className="ml-auto">
-					<Button variant={isPrimary ? "default" : "outline"} size="sm" className="rounded-full font-black uppercase text-[10px] tracking-widest">{cta}</Button>
+					<Button onClick={onSelect} variant={isPrimary ? "default" : "outline"} size="sm" className="rounded-full font-black uppercase text-[10px] tracking-widest cursor-pointer">{cta}</Button>
 				</div>
 			</div>
 
@@ -67,7 +69,7 @@ export function PricingCard({
 	);
 }
 
-export function BentoPricing() {
+export function BentoPricing({ onSelect }: { onSelect?: () => void }) {
 	return (
 		<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-8">
 			{/* Growth Tier - The HERO Section */}
@@ -96,7 +98,7 @@ export function BentoPricing() {
 						<SparklesIcon className="me-2 size-3 text-[#FFD700]" /> MOST POPULAR
 					</Badge>
 					<div className="ml-auto">
-						<Button className="rounded-full font-black uppercase text-[11px] tracking-widest px-10 h-12 shadow-[0_10px_20px_rgba(255,215,0,0.2)]">SELECT GROWTH</Button>
+						<Button onClick={onSelect} className="rounded-full font-black uppercase text-[11px] tracking-widest px-10 h-12 shadow-[0_10px_20px_rgba(255,215,0,0.2)] cursor-pointer">SELECT GROWTH</Button>
 					</div>
 				</div>
 				<div className="flex flex-col p-8 lg:flex-row relative z-10">
@@ -138,6 +140,7 @@ export function BentoPricing() {
 				]}
 				className="lg:col-span-3 border-white/10"
                 cta="GET STARTED"
+				onSelect={onSelect}
 			/>
 
 			{/* Breakout Tier */}
@@ -154,6 +157,7 @@ export function BentoPricing() {
 				className="lg:col-span-4 border-[#FFD700]/20"
                 cta="SELECT BREAKOUT"
                 isPrimary
+				onSelect={onSelect}
 			/>
 
 			{/* Concierge Tier */}
@@ -188,7 +192,7 @@ export function BentoPricing() {
 					))}
 				</ul>
                 <div className="p-8 mt-auto">
-                    <Button variant="outline" className="w-full rounded-full font-black uppercase text-[11px] tracking-widest h-12 border-white/20 hover:bg-[#FFD700] hover:text-black hover:border-transparent transition-all">Book A Call</Button>
+                    <Button onClick={onSelect} variant="outline" className="w-full rounded-full font-black uppercase text-[11px] tracking-widest h-12 border-white/20 hover:bg-[#FFD700] hover:text-black hover:border-transparent transition-all cursor-pointer">Book A Call</Button>
                 </div>
 			</div>
 		</div>
