@@ -128,24 +128,56 @@ const CATEGORY_META: Record<string, { icon: React.ReactNode; color: string; bord
 }
 
 // ─── Video playlists ──────────────────────────────────────────────────────────
-const VIDEO_PLAYLISTS = [
+interface PlaylistVideo { id: string; title: string }
+interface Playlist {
+  title: string
+  playlistId: string
+  coverImage: string
+  videos: PlaylistVideo[]
+}
+
+const VIDEO_PLAYLISTS: Playlist[] = [
   {
     title: "Release Strategy",
-    count: 2,
-    coverImage: "https://images.unsplash.com/photo-1614680376739-414d95ff43df?q=80&w=400&auto=format&fit=crop",
     playlistId: "PLtPKxx4Gpa5Qqp0HGUWijH2UBzW6ZDtJT",
+    coverImage: `https://img.youtube.com/vi/7MSplBGZXx4/hqdefault.jpg`,
+    videos: [
+      { id: "7MSplBGZXx4", title: "Waterfall Release Strategy Tutorial with DistroKid 2024" },
+      { id: "3Qsjm-CmNPo", title: "How To ACTUALLY Do An Album Rollout..." },
+    ],
   },
   {
     title: "Conversations",
-    count: 17,
-    coverImage: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?q=80&w=400&auto=format&fit=crop",
     playlistId: "PLtPKxx4Gpa5T8GV8ywmfBoSC8QZ_BQqTu",
+    coverImage: `https://img.youtube.com/vi/qekbbQ4Zt1M/hqdefault.jpg`,
+    videos: [
+      { id: "qekbbQ4Zt1M", title: "'Conversations' with BNYX, Riot & Zaytoven" },
+      { id: "v5Ct8rvTGNA", title: 'The Cheat Code | "The Blame Game" | Ep. 99' },
+      { id: "DJjUOOiEg1Y", title: 'The Cheat Code | "Before You Go To Radio" | Ep. 98' },
+      { id: "YbAM9TIKEyc", title: 'The Cheat Code | "Owning Your Image" | Ep. 89' },
+      { id: "l2zTuMo-bfk", title: 'The Cheat Code | "Let\'s Go On Tour" | Ep. 85' },
+      { id: "9jaMhuEWJQU", title: 'The Cheat Code | "What Are You Willing To Do" | Ep. 86' },
+      { id: "Vyu7lqInGac", title: 'The Cheat Code | "Growth and Gratitude" | Ep. 83' },
+      { id: "bmFfqZZ-akg", title: 'The Cheat Code | "Money Money Money" | Ep. 81' },
+      { id: "r_bzWGby0lY", title: 'The Cheat Code | "Work Hard, Win Big" | Ep. 76' },
+      { id: "6F1v2m1QqWk", title: 'The Cheat Code | "Flawless Execution" | Ep. 79' },
+      { id: "0-2lm7tLlog", title: 'The Cheat Code | "Inside The Machine" | Ep. 57' },
+      { id: "zPjOG71nRdg", title: 'The Cheat Code | "Post Release Day, What\'s Next?" | Ep. 58' },
+      { id: "TpcaH3vFKOg", title: 'The Cheat Code | "Can You Really Be Blackballed?" | Ep. 59' },
+      { id: "Fb7nbwbwzSc", title: 'The Cheat Code | "Choosing A Distributor" | Ep. 54' },
+      { id: "taw7RMwETfE", title: 'The Cheat Code | "Marketing Explained" | Ep. 55' },
+      { id: "zWepMQnG4do", title: 'The Cheat Code | "Fake It Til You Make It" | Ep. 48' },
+      { id: "ACvzJWN2nYY", title: 'The Cheat Code | "How Did I Get Shadow Banned?" | Ep. 50' },
+    ],
   },
   {
     title: "The Business",
-    count: 2,
-    coverImage: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=400&auto=format&fit=crop",
     playlistId: "PLtPKxx4Gpa5SpjX-QHyBZeoyuJv7SQa4N",
+    coverImage: `https://img.youtube.com/vi/taw7RMwETfE/hqdefault.jpg`,
+    videos: [
+      { id: "taw7RMwETfE", title: 'The Cheat Code | "Marketing Explained" | Ep. 55' },
+      { id: "zPjOG71nRdg", title: 'The Cheat Code | "Post Release Day, What\'s Next?" | Ep. 58' },
+    ],
   },
 ]
 
@@ -372,7 +404,17 @@ function PdfReaderModal({ guide, onClose }: { guide: PdfGuide; onClose: () => vo
 }
 
 // ─── Playlist Modal ───────────────────────────────────────────────────────────
-function PlaylistModal({ playlist, onClose }: { playlist: typeof VIDEO_PLAYLISTS[number]; onClose: () => void }) {
+function PlaylistModal({ playlist, onClose }: { playlist: Playlist; onClose: () => void }) {
+  const [activeIdx, setActiveIdx] = useState(0)
+  const sidebarRef = useRef<HTMLDivElement>(null)
+  const activeVideo = playlist.videos[activeIdx]
+
+  // Scroll active item into view in sidebar
+  useEffect(() => {
+    const el = sidebarRef.current?.querySelector(`[data-idx="${activeIdx}"]`) as HTMLElement | null
+    el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [activeIdx])
+
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -380,17 +422,21 @@ function PlaylistModal({ playlist, onClose }: { playlist: typeof VIDEO_PLAYLISTS
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
+        initial={{ scale: 0.96, y: 24 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 24 }}
+        transition={{ type: 'spring', damping: 28, stiffness: 320 }}
         onClick={e => e.stopPropagation()}
-        className="bg-zinc-950 border border-white/10 rounded-3xl overflow-hidden w-full max-w-4xl shadow-2xl flex flex-col"
-        style={{ maxHeight: '90vh' }}
+        className="bg-zinc-950 border border-white/10 rounded-3xl overflow-hidden w-full shadow-2xl flex flex-col"
+        style={{ maxWidth: 960, maxHeight: '92vh' }}
       >
+        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0">
-          <div>
-            <p className="text-white font-black text-sm uppercase tracking-tighter">{playlist.title}</p>
-            <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mt-0.5">{playlist.count} Videos · Stash Guapo</p>
+          <div className="min-w-0">
+            <p className="text-white font-black text-sm uppercase tracking-tighter truncate">{playlist.title}</p>
+            <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mt-0.5">
+              {activeIdx + 1} / {playlist.videos.length} · Stash Guapo
+            </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0 ml-4">
             <a
               href={`https://www.youtube.com/playlist?list=${playlist.playlistId}`}
               target="_blank" rel="noopener noreferrer"
@@ -398,18 +444,104 @@ function PlaylistModal({ playlist, onClose }: { playlist: typeof VIDEO_PLAYLISTS
             >
               <ExternalLink size={12} /> YouTube
             </a>
-            <button onClick={onClose} className="text-white/30 hover:text-white transition-colors p-1"><X size={20} /></button>
+            <button onClick={onClose} className="text-white/30 hover:text-white transition-colors p-1">
+              <X size={20} />
+            </button>
           </div>
         </div>
-        <div className="flex-1 bg-black" style={{ minHeight: '480px' }}>
-          <iframe
-            className="w-full h-full"
-            style={{ minHeight: '480px' }}
-            src={`https://www.youtube.com/embed/videoseries?list=${playlist.playlistId}&rel=0`}
-            title={playlist.title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
+
+        {/* Body: player + sidebar */}
+        <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
+
+          {/* Player */}
+          <div className="flex-1 bg-black flex flex-col min-h-0">
+            <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
+              <iframe
+                key={activeVideo.id}
+                className="absolute inset-0 w-full h-full"
+                src={`https://www.youtube.com/embed/${activeVideo.id}?autoplay=1&rel=0`}
+                title={activeVideo.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+            {/* Now playing label */}
+            <div className="px-5 py-3 border-t border-white/5 shrink-0">
+              <p className="text-white font-black text-sm leading-snug line-clamp-2">{activeVideo.title}</p>
+              <div className="flex items-center gap-3 mt-2">
+                <button
+                  onClick={() => setActiveIdx(i => Math.max(0, i - 1))}
+                  disabled={activeIdx === 0}
+                  className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white disabled:opacity-20 transition-colors"
+                >
+                  ← Prev
+                </button>
+                <button
+                  onClick={() => setActiveIdx(i => Math.min(playlist.videos.length - 1, i + 1))}
+                  disabled={activeIdx === playlist.videos.length - 1}
+                  className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white disabled:opacity-20 transition-colors"
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div
+            ref={sidebarRef}
+            className="w-full lg:w-72 xl:w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-white/5 overflow-y-auto"
+            style={{ maxHeight: '100%' }}
+          >
+            <div className="p-3 space-y-1">
+              {playlist.videos.map((video, i) => {
+                const isActive = i === activeIdx
+                return (
+                  <button
+                    key={video.id}
+                    data-idx={i}
+                    onClick={() => setActiveIdx(i)}
+                    className={`w-full flex items-start gap-3 p-3 rounded-xl text-left transition-all group ${
+                      isActive
+                        ? 'bg-[#FFD700]/10 border border-[#FFD700]/25'
+                        : 'border border-transparent hover:bg-white/5 hover:border-white/8'
+                    }`}
+                  >
+                    {/* Thumbnail */}
+                    <div className="relative w-[88px] h-[50px] rounded-lg overflow-hidden shrink-0 bg-zinc-800">
+                      <img
+                        src={`https://img.youtube.com/vi/${video.id}/mqdefault.jpg`}
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                      {/* overlay */}
+                      <div className={`absolute inset-0 flex items-center justify-center transition-all ${
+                        isActive ? 'bg-[#FFD700]/25' : 'bg-black/40 group-hover:bg-black/20'
+                      }`}>
+                        {isActive ? (
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#FFD700] shadow-[0_0_8px_#FFD700]" />
+                        ) : (
+                          <Play size={14} fill="white" className="text-white drop-shadow" />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Title + index */}
+                    <div className="flex-1 min-w-0 pt-0.5">
+                      <p className={`text-[11px] font-bold leading-snug line-clamp-3 transition-colors ${
+                        isActive ? 'text-[#FFD700]' : 'text-white/60 group-hover:text-white'
+                      }`}>
+                        {video.title}
+                      </p>
+                      <p className="text-white/20 text-[9px] font-black uppercase tracking-widest mt-1">{i + 1}</p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
         </div>
       </motion.div>
     </motion.div>
@@ -517,7 +649,7 @@ export function LearnSection() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
               <div className="absolute inset-0 flex flex-col justify-end p-4">
                 <p className="text-white font-black text-sm uppercase tracking-tighter">{pl.title}</p>
-                <p className="text-white/40 text-[10px] font-bold mt-1">{pl.count} videos</p>
+                <p className="text-white/40 text-[10px] font-bold mt-1">{pl.videos.length} {pl.videos.length === 1 ? 'video' : 'videos'}</p>
               </div>
               <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-[#FFD700] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
                 <Play size={12} fill="black" className="text-black ml-0.5" />
