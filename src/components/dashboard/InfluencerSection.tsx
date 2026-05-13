@@ -4,6 +4,7 @@ import { Search, TrendingUp, Users, Music2, Globe, ExternalLink, Zap, Play, Radi
 import { INFLUENCERS, NETWORK_STATS, type Platform, type TikTokTier } from '../../data/influencers';
 import { useAuth } from '../../hooks/useAuth';
 import { GlassCheckoutCard } from '../ui/glass-checkout-card';
+import { EmailButton } from '../ui/GmailCompose';
 
 const FREE_ROW_LIMIT = 6; // 2 rows × 3 cols on desktop
 
@@ -268,6 +269,14 @@ export function InfluencerSection() {
                     <p className="text-white/20 text-[9px] font-black uppercase tracking-widest mt-0.5">Avg Views</p>
                   </div>
                 )}
+              </div>
+              <div className="mt-3">
+                <EmailButton
+                  subject={`Music Submission — [Your Name] × ${inf.name}`}
+                  body={`Hi ${inf.name},\n\nI came across your ${inf.platform} page and would love to collaborate on my upcoming release.\n\n[Your pitch here]\n\nBest,\n[Your Name]`}
+                  label="Email"
+                  className="w-full justify-center"
+                />
               </div>
             </motion.div>
           ))}
