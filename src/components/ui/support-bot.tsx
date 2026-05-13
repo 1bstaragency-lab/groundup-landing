@@ -56,9 +56,9 @@ export function SupportBot() {
                   ? "bg-[#FFD700] border-transparent text-black shadow-[0_10px_30px_rgba(255,215,0,0.2)]" 
                   : "bg-zinc-900/40 border-white/5 text-white/40 hover:bg-zinc-900 hover:text-white"
               )}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
             >
               <span className="font-black text-xs uppercase tracking-widest">{faq.question}</span>
               <ChevronRight size={18} className={cn("transition-transform", activeFaq === i ? "rotate-0" : "opacity-0 group-hover:opacity-100")} />
@@ -92,8 +92,8 @@ export function SupportBot() {
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-zinc-900/20 border border-white/5 p-12 rounded-[3rem] backdrop-blur-3xl relative overflow-hidden"
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-zinc-900/40 border border-white/5 p-12 rounded-[3rem] backdrop-blur-sm relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 p-8">
                 <Sparkles size={32} className="text-[#FFD700] opacity-20 animate-pulse" />

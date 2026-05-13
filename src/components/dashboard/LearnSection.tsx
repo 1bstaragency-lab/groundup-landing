@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect } from "react" // useRef/useEffect used by TTS
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Play, Pause, Square, X, BookOpen, TrendingUp, Music2,
@@ -130,45 +130,22 @@ const CATEGORY_META: Record<string, { icon: React.ReactNode; color: string; bord
 // ─── Video playlists ──────────────────────────────────────────────────────────
 const VIDEO_PLAYLISTS = [
   {
-    title: "Network Patterns",
-    count: 12,
-    coverImage: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400&auto=format&fit=crop",
-    playlistId: "PLtPKxx4Gpa5SpjX-QHyBZeoyuJv7SQa4N",
-    videos: [
-      { id: "dQw4w9WgXcQ", title: "Building Your Core Network" },
-      { id: "9bZkp7q19f0", title: "Label & Manager Relationships" },
-      { id: "CevxZvSJLk8", title: "Sync Licensing Connections" },
-      { id: "JGwWNGJdvx8", title: "Publisher Deal Framework" },
-      { id: "hT_nvWreIhg", title: "Festival Booking Strategy" },
-      { id: "fJ9rUzIMcZQ", title: "Brand Partnership 101" },
-    ],
-  },
-  {
-    title: "Distribution Mastery",
-    count: 15,
+    title: "Release Strategy",
+    count: 2,
     coverImage: "https://images.unsplash.com/photo-1614680376739-414d95ff43df?q=80&w=400&auto=format&fit=crop",
     playlistId: "PLtPKxx4Gpa5Qqp0HGUWijH2UBzW6ZDtJT",
-    videos: [
-      { id: "dQw4w9WgXcQ", title: "Choosing Your Distributor" },
-      { id: "9bZkp7q19f0", title: "Release Timeline Strategy" },
-      { id: "CevxZvSJLk8", title: "Metadata & ISRC Setup" },
-      { id: "JGwWNGJdvx8", title: "Pre-Save Campaigns" },
-      { id: "hT_nvWreIhg", title: "Playlist Pitching Framework" },
-      { id: "fJ9rUzIMcZQ", title: "Release Radar Optimization" },
-    ],
   },
   {
-    title: "Marketing Strategy",
-    count: 10,
-    coverImage: "https://images.unsplash.com/photo-1611162617263-4ec3d744e682?q=80&w=400&auto=format&fit=crop",
-    playlistId: "PLtPKxx4Gpa5SESTNMiIWEQQhY5KcsLCbk",
-    videos: [
-      { id: "0sGLlx0iKI8", title: "TikTok Growth System" },
-      { id: "YQHsXMglC9A", title: "Instagram Reels Strategy" },
-      { id: "SlPhMPnQ58k", title: "Email List Building" },
-      { id: "CevxZvSJLk8", title: "Content Calendar" },
-      { id: "dQw4w9WgXcQ", title: "DSP Playlist Pitching" },
-    ],
+    title: "Conversations",
+    count: 17,
+    coverImage: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?q=80&w=400&auto=format&fit=crop",
+    playlistId: "PLtPKxx4Gpa5T8GV8ywmfBoSC8QZ_BQqTu",
+  },
+  {
+    title: "The Business",
+    count: 2,
+    coverImage: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=400&auto=format&fit=crop",
+    playlistId: "PLtPKxx4Gpa5SpjX-QHyBZeoyuJv7SQa4N",
   },
 ]
 
@@ -396,8 +373,6 @@ function PdfReaderModal({ guide, onClose }: { guide: PdfGuide; onClose: () => vo
 
 // ─── Playlist Modal ───────────────────────────────────────────────────────────
 function PlaylistModal({ playlist, onClose }: { playlist: typeof VIDEO_PLAYLISTS[number]; onClose: () => void }) {
-  const [activeVideo, setActiveVideo] = useState<{ id: string; title: string } | null>(null)
-
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -407,56 +382,34 @@ function PlaylistModal({ playlist, onClose }: { playlist: typeof VIDEO_PLAYLISTS
       <motion.div
         initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
         onClick={e => e.stopPropagation()}
-        className="bg-zinc-950 border border-white/10 rounded-3xl overflow-hidden w-full max-w-5xl shadow-2xl flex flex-col"
+        className="bg-zinc-950 border border-white/10 rounded-3xl overflow-hidden w-full max-w-4xl shadow-2xl flex flex-col"
         style={{ maxHeight: '90vh' }}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0">
           <div>
             <p className="text-white font-black text-sm uppercase tracking-tighter">{playlist.title}</p>
-            <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mt-0.5">{playlist.count} Videos</p>
+            <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mt-0.5">{playlist.count} Videos · Stash Guapo</p>
           </div>
-          <button onClick={onClose} className="text-white/30 hover:text-white transition-colors p-1"><X size={20} /></button>
+          <div className="flex items-center gap-3">
+            <a
+              href={`https://www.youtube.com/playlist?list=${playlist.playlistId}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-white/30 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors"
+            >
+              <ExternalLink size={12} /> YouTube
+            </a>
+            <button onClick={onClose} className="text-white/30 hover:text-white transition-colors p-1"><X size={20} /></button>
+          </div>
         </div>
-        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-0">
-          <div className="flex-1 bg-black">
-            {activeVideo ? (
-              <div className="relative w-full h-full" style={{ minHeight: '240px' }}>
-                <iframe className="absolute inset-0 w-full h-full"
-                  src={`https://www.youtube.com/embed/${activeVideo.id}?autoplay=1&rel=0`}
-                  title={activeVideo.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
-              </div>
-            ) : (
-              <div className="relative w-full flex items-center justify-center" style={{ minHeight: '240px', aspectRatio: '16/9' }}>
-                <img src={playlist.coverImage} alt={playlist.title} className="absolute inset-0 w-full h-full object-cover opacity-30" />
-                <div className="relative text-center">
-                  <div className="w-16 h-16 rounded-full bg-[#FFD700] flex items-center justify-center mx-auto mb-3 shadow-[0_0_30px_rgba(255,215,0,0.4)]">
-                    <Play size={24} fill="black" className="text-black ml-1" />
-                  </div>
-                  <p className="text-white/50 text-xs font-bold uppercase tracking-widest">Select a video to play</p>
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="w-full lg:w-72 border-t lg:border-t-0 lg:border-l border-white/5 overflow-y-auto shrink-0">
-            <div className="p-3 space-y-1">
-              {playlist.videos.map((video, i) => (
-                <button key={video.id + i} onClick={() => setActiveVideo(video)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all group ${activeVideo?.title === video.title ? 'bg-[#FFD700]/10 border border-[#FFD700]/20' : 'hover:bg-white/5 border border-transparent'}`}>
-                  <div className="relative w-16 h-10 rounded-lg overflow-hidden bg-zinc-800 shrink-0">
-                    <img src={`https://img.youtube.com/vi/${video.id}/mqdefault.jpg`} alt={video.title} className="w-full h-full object-cover" />
-                    <div className={`absolute inset-0 flex items-center justify-center ${activeVideo?.title === video.title ? 'bg-[#FFD700]/30' : 'bg-black/30 group-hover:bg-black/10'} transition-all`}>
-                      {activeVideo?.title === video.title ? <div className="w-3 h-3 rounded-full bg-[#FFD700]" /> : <Play size={10} fill="white" className="text-white" />}
-                    </div>
-                  </div>
-                  <p className={`text-xs font-bold leading-snug flex-1 text-left ${activeVideo?.title === video.title ? 'text-[#FFD700]' : 'text-white/60 group-hover:text-white'} transition-colors`}>{video.title}</p>
-                </button>
-              ))}
-              <a href={`https://www.youtube.com/playlist?list=${playlist.playlistId}`} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 w-full px-3 py-2.5 mt-2 rounded-xl text-white/20 hover:text-white/50 transition-colors text-[10px] font-black uppercase tracking-widest border border-dashed border-white/5 hover:border-white/15 justify-center">
-                <ExternalLink size={10} /> View Full Playlist
-              </a>
-            </div>
-          </div>
+        <div className="flex-1 bg-black" style={{ minHeight: '480px' }}>
+          <iframe
+            className="w-full h-full"
+            style={{ minHeight: '480px' }}
+            src={`https://www.youtube.com/embed/videoseries?list=${playlist.playlistId}&rel=0`}
+            title={playlist.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
         </div>
       </motion.div>
     </motion.div>

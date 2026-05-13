@@ -112,8 +112,7 @@ export function BentoPricing({ onSelect }: { onSelect?: () => void }) {
 					</div>
 					<ul className="text-white/60 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 lg:w-[65%] text-[14px] font-bold">
 						{[
-							'Content Bundle (6 Content, 2 Viz, 2 Lyric)',
-							'OR 35 Credits to use across Infrastructure',
+							'Content Bundle / 35 Credits',
 							'Personalized Rollout Strategy',
                             'Real-time Performance Data',
                             'Priority AI Processing',

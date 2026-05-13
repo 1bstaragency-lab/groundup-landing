@@ -77,19 +77,26 @@ export function GlobeLive({
     let globe: any = null
     let animationId: number
     let phi = 0
+    let isVisible = true
+
+    const io = new IntersectionObserver(
+      ([entry]) => { isVisible = entry.isIntersecting },
+      { threshold: 0 }
+    )
+    io.observe(canvas)
 
     function init() {
       const width = canvas.offsetWidth
       if (width === 0 || globe) return
 
       globe = createGlobe(canvas, {
-        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        devicePixelRatio: Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1 : 2),
         width, height: width,
         phi: 0, theta: 0.2, dark: 1, diffuse: 1.5,
-        mapSamples: 16000, mapBrightness: 6,
+        mapSamples: 8000, mapBrightness: 6,
         baseColor: [0.1, 0.1, 0.1],
-        markerColor: [1, 0.84, 0], // Gold markers
-        glowColor: [1, 0.84, 0], // Gold glow
+        markerColor: [1, 0.84, 0],
+        glowColor: [1, 0.84, 0],
         markerElevation: 0.01,
         markers: markers.map((m) => ({ location: m.location, size: 0.05, id: m.id })),
         arcs: [], arcColor: [1, 0.84, 0],
@@ -97,12 +104,13 @@ export function GlobeLive({
       })
 
       function animate() {
+        animationId = requestAnimationFrame(animate)
+        if (!isVisible) return
         if (!isPausedRef.current) phi += speed
         globe!.update({
           phi: phi + phiOffsetRef.current + dragOffset.current.phi,
           theta: 0.2 + thetaOffsetRef.current + dragOffset.current.theta,
         })
-        animationId = requestAnimationFrame(animate)
       }
       animate()
       setTimeout(() => canvas && (canvas.style.opacity = "1"))
@@ -121,6 +129,7 @@ export function GlobeLive({
     }
 
     return () => {
+      io.disconnect()
       if (animationId) cancelAnimationFrame(animationId)
       if (globe) globe.destroy()
     }

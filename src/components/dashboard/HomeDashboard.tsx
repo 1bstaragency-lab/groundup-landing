@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Grid, Calendar, Users, TrendingUp, Plus, Rocket, BarChart2,
@@ -265,10 +265,20 @@ function EventRow({
   onPriority: (p: CalEvent['priority']) => void
 }) {
   const [open, setOpen] = useState(false)
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 })
+  const btnRef = useRef<HTMLButtonElement>(null)
   const pri = PRIORITY_CONFIG[ev.priority] ?? PRIORITY_CONFIG.none
 
   function formatDate(d: string) {
     return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }
+
+  function toggleMenu() {
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect()
+      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+    }
+    setOpen(o => !o)
   }
 
   return (
@@ -298,78 +308,78 @@ function EventRow({
       </span>
 
       {/* Three-dot menu */}
-      <div className="relative">
-        <button
-          onClick={() => setOpen(o => !o)}
-          className="p-1.5 rounded-lg text-white/20 hover:text-white hover:bg-white/5 transition-all"
-        >
-          <MoreVertical size={14} />
-        </button>
+      <button
+        ref={btnRef}
+        onClick={toggleMenu}
+        className="p-1.5 rounded-lg text-white/20 hover:text-white hover:bg-white/5 transition-all"
+      >
+        <MoreVertical size={14} />
+      </button>
 
-        <AnimatePresence>
-          {open && (
-            <>
-              {/* Click-away overlay */}
-              <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: -4 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: -4 }}
-                transition={{ duration: 0.12 }}
-                className="absolute right-0 top-8 z-50 w-44 bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+      <AnimatePresence>
+        {open && (
+          <>
+            {/* Click-away overlay */}
+            <div className="fixed inset-0 z-[150]" onClick={() => setOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: -4 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: -4 }}
+              transition={{ duration: 0.12 }}
+              style={{ position: 'fixed', top: menuPos.top, right: menuPos.right }}
+              className="z-[200] w-44 bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+            >
+              {/* Edit */}
+              <button
+                onClick={() => { setOpen(false); onEdit() }}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-white/70 hover:text-white hover:bg-white/5 transition-all text-[11px] font-black uppercase tracking-widest"
               >
-                {/* Edit */}
+                <Edit2 size={12} /> Edit
+              </button>
+
+              {/* Priority divider */}
+              <div className="px-4 py-1.5 border-t border-white/5">
+                <p className="text-white/20 text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                  <Flag size={9} /> Priority
+                </p>
+              </div>
+
+              {(['low', 'medium', 'high'] as const).map(p => (
                 <button
-                  onClick={() => { setOpen(false); onEdit() }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-white/70 hover:text-white hover:bg-white/5 transition-all text-[11px] font-black uppercase tracking-widest"
+                  key={p}
+                  onClick={() => { setOpen(false); onPriority(p) }}
+                  className={`w-full flex items-center gap-2.5 px-4 py-2 transition-all text-[11px] font-black uppercase tracking-widest ${
+                    ev.priority === p ? 'bg-white/8 text-white' : 'text-white/50 hover:text-white hover:bg-white/5'
+                  }`}
                 >
-                  <Edit2 size={12} /> Edit
+                  <div className={`w-2 h-2 rounded-full ${PRIORITY_CONFIG[p].dot}`} />
+                  {PRIORITY_CONFIG[p].label}
+                  {ev.priority === p && <Check size={10} className="ml-auto" />}
                 </button>
+              ))}
 
-                {/* Priority divider */}
-                <div className="px-4 py-1.5 border-t border-white/5">
-                  <p className="text-white/20 text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5">
-                    <Flag size={9} /> Priority
-                  </p>
-                </div>
+              {ev.priority !== 'none' && (
+                <button
+                  onClick={() => { setOpen(false); onPriority('none') }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-white/30 hover:text-white/60 hover:bg-white/5 transition-all text-[11px] font-black uppercase tracking-widest"
+                >
+                  <div className="w-2 h-2 rounded-full bg-white/20" /> Clear priority
+                </button>
+              )}
 
-                {(['low', 'medium', 'high'] as const).map(p => (
-                  <button
-                    key={p}
-                    onClick={() => { setOpen(false); onPriority(p) }}
-                    className={`w-full flex items-center gap-2.5 px-4 py-2 transition-all text-[11px] font-black uppercase tracking-widest ${
-                      ev.priority === p ? 'bg-white/8 text-white' : 'text-white/50 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    <div className={`w-2 h-2 rounded-full ${PRIORITY_CONFIG[p].dot}`} />
-                    {PRIORITY_CONFIG[p].label}
-                    {ev.priority === p && <Check size={10} className="ml-auto" />}
-                  </button>
-                ))}
-
-                {ev.priority !== 'none' && (
-                  <button
-                    onClick={() => { setOpen(false); onPriority('none') }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2 text-white/30 hover:text-white/60 hover:bg-white/5 transition-all text-[11px] font-black uppercase tracking-widest"
-                  >
-                    <div className="w-2 h-2 rounded-full bg-white/20" /> Clear priority
-                  </button>
-                )}
-
-                {/* Delete */}
-                <div className="border-t border-white/5">
-                  <button
-                    onClick={() => { setOpen(false); onDelete() }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all text-[11px] font-black uppercase tracking-widest"
-                  >
-                    <Trash2 size={12} /> Delete
-                  </button>
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-      </div>
+              {/* Delete */}
+              <div className="border-t border-white/5">
+                <button
+                  onClick={() => { setOpen(false); onDelete() }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all text-[11px] font-black uppercase tracking-widest"
+                >
+                  <Trash2 size={12} /> Delete
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -715,7 +725,7 @@ export function HomeDashboard() {
     setLoadingEvents(true)
     const { data } = await supabase
       .from('calendar_events')
-      .select('id, title, event_type, event_date')
+      .select('id, title, event_type, event_date, priority')
       .eq('user_id', user.id)
       .order('event_date', { ascending: true })
     if (data) setEvents(data as CalEvent[])
