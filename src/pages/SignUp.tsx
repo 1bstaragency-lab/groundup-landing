@@ -9,8 +9,8 @@ import type { ArtistTone } from '../types/auth.types';
 type Step = 'signup' | 'profile' | 'tone';
 
 interface SignUpPageProps {
-  onComplete: () => void;
-  onSwitchToLogin: () => void;
+  onComplete?: () => void;
+  onSwitchToLogin?: () => void;
 }
 
 export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
@@ -32,7 +32,7 @@ export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
       onboarding_complete: true,
     });
     setSaving(false);
-    onComplete();
+    onComplete?.();
   }
 
   return (
@@ -55,7 +55,7 @@ export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
             <motion.div key="signup" className="w-full flex justify-center">
               <SignUpForm
                 onSuccess={() => setStep('profile')}
-                onSwitchToLogin={onSwitchToLogin}
+                onSwitchToLogin={onSwitchToLogin ?? (() => {})}
               />
             </motion.div>
           )}
