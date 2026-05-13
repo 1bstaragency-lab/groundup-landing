@@ -5,6 +5,7 @@ import ShaderShowcase from './components/ui/hero';
 import { LiquidButton } from './components/ui/liquid-glass-button';
 import { BentoPricing } from './components/ui/bento-pricing';
 import { GlobeLive } from './components/ui/cobe-globe-live';
+import { SupportBot } from './components/ui/support-bot';
 import { CinematicFooter } from './components/ui/motion-footer';
 import './App.css';
 
@@ -107,6 +108,11 @@ function App() {
                 </div>
             </div>
         </div>
+      </section>
+
+      {/* FAQ Support Section */}
+      <section id="faq" className="py-32 px-6 bg-black relative">
+        <SupportBot />
       </section>
 
       {/* Global Artist Network */}
