@@ -29,7 +29,16 @@ export function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProps) {
     setLoading(false);
 
     if (signInError) {
-      setError('Invalid email or password.');
+      const msg = signInError.toLowerCase();
+      if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
+        setError('Please confirm your email before signing in. Check your inbox.');
+      } else if (msg.includes('invalid') || msg.includes('credentials') || msg.includes('password')) {
+        setError('Invalid email or password.');
+      } else if (msg.includes('fetch') || msg.includes('network') || msg.includes('load')) {
+        setError('Connection error — Supabase may not be configured on this deployment.');
+      } else {
+        setError(signInError);
+      }
       return;
     }
 
