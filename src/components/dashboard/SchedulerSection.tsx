@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, ChevronRight, Plus, Clock, X, Smartphone, Check } from "lucide-react"
+import { supabase } from "../../lib/supabaseClient"
+import { useAuth } from "../../hooks/useAuth"
 
 const DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
 const MONTHS = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"]
@@ -100,12 +102,21 @@ function AddEventModal({ onClose, onSave }: { onClose: () => void; onSave: (ev: 
   )
 }
 
-function PhoneModal({ onClose }: { onClose: () => void }) {
+function PhoneModal({ onClose, userId }: { onClose: () => void; userId?: string }) {
   const [phone, setPhone] = useState("")
   const [submitted, setSubmitted] = useState(false)
+  const [saving, setSaving] = useState(false)
 
-  function submit() {
+  async function submit() {
     if (!phone) return
+    setSaving(true)
+    if (userId) {
+      await supabase
+        .from('artist_preferences')
+        .update({ phone, sms_notifications: true })
+        .eq('id', userId)
+    }
+    setSaving(false)
     setSubmitted(true)
   }
 
@@ -169,10 +180,10 @@ function PhoneModal({ onClose }: { onClose: () => void }) {
                 </button>
                 <button
                   onClick={submit}
-                  disabled={!phone}
+                  disabled={!phone || saving}
                   className="flex-1 py-3 bg-[#FFD700] text-black font-black text-[10px] uppercase tracking-widest rounded-2xl hover:scale-105 transition-all disabled:opacity-30 disabled:pointer-events-none"
                 >
-                  Notify Me
+                  {saving ? 'Saving...' : 'Notify Me'}
                 </button>
               </div>
             </motion.div>
@@ -185,6 +196,7 @@ function PhoneModal({ onClose }: { onClose: () => void }) {
 
 export function SchedulerSection() {
   const today = new Date()
+  const { user } = useAuth()
   const [currentMonth, setCurrentMonth] = useState(today.getMonth())
   const [currentYear, setCurrentYear] = useState(today.getFullYear())
   const [events, setEvents] = useState<CalEvent[]>([])
@@ -212,66 +224,66 @@ export function SchedulerSection() {
   const upcomingEvents = events.filter(e => e.day >= (todayDay > 0 ? todayDay : 1)).slice(0, 3)
 
   return (
-    <div className="space-y-12 pb-20">
-      <div className="flex flex-col md:flex-row items-end justify-between gap-6 border-b border-white/5 pb-10">
-        <div className="max-w-xl">
-          <h2 className="text-5xl font-black text-white tracking-tighter mb-4 uppercase">Campaign Scheduler</h2>
-          <p className="text-white/40 font-medium text-lg leading-relaxed">Coordinate your releases, content drops, and team meetings in one high-fidelity timeline.</p>
+    <div className="space-y-6 pb-8">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-white/5 pb-5">
+        <div>
+          <h2 className="text-3xl font-black text-white tracking-tighter uppercase">Campaign Scheduler</h2>
+          <p className="text-white/40 font-medium text-sm mt-1">Coordinate releases, content drops, and team meetings.</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <button
             onClick={prevMonth}
-            className="p-4 rounded-2xl bg-zinc-900 border border-white/5 text-white/40 hover:text-white transition-colors"
+            className="p-2.5 rounded-xl bg-zinc-900 border border-white/5 text-white/40 hover:text-white transition-colors"
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft size={16} />
           </button>
-          <div className="bg-zinc-900 px-8 py-4 rounded-2xl border border-white/5 font-black text-xs uppercase tracking-[0.3em] text-white">
+          <div className="bg-zinc-900 px-5 py-2.5 rounded-xl border border-white/5 font-black text-[10px] uppercase tracking-[0.3em] text-white">
             {MONTHS[currentMonth]} {currentYear}
           </div>
           <button
             onClick={nextMonth}
-            className="p-4 rounded-2xl bg-zinc-900 border border-white/5 text-white/40 hover:text-white transition-colors"
+            className="p-2.5 rounded-xl bg-zinc-900 border border-white/5 text-white/40 hover:text-white transition-colors"
           >
-            <ChevronRight size={20} />
+            <ChevronRight size={16} />
           </button>
           <button
             onClick={() => setShowAddEvent(true)}
-            className="ml-6 p-4 rounded-2xl bg-[#FFD700] text-black font-black flex items-center gap-2 hover:scale-105 transition-transform"
+            className="ml-2 px-4 py-2.5 rounded-xl bg-[#FFD700] text-black font-black flex items-center gap-2 hover:scale-105 transition-transform"
           >
-            <Plus size={20} /> <span className="text-[10px] uppercase tracking-widest">New Event</span>
+            <Plus size={15} /> <span className="text-[10px] uppercase tracking-widest">New Event</span>
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Main Calendar Grid */}
-        <div className="lg:col-span-8 bg-zinc-900/20 border border-white/5 rounded-[3rem] p-8 backdrop-blur-3xl overflow-x-auto">
-          <div className="min-w-[800px]">
-            <div className="grid grid-cols-7 gap-4 mb-8">
+        <div className="lg:col-span-8 bg-zinc-900/20 border border-white/5 rounded-[2rem] p-5 backdrop-blur-3xl overflow-x-auto">
+          <div className="min-w-[560px]">
+            <div className="grid grid-cols-7 gap-1.5 mb-3">
               {DAYS.map(day => (
-                <div key={day} className="text-center text-[10px] font-black text-white/20 tracking-widest uppercase py-4">{day}</div>
+                <div key={day} className="text-center text-[9px] font-black text-white/20 tracking-widest uppercase py-2">{day}</div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-4 auto-rows-fr">
+            <div className="grid grid-cols-7 gap-1.5">
               {/* blank cells for the start-day offset */}
               {Array.from({ length: startDayOfWeek }).map((_, i) => (
-                <div key={`blank-${i}`} className="min-h-[140px]" />
+                <div key={`blank-${i}`} className="min-h-[60px]" />
               ))}
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const dayNum = i + 1
                 const event = events.find(e => e.day === dayNum)
                 const isToday = dayNum === todayDay
                 return (
-                  <div key={i} className={`min-h-[140px] rounded-2xl border p-4 transition-all duration-300 relative group ${
+                  <div key={i} className={`min-h-[60px] rounded-xl border p-2 transition-all duration-300 relative group ${
                     isToday ? "border-[#FFD700]/40 bg-[#FFD700]/5" :
                     event ? "border-white/10 bg-white/5" : "border-white/5 hover:border-white/10 hover:bg-white/5"
                   }`}>
-                    <span className={`text-xs font-black ${isToday ? "text-[#FFD700]" : event ? "text-white" : "text-white/20 group-hover:text-white/40"}`}>
+                    <span className={`text-[10px] font-black ${isToday ? "text-[#FFD700]" : event ? "text-white" : "text-white/20 group-hover:text-white/40"}`}>
                       {dayNum}
                     </span>
-                    {isToday && <div className="absolute top-3 right-3 w-1.5 h-1.5 bg-[#FFD700] rounded-full" />}
+                    {isToday && <div className="absolute top-2 right-2 w-1 h-1 bg-[#FFD700] rounded-full" />}
                     {event && (
-                      <div className={`mt-4 p-3 rounded-xl text-[9px] font-black leading-tight uppercase tracking-tight ${event.color}`}>
+                      <div className={`mt-1 p-1 rounded-md text-[8px] font-black leading-tight uppercase tracking-tight truncate ${event.color}`}>
                         {event.title}
                       </div>
                     )}
@@ -334,7 +346,7 @@ export function SchedulerSection() {
 
       <AnimatePresence>
         {showAddEvent && <AddEventModal onClose={() => setShowAddEvent(false)} onSave={addEvent} />}
-        {showPhone && <PhoneModal onClose={() => setShowPhone(false)} />}
+        {showPhone && <PhoneModal onClose={() => setShowPhone(false)} userId={user?.id} />}
       </AnimatePresence>
     </div>
   )

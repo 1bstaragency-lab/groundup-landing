@@ -234,8 +234,37 @@ function useTts() {
       }
     } else {
       const utterance = new SpeechSynthesisUtterance(text)
-      utterance.rate = 0.95
-      utterance.pitch = 1
+      utterance.rate = 0.88
+      utterance.pitch = 1.0
+
+      const applyVoice = (voices: SpeechSynthesisVoice[]) => {
+        const PREFERRED = [
+          'Google US English',
+          'Microsoft Aria Online (Natural) - English (United States)',
+          'Microsoft Guy Online (Natural) - English (United States)',
+          'Microsoft Mark Online (Natural) - English (United States)',
+          'Samantha',
+          'Alex',
+        ]
+        const picked =
+          PREFERRED.reduce<SpeechSynthesisVoice | null>((found, name) =>
+            found ?? (voices.find(v => v.name === name) ?? null), null)
+          ?? voices.find(v => v.lang.startsWith('en') && !v.localService)
+          ?? voices.find(v => v.lang.startsWith('en'))
+          ?? null
+        if (picked) utterance.voice = picked
+      }
+
+      const voices = window.speechSynthesis.getVoices()
+      if (voices.length) {
+        applyVoice(voices)
+      } else {
+        window.speechSynthesis.onvoiceschanged = () => {
+          applyVoice(window.speechSynthesis.getVoices())
+          window.speechSynthesis.onvoiceschanged = null
+        }
+      }
+
       utterance.onend = () => setTtsState('idle')
       utterance.onerror = () => setTtsState('idle')
       utteranceRef.current = utterance

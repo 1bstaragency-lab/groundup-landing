@@ -4,3 +4,13 @@
 
 [build.environment]
   NODE_VERSION = "20"
+
+# Runs every Sunday at 10am ET and every Wednesday at 10am ET
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[functions.scheduled-texts]]
+  schedule = "0 14 * * 0,3"
