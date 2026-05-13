@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, TrendingUp, Users, Music2, Globe, ExternalLink, Zap, Play, Radio, Lock, Crown, X } from 'lucide-react';
 import { INFLUENCERS, NETWORK_STATS, type Platform, type TikTokTier } from '../../data/influencers';
 import { useAuth } from '../../hooks/useAuth';
-import { redirectToCheckout, stripeConfigured } from '../../lib/stripe';
+import { GlassCheckoutCard } from '../ui/glass-checkout-card';
 
 const FREE_ROW_LIMIT = 6; // 2 rows × 3 cols on desktop
 
@@ -44,7 +44,7 @@ function fmtFollowers(n: number): string {
   return String(n);
 }
 
-function UpgradeModal({ onClose, onUpgrade, loading }: { onClose: () => void; onUpgrade: () => void; loading: boolean }) {
+function UpgradeModal({ onClose }: { onClose: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -58,61 +58,31 @@ function UpgradeModal({ onClose, onUpgrade, loading }: { onClose: () => void; on
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-        className="bg-zinc-950 border border-white/10 rounded-3xl p-8 max-w-md w-full relative"
+        className="relative"
         onClick={e => e.stopPropagation()}
       >
-        <button onClick={onClose} className="absolute top-5 right-5 text-white/20 hover:text-white transition-colors">
-          <X size={16} />
-        </button>
-
-        {/* Crown */}
-        <div className="w-14 h-14 rounded-2xl bg-[#FFD700]/10 border border-[#FFD700]/20 flex items-center justify-center mb-6">
-          <Crown size={24} className="text-[#FFD700]" />
-        </div>
-
-        <h2 className="text-2xl font-black text-white tracking-tighter uppercase mb-2">Unlock Full Network</h2>
-        <p className="text-white/40 text-sm font-medium mb-6 leading-relaxed">
-          Get full access to all {NETWORK_STATS.total.toLocaleString()} influencers — TikTok creators, Twitter/X accounts, Spotify curators, YouTube channels, and SoundCloud DJs — with direct contact info and engagement data.
-        </p>
-
-        <ul className="space-y-2 mb-8">
-          {[
-            `${NETWORK_STATS.total.toLocaleString()} influencers across 5 platforms`,
-            'Direct emails & Instagram handles',
-            'Priority tiers (P1 → P4) for outreach',
-            'Real engagement data & follower counts',
-            'Unlimited search & filtering',
-          ].map(f => (
-            <li key={f} className="flex items-center gap-3 text-white/60 text-[11px] font-bold uppercase tracking-wide">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#FFD700] shrink-0" />
-              {f}
-            </li>
-          ))}
-        </ul>
-
         <button
-          onClick={onUpgrade}
-          disabled={loading}
-          className="w-full py-4 rounded-2xl bg-[#FFD700] text-black font-black text-sm uppercase tracking-widest hover:bg-[#FFD700]/90 transition-all disabled:opacity-50"
+          onClick={onClose}
+          className="absolute -top-3 -right-3 z-10 w-7 h-7 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center text-white/30 hover:text-white transition-colors"
         >
-          {loading ? 'Redirecting...' : stripeConfigured ? 'Upgrade to Pro' : 'Coming Soon — Stripe Not Configured'}
+          <X size={13} />
         </button>
-
-        <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest text-center mt-4">
-          Cancel anytime · Instant access
-        </p>
+        <GlassCheckoutCard
+          amount={29}
+          planName="Pro"
+          onSuccess={onClose}
+        />
       </motion.div>
     </motion.div>
   );
 }
 
 export function InfluencerSection() {
-  const { user, profile }             = useAuth();
+  const { profile }                   = useAuth();
   const [activePlatform, setActivePlatform] = useState<Platform | 'All'>('All');
   const [activeTier, setActiveTier]         = useState<TikTokTier | 'All'>('All');
   const [search, setSearch]                 = useState('');
-  const [showUpgrade, setShowUpgrade]       = useState(false);
-  const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   const isPro = profile?.plan_tier === 'pro' || profile?.plan_tier === 'growth';
 
@@ -134,22 +104,11 @@ export function InfluencerSection() {
   const unlocked = isPro ? filtered : filtered.slice(0, FREE_ROW_LIMIT);
   const locked   = isPro ? []       : filtered.slice(FREE_ROW_LIMIT);
 
-  async function handleUpgrade() {
-    if (!stripeConfigured) { setShowUpgrade(false); return; }
-    setUpgradeLoading(true);
-    await redirectToCheckout(user?.id ?? '');
-    setUpgradeLoading(false);
-  }
-
   return (
     <>
       <AnimatePresence>
         {showUpgrade && (
-          <UpgradeModal
-            onClose={() => setShowUpgrade(false)}
-            onUpgrade={handleUpgrade}
-            loading={upgradeLoading}
-          />
+          <UpgradeModal onClose={() => setShowUpgrade(false)} />
         )}
       </AnimatePresence>
 
