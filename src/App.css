@@ -71,4 +71,35 @@ body {
 /* Responsive */
 @media (max-width: 768px) {
   .nav-pill { @apply hidden; }
+
+  .nav-container {
+    @apply px-4 py-5;
+  }
+
+  .nav-cta {
+    @apply px-4 py-2.5 text-[9px] min-h-[40px];
+  }
+}
+
+/* iOS safe-area support */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Dynamic viewport height — handles iOS Safari toolbar */
+.h-dvh {
+  height: 100dvh;
+}
+
+/* Prevent text size adjustment on iOS */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Smooth momentum scrolling on iOS */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
 }

@@ -87,7 +87,7 @@ export function RolloutsSection() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-5xl font-black text-white tracking-tighter uppercase mb-2">Rollouts</h1>
+          <h1 className="text-3xl lg:text-5xl font-black text-white tracking-tighter uppercase mb-2">Rollouts</h1>
           <p className="text-white/30 text-sm font-bold">
             {releases.length === 0 ? 'No releases planned yet.' : `${releases.length} release${releases.length > 1 ? 's' : ''} in pipeline`}
           </p>
@@ -165,7 +165,7 @@ export function RolloutsSection() {
         /* Type Card Empty States */
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
           <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.3em]">Choose a release type to get started</p>
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {(Object.keys(TYPE_META) as ReleaseType[]).map(type => {
               const meta = TYPE_META[type];
               return (
@@ -188,9 +188,9 @@ export function RolloutsSection() {
           </div>
         </motion.div>
       ) : (
-        <div className="grid grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Release List */}
-          <div className="col-span-4 space-y-3">
+          <div className="lg:col-span-4 space-y-3">
             <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Pipeline</p>
             {releases.map(r => (
               <motion.button
@@ -228,7 +228,7 @@ export function RolloutsSection() {
           </div>
 
           {/* Checklist Panel */}
-          <div className="col-span-8">
+          <div className="lg:col-span-8">
             <AnimatePresence mode="wait">
               {activeRelease ? (
                 <motion.div

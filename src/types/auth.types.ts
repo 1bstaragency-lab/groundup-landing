@@ -41,6 +41,8 @@ export interface AuthContextValue {
   user: AuthUser | null;
   profile: ArtistProfile | null;
   loading: boolean;
+  emailJustConfirmed: boolean;
+  clearEmailConfirmed: () => void;
   signUp: (credentials: SignUpCredentials) => Promise<{ error: string | null }>;
   signIn: (credentials: SignInCredentials) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;

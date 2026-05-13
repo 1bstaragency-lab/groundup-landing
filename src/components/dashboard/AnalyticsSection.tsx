@@ -109,7 +109,7 @@ export function AnalyticsSection() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-5xl font-black text-white tracking-tighter uppercase mb-2">Analytics</h1>
+          <h1 className="text-3xl lg:text-5xl font-black text-white tracking-tighter uppercase mb-2">Analytics</h1>
           <p className="text-white/30 text-sm font-bold">Connect your platforms to see real-time data.</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-zinc-900/60 border border-white/5 rounded-2xl">
@@ -119,7 +119,7 @@ export function AnalyticsSection() {
       </div>
 
       {/* Stat Cards — top 4 */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard label="Total Streams" value="—" sub="Connect Spotify" color="text-green-400" />
         <StatCard label="Monthly Listeners" value="—" sub="Connect Spotify" color="text-[#FFD700]" />
         <StatCard label="IG Followers" value="—" sub="Connect Instagram" color="text-pink-400" />
@@ -127,14 +127,14 @@ export function AnalyticsSection() {
       </div>
 
       {/* Secondary stats row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label="TikTok Sound Uses" value="—" sub="Connect TikTok" color="text-sky-400" />
         <StatCard label="Apple Music Plays" value="—" sub="Connect Apple Music" color="text-pink-300" />
         <StatCard label="SoundCloud Plays" value="—" sub="Connect SoundCloud" color="text-orange-400" />
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <EmptyChart label="Stream Trend (30 days)" />
         <EmptyChart label="Follower Growth (30 days)" />
       </div>
@@ -142,7 +142,7 @@ export function AnalyticsSection() {
       {/* Connect Platforms */}
       <div>
         <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Connect Platforms</p>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {PLATFORMS.map(platform => (
             <motion.div
               key={platform.name}

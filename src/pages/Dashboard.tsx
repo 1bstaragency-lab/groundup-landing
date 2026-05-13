@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut } from 'lucide-react';
+import { LogOut, CheckCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { DashboardShell } from '../components/layout/DashboardShell';
 import { TeamDashboardMockup } from '../components/ui/TeamDashboardMockup';
@@ -13,11 +13,22 @@ import { AnalyticsSection } from '../components/dashboard/AnalyticsSection';
 import { TeamSection } from '../components/dashboard/TeamSection';
 
 export function Dashboard() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, emailJustConfirmed, clearEmailConfirmed } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
   const [loggingOut, setLoggingOut] = useState(false);
+  const [showBanner, setShowBanner] = useState(false);
 
   const displayName = profile?.artist_name ?? user?.artistName ?? user?.email?.split('@')[0] ?? 'Artist';
+
+  // Show email confirmed banner when flag fires from AuthContext
+  useEffect(() => {
+    if (emailJustConfirmed) {
+      setShowBanner(true);
+      clearEmailConfirmed();
+      const t = setTimeout(() => setShowBanner(false), 5000);
+      return () => clearTimeout(t);
+    }
+  }, [emailJustConfirmed, clearEmailConfirmed]);
 
   async function handleSignOut() {
     setLoggingOut(true);
@@ -25,42 +36,66 @@ export function Dashboard() {
   }
 
   return (
-    <DashboardShell activeTab={activeTab} setActiveTab={setActiveTab}>
-      <AnimatePresence mode="wait">
-
-        {activeTab === 'home' && (
-          <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-10">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="text-5xl font-black text-white tracking-tighter uppercase mb-3">
-                  Welcome, <span className="text-[#FFD700]">{displayName.toUpperCase()}</span>
-                </h1>
-                <p className="text-white/40 font-medium text-base leading-relaxed">
-                  Your Artist OS is live. Start planning your next rollout.
-                </p>
-              </div>
-              <button
-                onClick={handleSignOut}
-                disabled={loggingOut}
-                className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-zinc-900/60 border border-white/5 text-white/40 hover:text-white hover:border-white/20 transition-all font-black text-[10px] uppercase tracking-widest"
-              >
-                <LogOut size={14} />
-                {loggingOut ? 'Signing out...' : 'Sign Out'}
-              </button>
-            </div>
-            <TeamDashboardMockup />
+    <>
+      {/* Email confirmed banner */}
+      <AnimatePresence>
+        {showBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -60 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -60 }}
+            transition={{ type: 'spring', damping: 24, stiffness: 260 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-6 py-3.5 bg-[#FFD700] text-black rounded-2xl shadow-[0_20px_60px_rgba(255,215,0,0.4)] font-black text-[11px] uppercase tracking-widest whitespace-nowrap"
+          >
+            <CheckCircle size={16} strokeWidth={3} />
+            Email confirmed — welcome to GrounduP!
+            <button
+              onClick={() => setShowBanner(false)}
+              className="ml-2 opacity-50 hover:opacity-100 transition-opacity text-black font-black text-base leading-none"
+            >
+              ×
+            </button>
           </motion.div>
         )}
-
-        {activeTab === 'rollouts'  && <motion.div key="rollouts"  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><RolloutsSection /></motion.div>}
-        {activeTab === 'analytics' && <motion.div key="analytics" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><AnalyticsSection /></motion.div>}
-        {activeTab === 'team'      && <motion.div key="team"      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><TeamSection /></motion.div>}
-        {activeTab === 'learn'     && <LearnSection />}
-        {activeTab === 'scheduler' && <SchedulerSection />}
-        {activeTab === 'studio'    && <StudioSection />}
-        {activeTab === 'profile'   && <ProfileSection />}
-
       </AnimatePresence>
-    </DashboardShell>
+
+      <DashboardShell activeTab={activeTab} setActiveTab={setActiveTab}>
+        <AnimatePresence mode="wait">
+
+          {activeTab === 'home' && (
+            <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6 lg:space-y-10">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h1 className="text-3xl lg:text-5xl font-black text-white tracking-tighter uppercase mb-2">
+                    Welcome, <span className="text-[#FFD700]">{displayName.toUpperCase()}</span>
+                  </h1>
+                  <p className="text-white/40 font-medium text-sm leading-relaxed">
+                    Your Artist OS is live. Start planning your next rollout.
+                  </p>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  disabled={loggingOut}
+                  className="flex items-center gap-2 lg:gap-3 px-3 lg:px-5 py-2.5 lg:py-3 rounded-2xl bg-zinc-900/60 border border-white/5 text-white/40 hover:text-white hover:border-white/20 transition-all font-black text-[10px] uppercase tracking-widest shrink-0"
+                >
+                  <LogOut size={13} />
+                  <span className="hidden sm:inline">{loggingOut ? 'Signing out...' : 'Sign Out'}</span>
+                </button>
+              </div>
+              <TeamDashboardMockup />
+            </motion.div>
+          )}
+
+          {activeTab === 'rollouts'  && <motion.div key="rollouts"  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><RolloutsSection /></motion.div>}
+          {activeTab === 'analytics' && <motion.div key="analytics" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><AnalyticsSection /></motion.div>}
+          {activeTab === 'team'      && <motion.div key="team"      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><TeamSection /></motion.div>}
+          {activeTab === 'learn'     && <LearnSection />}
+          {activeTab === 'scheduler' && <SchedulerSection />}
+          {activeTab === 'studio'    && <StudioSection />}
+          {activeTab === 'profile'   && <ProfileSection />}
+
+        </AnimatePresence>
+      </DashboardShell>
+    </>
   );
 }

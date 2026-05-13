@@ -11,10 +11,24 @@ import type {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function isEmailConfirmationUrl(): boolean {
+  const hash   = window.location.hash;
+  const search = window.location.search;
+  return (
+    hash.includes('type=signup') ||
+    hash.includes('type=email') ||
+    search.includes('type=signup') ||
+    search.includes('type=email') ||
+    // PKCE flow: code param present on first load (before exchange)
+    (search.includes('code=') && !sessionStorage.getItem('gu_code_consumed'))
+  );
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [profile, setProfile] = useState<ArtistProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user,               setUser]               = useState<AuthUser | null>(null);
+  const [profile,            setProfile]            = useState<ArtistProfile | null>(null);
+  const [loading,            setLoading]            = useState(true);
+  const [emailJustConfirmed, setEmailJustConfirmed] = useState(false);
 
   async function fetchProfile(userId: string) {
     const { data, error } = await supabase
@@ -34,6 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    // Mark PKCE code as consumed so we only fire the banner once
+    if (window.location.search.includes('code=')) {
+      sessionStorage.setItem('gu_code_consumed', '1');
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setUser(sessionToUser(session));
@@ -42,10 +61,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
         setUser(sessionToUser(session));
         fetchProfile(session.user.id);
+
+        // Detect email confirmation: fires on SIGNED_IN when the URL
+        // carries confirmation tokens (implicit) or the PKCE code
+        if (event === 'SIGNED_IN' && isEmailConfirmationUrl()) {
+          setEmailJustConfirmed(true);
+          // Clean up URL so refreshes don't re-trigger
+          window.history.replaceState(null, '', window.location.pathname);
+          sessionStorage.removeItem('gu_code_consumed');
+        }
       } else {
         setUser(null);
         setProfile(null);
@@ -54,6 +82,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  function clearEmailConfirmed() {
+    setEmailJustConfirmed(false);
+  }
 
   async function signUp({ email, password, artistName }: SignUpCredentials) {
     const { data, error } = await supabase.auth.signUp({
@@ -111,7 +143,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut, saveProfile, refreshProfile }}>
+    <AuthContext.Provider value={{
+      user, profile, loading,
+      emailJustConfirmed, clearEmailConfirmed,
+      signUp, signIn, signOut, saveProfile, refreshProfile,
+    }}>
       {children}
     </AuthContext.Provider>
   );
