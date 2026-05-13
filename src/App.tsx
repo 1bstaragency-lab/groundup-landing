@@ -60,16 +60,20 @@ function App() {
       {/* Navigation */}
       <nav className="nav-container">
         <div className="nav-logo">
-          <img src="/logo.png" alt="GrounduP" className="h-8 md:h-10" />
+          <img src="/logo.png" alt="GrounduP" className="h-12 md:h-16" />
         </div>
-        <div className="nav-pill">
-          <a href="#features" className="nav-pill-link">Features</a>
-          <a href="#pricing" className="nav-pill-link">Pricing</a>
-          <a href="#waitlist" className="nav-pill-link">Waitlist</a>
+        <nav className="hidden md:flex items-center gap-12 text-[11px] font-black uppercase tracking-[0.2em] text-white/40">
+          <a href="#features" className="hover:text-[#FFD700] transition-colors">Features</a>
+          <a href="#pricing" className="hover:text-[#FFD700] transition-colors">Pricing</a>
+          <a href="#waitlist" className="hover:text-[#FFD700] transition-colors">Waitlist</a>
+        </nav>
+
+        <div className="flex items-center gap-6">
+          <div className="w-14 h-14 bg-[#FFD700] rounded-2xl flex items-center justify-center font-black text-black text-2xl shadow-[0_0_30px_rgba(255,215,0,0.3)]">uP</div>
+          <button className="nav-cta" onClick={() => document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' })}>
+            Join Now
+          </button>
         </div>
-        <button className="nav-cta" onClick={() => document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' })}>
-          Join Now
-        </button>
       </nav>
 
       {/* Hero Section */}
