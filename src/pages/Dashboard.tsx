@@ -13,6 +13,7 @@ import { TeamSection } from '../components/dashboard/TeamSection';
 import { CuratorSection } from '../components/dashboard/CuratorSection';
 import { InfluencerSection } from '../components/dashboard/InfluencerSection';
 import { HomeDashboard } from '../components/dashboard/HomeDashboard';
+import { GmailConnectButton } from '../components/ui/GmailCompose';
 
 const INDUSTRY_NEWS = [
   {
@@ -55,9 +56,12 @@ export function Dashboard() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
 
-  const displayName = profile?.artist_name ?? user?.artistName ?? user?.email?.split('@')[0] ?? 'Artist';
+  const rawName = profile?.artist_name ?? user?.artistName ?? '';
+  const displayName = rawName && !rawName.includes('@') ? rawName : 'Artist';
 
-  // Show email confirmed banner when flag fires from AuthContext
+  const [gmailBanner, setGmailBanner] = useState(false);
+
+  // Show email confirmed banner + Gmail connected banner from redirect params
   useEffect(() => {
     if (emailJustConfirmed) {
       setShowBanner(true);
@@ -67,6 +71,15 @@ export function Dashboard() {
     }
   }, [emailJustConfirmed, clearEmailConfirmed]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('gmail_connected') === '1') {
+      setGmailBanner(true);
+      window.history.replaceState({}, '', '/dashboard');
+      setTimeout(() => setGmailBanner(false), 5000);
+    }
+  }, []);
+
   async function handleSignOut() {
     setLoggingOut(true);
     await signOut();
@@ -74,6 +87,20 @@ export function Dashboard() {
 
   return (
     <>
+
+      {/* Gmail connected banner */}
+      <AnimatePresence>
+        {gmailBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -60 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -60 }}
+            transition={{ type: 'spring', damping: 24, stiffness: 260 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-6 py-3.5 bg-green-500 text-white rounded-2xl shadow-[0_20px_60px_rgba(34,197,94,0.4)] font-black text-[11px] uppercase tracking-widest whitespace-nowrap"
+          >
+            <CheckCircle size={16} strokeWidth={3} />
+            Gmail connected — ready to send outreach emails!
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Email confirmed banner */}
       <AnimatePresence>
@@ -111,14 +138,17 @@ export function Dashboard() {
                     Your Artist OS is live. Start planning your next rollout.
                   </p>
                 </div>
-                <button
-                  onClick={handleSignOut}
-                  disabled={loggingOut}
-                  className="flex items-center gap-2 lg:gap-3 px-3 lg:px-5 py-2.5 lg:py-3 rounded-2xl bg-zinc-900/60 border border-white/5 text-white/40 hover:text-white hover:border-white/20 transition-all font-black text-[10px] uppercase tracking-widest shrink-0"
-                >
-                  <LogOut size={13} />
-                  <span className="hidden sm:inline">{loggingOut ? 'Signing out...' : 'Sign Out'}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <GmailConnectButton />
+                  <button
+                    onClick={handleSignOut}
+                    disabled={loggingOut}
+                    className="flex items-center gap-2 lg:gap-3 px-3 lg:px-5 py-2.5 lg:py-3 rounded-2xl bg-zinc-900/60 border border-white/5 text-white/40 hover:text-white hover:border-white/20 transition-all font-black text-[10px] uppercase tracking-widest shrink-0"
+                  >
+                    <LogOut size={13} />
+                    <span className="hidden sm:inline">{loggingOut ? 'Signing out...' : 'Sign Out'}</span>
+                  </button>
+                </div>
               </div>
               {/* Live dashboard */}
               <HomeDashboard />

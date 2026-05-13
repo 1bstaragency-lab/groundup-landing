@@ -112,6 +112,111 @@ function AddEventModal({ userId, onClose, onSaved }: { userId: string; onClose: 
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
 
+const TYPE_COLOR: Record<string, string> = {
+  Release:   'bg-[#FFD700] text-black',
+  Social:    'bg-white/10 text-white',
+  PR:        'bg-[#FFD700]/20 text-[#FFD700]',
+  Meeting:   'bg-blue-500/20 text-blue-400',
+  TikTok:    'bg-pink-500/20 text-pink-400',
+  Interview: 'bg-purple-500/20 text-purple-400',
+}
+
+const DAYS_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+
+function DynamicCalendar({ events }: { events: CalEvent[] }) {
+  const today = new Date()
+  const year  = today.getFullYear()
+  const month = today.getMonth()
+  const daysInMonth   = new Date(year, month + 1, 0).getDate()
+  const startWeekday  = new Date(year, month, 1).getDay()
+  const todayDate     = today.getDate()
+
+  const count  = events.length
+  // size tiers
+  const isSmall  = count >= 1  && count <= 4   // list only, no grid
+  const isMedium = count >= 5  && count <= 9   // mini grid + dots
+  const isLarge  = count >= 10                  // full grid + labels
+
+  // Map event_date → events for quick lookup
+  const byDay: Record<number, CalEvent[]> = {}
+  events.forEach(ev => {
+    const d = new Date(ev.event_date + 'T00:00:00')
+    if (d.getFullYear() === year && d.getMonth() === month) {
+      const day = d.getDate()
+      if (!byDay[day]) byDay[day] = []
+      byDay[day].push(ev)
+    }
+  })
+
+  if (isSmall) return null // just show list below
+
+  const cellBase = isMedium
+    ? 'min-h-[44px] rounded-lg p-1'
+    : 'min-h-[64px] rounded-xl p-2'
+
+  return (
+    <div className="bg-zinc-900/30 border border-white/5 rounded-2xl p-4 mb-4">
+      <p className="text-white/20 text-[9px] font-black uppercase tracking-[0.3em] mb-3">
+        {today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+      </p>
+      {/* Day headers */}
+      <div className="grid grid-cols-7 gap-1 mb-1">
+        {DAYS_SHORT.map((d, i) => (
+          <div key={i} className="text-center text-[9px] font-black text-white/20 uppercase py-1">{d}</div>
+        ))}
+      </div>
+      {/* Day cells */}
+      <div className="grid grid-cols-7 gap-1">
+        {Array.from({ length: startWeekday }).map((_, i) => (
+          <div key={`b${i}`} />
+        ))}
+        {Array.from({ length: daysInMonth }).map((_, i) => {
+          const day     = i + 1
+          const dayEvs  = byDay[day] ?? []
+          const isToday = day === todayDate
+          return (
+            <div key={day} className={`${cellBase} border transition-all relative ${
+              isToday    ? 'border-[#FFD700]/40 bg-[#FFD700]/8' :
+              dayEvs.length ? 'border-white/10 bg-white/4' :
+              'border-white/4 hover:border-white/10'
+            }`}>
+              <span className={`text-[10px] font-black ${isToday ? 'text-[#FFD700]' : dayEvs.length ? 'text-white' : 'text-white/25'}`}>
+                {day}
+              </span>
+              {isToday && <div className="absolute top-1 right-1 w-1 h-1 bg-[#FFD700] rounded-full" />}
+              {/* Medium: dots only */}
+              {isMedium && dayEvs.length > 0 && (
+                <div className="flex gap-0.5 mt-0.5 flex-wrap">
+                  {dayEvs.slice(0, 3).map((ev, j) => (
+                    <div key={j} className={`w-1.5 h-1.5 rounded-full ${
+                      ev.event_type === 'Release' ? 'bg-[#FFD700]' :
+                      ev.event_type === 'TikTok'  ? 'bg-pink-400' :
+                      ev.event_type === 'Meeting' ? 'bg-blue-400' : 'bg-white/40'
+                    }`} />
+                  ))}
+                </div>
+              )}
+              {/* Large: label text */}
+              {isLarge && dayEvs.length > 0 && (
+                <div className="mt-1 space-y-0.5">
+                  {dayEvs.slice(0, 2).map((ev, j) => (
+                    <div key={j} className={`px-1 py-0.5 rounded text-[7px] font-black uppercase truncate ${TYPE_COLOR[ev.event_type] ?? 'bg-white/10 text-white'}`}>
+                      {ev.title}
+                    </div>
+                  ))}
+                  {dayEvs.length > 2 && (
+                    <div className="text-[7px] text-white/30 font-black">+{dayEvs.length - 2}</div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function OverviewTab({ events, loadingEvents, userId, onEventAdded }: {
   events: CalEvent[]
   loadingEvents: boolean
@@ -121,27 +226,22 @@ function OverviewTab({ events, loadingEvents, userId, onEventAdded }: {
   const [showAdd, setShowAdd] = useState(false)
   const today = new Date()
   const upcoming = events
-    .filter(e => new Date(e.event_date) >= today)
+    .filter(e => new Date(e.event_date + 'T00:00:00') >= today)
     .sort((a, b) => a.event_date.localeCompare(b.event_date))
-    .slice(0, 5)
-
-  const TYPE_COLOR: Record<string, string> = {
-    Release:   'bg-[#FFD700] text-black',
-    Social:    'bg-white/10 text-white',
-    PR:        'bg-[#FFD700]/20 text-[#FFD700]',
-    Meeting:   'bg-blue-500/20 text-blue-400',
-    TikTok:    'bg-pink-500/20 text-pink-400',
-    Interview: 'bg-purple-500/20 text-purple-400',
-  }
 
   function formatDate(d: string) {
     return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
+  // How many list items to show based on event count
+  const listLimit = events.length <= 4 ? events.length : events.length <= 9 ? 4 : 3
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em]">Upcoming Events</p>
+        <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em]">
+          {upcoming.length > 0 ? `${upcoming.length} upcoming` : 'Upcoming Events'}
+        </p>
         <button
           onClick={() => setShowAdd(true)}
           className="flex items-center gap-1.5 px-3 py-2 bg-[#FFD700] text-black font-black text-[10px] uppercase tracking-widest rounded-xl hover:scale-105 transition-transform"
@@ -161,27 +261,38 @@ function OverviewTab({ events, loadingEvents, userId, onEventAdded }: {
           <p className="text-white/10 text-[10px] font-medium mt-1">Add your first release date or campaign</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {upcoming.map(ev => (
-            <div key={ev.id} className="flex items-center gap-4 p-4 bg-zinc-900/40 border border-white/5 rounded-2xl hover:border-white/10 transition-all group">
-              <div className="w-12 h-12 bg-zinc-800 rounded-xl flex flex-col items-center justify-center shrink-0">
-                <span className="text-[#FFD700] font-black text-xs uppercase">
-                  {new Date(ev.event_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' })}
-                </span>
-                <span className="text-white font-black text-lg leading-none">
-                  {new Date(ev.event_date + 'T00:00:00').getDate()}
+        <>
+          {/* Dynamic calendar — hidden for 1–4 events, appears at 5+ */}
+          <DynamicCalendar events={events} />
+
+          {/* Event list */}
+          <div className="space-y-2">
+            {upcoming.slice(0, listLimit).map(ev => (
+              <div key={ev.id} className="flex items-center gap-3 p-3 bg-zinc-900/40 border border-white/5 rounded-2xl hover:border-white/10 transition-all group">
+                <div className="w-11 h-11 bg-zinc-800 rounded-xl flex flex-col items-center justify-center shrink-0">
+                  <span className="text-[#FFD700] font-black text-[9px] uppercase leading-none">
+                    {new Date(ev.event_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' })}
+                  </span>
+                  <span className="text-white font-black text-base leading-none mt-0.5">
+                    {new Date(ev.event_date + 'T00:00:00').getDate()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-bold text-sm tracking-tight truncate group-hover:text-[#FFD700] transition-colors">{ev.title}</p>
+                  <p className="text-white/30 text-[10px] font-medium mt-0.5">{formatDate(ev.event_date)}</p>
+                </div>
+                <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wide shrink-0 ${TYPE_COLOR[ev.event_type] ?? 'bg-white/10 text-white'}`}>
+                  {ev.event_type}
                 </span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-black text-sm tracking-tight truncate group-hover:text-[#FFD700] transition-colors">{ev.title}</p>
-                <p className="text-white/30 text-[10px] font-medium mt-0.5">{formatDate(ev.event_date)}</p>
-              </div>
-              <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wide shrink-0 ${TYPE_COLOR[ev.event_type] ?? 'bg-white/10 text-white'}`}>
-                {ev.event_type}
-              </span>
-            </div>
-          ))}
-        </div>
+            ))}
+            {upcoming.length > listLimit && (
+              <p className="text-white/20 text-[10px] font-black uppercase tracking-widest text-center pt-1">
+                +{upcoming.length - listLimit} more — visible on calendar above
+              </p>
+            )}
+          </div>
+        </>
       )}
 
       <AnimatePresence>
@@ -436,7 +547,8 @@ export function HomeDashboard() {
   const [members, setMembers] = useState<TeamMember[]>([])
   const [loadingTeam, setLoadingTeam] = useState(true)
 
-  const displayName = profile?.artist_name ?? user?.email?.split('@')[0] ?? 'Artist'
+  const rawName = profile?.artist_name ?? user?.artistName ?? ''
+  const displayName = rawName && !rawName.includes('@') ? rawName : 'Artist'
 
   const loadEvents = useCallback(async () => {
     if (!user) return
