@@ -14,7 +14,9 @@ import {
   Download,
   Trash2,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  Sparkles,
+  Wand2
 } from "lucide-react"
 
 const ASSETS = [
@@ -47,6 +49,42 @@ export function StudioSection() {
               <Upload size={18} /> Upload Assets
            </button>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+         <div className="bg-zinc-900/40 border border-[#FFD700]/20 p-10 rounded-[3rem] backdrop-blur-3xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 opacity-5 text-[#FFD700]">
+               <Wand2 size={120} />
+            </div>
+            <div className="relative z-10">
+               <div className="w-14 h-14 bg-[#FFD700]/10 rounded-2xl flex items-center justify-center mb-8 border border-[#FFD700]/20">
+                  <Sparkles className="text-[#FFD700]" />
+               </div>
+               <h3 className="text-3xl font-black text-white tracking-tighter mb-4 uppercase">AI Image Studio</h3>
+               <p className="text-white/40 font-medium mb-8 leading-relaxed max-w-sm">Generate high-fidelity album art, press photos, and social assets in seconds.</p>
+               <div className="flex gap-4">
+                  <input type="text" placeholder="Describe your vision..." className="flex-1 bg-black/40 border border-white/5 rounded-2xl px-6 font-medium text-xs text-white outline-none focus:border-[#FFD700]/30 transition-all" />
+                  <button className="p-4 rounded-2xl bg-[#FFD700] text-black font-black hover:scale-105 transition-transform"><Plus size={20} /></button>
+               </div>
+            </div>
+         </div>
+
+         <div className="bg-zinc-900/40 border border-white/5 p-10 rounded-[3rem] backdrop-blur-3xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 opacity-5 text-white">
+               <Video size={120} />
+            </div>
+            <div className="relative z-10">
+               <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center mb-8 border border-white/10">
+                  <Video className="text-white" />
+               </div>
+               <h3 className="text-3xl font-black text-white tracking-tighter mb-4 uppercase">AI Video Gen</h3>
+               <p className="text-white/40 font-medium mb-8 leading-relaxed max-w-sm">Create cinematic visualizers and lyric videos from your latest audio stems.</p>
+               <div className="flex gap-4">
+                  <button className="flex-1 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all">New Visualizer</button>
+                  <button className="flex-1 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all">New Lyric Video</button>
+               </div>
+            </div>
+         </div>
       </div>
 
       <div className="flex items-center gap-8 py-4 px-8 bg-zinc-900/40 rounded-[2rem] border border-white/5">

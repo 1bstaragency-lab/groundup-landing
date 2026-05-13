@@ -41,32 +41,34 @@ export function SchedulerSection() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
          {/* Main Calendar Grid */}
-         <div className="lg:col-span-8 bg-zinc-900/20 border border-white/5 rounded-[3rem] p-8 backdrop-blur-3xl">
-            <div className="grid grid-cols-7 gap-4 mb-8">
-               {DAYS.map(day => (
-                 <div key={day} className="text-center text-[10px] font-black text-white/20 tracking-widest uppercase py-4">{day}</div>
-               ))}
-            </div>
-            <div className="grid grid-cols-7 gap-4 auto-rows-fr">
-               {Array.from({ length: 31 }).map((_, i) => {
-                 const dayNum = i + 1
-                 const event = EVENTS.find(e => e.day === dayNum)
-                 return (
-                   <div key={i} className={`min-h-[120px] rounded-2xl border p-4 transition-all duration-300 relative group ${
-                     event ? "border-white/10 bg-white/5" : "border-white/5 hover:border-white/10 hover:bg-white/5"
-                   }`}>
-                      <span className={`text-xs font-black ${event ? "text-white" : "text-white/20 group-hover:text-white/40"}`}>{dayNum}</span>
-                      {event && (
-                        <div className={`mt-4 p-3 rounded-xl text-[9px] font-black leading-tight uppercase tracking-tight ${event.color}`}>
-                           {event.title}
-                        </div>
-                      )}
-                      {dayNum === 12 && (
-                        <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#FFD700] rounded-full shadow-[0_0_10px_#FFD700]" />
-                      )}
-                   </div>
-                 )
-               })}
+         <div className="lg:col-span-8 bg-zinc-900/20 border border-white/5 rounded-[3rem] p-8 backdrop-blur-3xl overflow-x-auto">
+            <div className="min-w-[800px]">
+               <div className="grid grid-cols-7 gap-4 mb-8">
+                  {DAYS.map(day => (
+                    <div key={day} className="text-center text-[10px] font-black text-white/20 tracking-widest uppercase py-4">{day}</div>
+                  ))}
+               </div>
+               <div className="grid grid-cols-7 gap-4 auto-rows-fr">
+                  {Array.from({ length: 31 }).map((_, i) => {
+                    const dayNum = i + 1
+                    const event = EVENTS.find(e => e.day === dayNum)
+                    return (
+                      <div key={i} className={`min-h-[140px] rounded-2xl border p-4 transition-all duration-300 relative group ${
+                        event ? "border-white/10 bg-white/5" : "border-white/5 hover:border-white/10 hover:bg-white/5"
+                      }`}>
+                         <span className={`text-xs font-black ${event ? "text-white" : "text-white/20 group-hover:text-white/40"}`}>{dayNum}</span>
+                         {event && (
+                           <div className={`mt-4 p-3 rounded-xl text-[9px] font-black leading-tight uppercase tracking-tight ${event.color}`}>
+                              {event.title}
+                           </div>
+                         )}
+                         {dayNum === 12 && (
+                           <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#FFD700] rounded-full shadow-[0_0_10px_#FFD700]" />
+                         )}
+                      </div>
+                    )
+                  })}
+               </div>
             </div>
          </div>
 
@@ -93,6 +95,11 @@ export function SchedulerSection() {
                        </div>
                     </div>
                   ))}
+               </div>
+               <div className="pt-6 border-t border-white/5 mt-6">
+                  <button className="w-full py-4 rounded-2xl bg-[#FFD700] text-black font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] transition-transform">
+                     Notify Me / Text Me
+                  </button>
                </div>
             </div>
 

@@ -117,6 +117,36 @@ export function LearnSection() {
            </div>
          ))}
       </div>
+
+      {/* Video Hub Section */}
+      <div className="space-y-10 mt-20">
+         <div className="max-w-xl">
+            <h2 className="text-4xl font-black text-white tracking-tighter mb-4 uppercase">Video Resource Hub</h2>
+            <p className="text-white/40 font-medium text-lg leading-relaxed">High-fidelity video patterns and industry insights curated for your growth stage.</p>
+         </div>
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { title: "Network Patterns", count: "12 Videos", image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400&auto=format&fit=crop", url: "https://youtube.com/playlist?list=PLtPKxx4Gpa5SpjX-QHyBZeoyuJv7SQa4N" },
+              { title: "Visual Creative Hub", count: "8 Videos", image: "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=400&auto=format&fit=crop", url: "https://youtube.com/playlist?list=PLtPKxx4Gpa5T8GV8ywmfBoSC8QZ_BQqTu" },
+              { title: "Distribution Mastery", count: "15 Videos", image: "https://images.unsplash.com/photo-1514525253361-bee8718a340b?q=80&w=400&auto=format&fit=crop", url: "https://youtube.com/playlist?list=PLtPKxx4Gpa5Qqp0HGUWijH2UBzW6ZDtJT" },
+              { title: "Marketing Strategy", count: "10 Videos", image: "https://images.unsplash.com/photo-1459749411177-042180ce673c?q=80&w=400&auto=format&fit=crop", url: "https://youtube.com/playlist?list=PLtPKxx4Gpa5SESTNMiIWEQQhY5KcsLCbk" }
+            ].map((vid, i) => (
+              <a key={i} href={vid.url} target="_blank" rel="noopener noreferrer" className="group relative aspect-video rounded-3xl overflow-hidden border border-white/5 hover:border-[#FFD700]/30 transition-all duration-500">
+                 <img src={vid.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={vid.title} />
+                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-12 h-12 rounded-full bg-[#FFD700] flex items-center justify-center text-black">
+                       <Play size={20} fill="currentColor" />
+                    </div>
+                 </div>
+                 <div className="absolute bottom-6 left-6 right-6">
+                    <p className="text-white font-black text-sm tracking-tight mb-1">{vid.title}</p>
+                    <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest">{vid.count}</p>
+                 </div>
+              </a>
+            ))}
+         </div>
+      </div>
     </div>
   )
 }

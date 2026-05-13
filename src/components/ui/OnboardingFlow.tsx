@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ChevronRight, ChevronLeft, Sparkles, Music, Users, Target } from "lucide-react"
+import { ChevronRight, ChevronLeft, Sparkles, Music, Users, Target, Rocket } from "lucide-react"
 import { LiquidButton } from "./liquid-glass-button"
 
 interface OnboardingProps {
@@ -15,7 +15,8 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
     artistType: "",
     goal: "",
     teamSize: "Solo",
-    focus: "Content & Growth"
+    focus: "Content & Growth",
+    painPoint: ""
   })
 
   const next = () => setStep(s => s + 1)
@@ -37,6 +38,13 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
       key: "goal"
     },
     {
+      title: "What's holding you back most?",
+      subtitle: "GrounduP is built to solve these specific industry frictions.",
+      icon: <Rocket className="text-[#FFD700]" />,
+      options: ["Lack of Rollout Structure", "Inconsistent Content Quality", "Struggling to Scale Team", "Poor Data Visibility"],
+      key: "painPoint"
+    },
+    {
       title: "How big is your team?",
       subtitle: "uP scales its collaboration tools based on your network.",
       icon: <Users className="text-[#FFD700]" />,
@@ -53,7 +61,7 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
       
       {/* Progress Bar */}
       <div className="w-full max-w-xl flex gap-2 mb-20 relative z-10">
-        {[1, 2, 3].map(i => (
+        {[1, 2, 3, 4].map(i => (
           <div 
             key={i} 
             className={`h-1 flex-1 rounded-full transition-all duration-500 ${i <= step ? "bg-[#FFD700]" : "bg-white/10"}`} 
@@ -103,10 +111,10 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
             ) : <div />}
             
             <LiquidButton 
-              onClick={step === 3 ? () => onComplete(data) : next}
+              onClick={step === 4 ? () => onComplete(data) : next}
               className="px-12"
             >
-              {step === 3 ? "LAUNCH DASHBOARD" : "CONTINUE"} <ChevronRight size={16} />
+              {step === 4 ? "LAUNCH DASHBOARD" : "CONTINUE"} <ChevronRight size={16} />
             </LiquidButton>
           </div>
         </motion.div>
