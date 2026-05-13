@@ -15,6 +15,8 @@ export type ArtistTone =
   | 'Analytical'
   | 'Strategic';
 
+export type PlanTier = 'free' | 'pro' | 'growth';
+
 export interface ArtistProfile {
   user_id: string;
   artist_name: string;
@@ -22,6 +24,7 @@ export interface ArtistProfile {
   bio: string;
   tone: ArtistTone;
   onboarding_complete: boolean;
+  plan_tier: PlanTier;
   created_at?: string;
   updated_at?: string;
 }

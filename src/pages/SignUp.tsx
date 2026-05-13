@@ -30,6 +30,7 @@ export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
       bio: profileData.bio,
       tone,
       onboarding_complete: true,
+      plan_tier: 'free',
     });
     setSaving(false);
     onComplete?.();
