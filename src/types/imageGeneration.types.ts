@@ -33,4 +33,5 @@ export interface GenerateImageParams {
   mood: ImageMood;
   aspect_ratio: AspectRatio;
   use_brand_colors: boolean;
+  reference_image_url?: string;
 }

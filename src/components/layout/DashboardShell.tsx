@@ -15,20 +15,23 @@ interface DashboardShellProps {
   setActiveTab: (tab: string) => void
 }
 
+// isMain = highlighted top-4 with gold treatment in sidebar
 const MENU_ITEMS = [
-  { id: "home",      label: "Dashboard",     icon: Home,      mobileShow: true },
-  { id: "rollouts",  label: "Rollouts",      icon: Rocket,    mobileShow: true },
-  { id: "analytics", label: "Analytics",     icon: TrendingUp,mobileShow: true },
-  { id: "team",      label: "Team",          icon: Users,     mobileShow: true },
-  { id: "learn",     label: "Learn & DB",    icon: BookOpen,  mobileShow: false },
-  { id: "scheduler", label: "Scheduler",     icon: Calendar,  mobileShow: false },
-  { id: "studio",    label: "Content Studio",icon: Layout,    mobileShow: false },
-  { id: "curator",   label: "Curator",       icon: Music2,    mobileShow: false },
-  { id: "profile",   label: "Artist Profile",icon: User,      mobileShow: false },
+  { id: "home",      label: "Dashboard",     icon: Home,      mobileShow: true,  isMain: true },
+  { id: "rollouts",  label: "Rollouts",      icon: Rocket,    mobileShow: true,  isMain: true },
+  { id: "analytics", label: "Analytics",     icon: TrendingUp,mobileShow: true,  isMain: true },
+  { id: "learn",     label: "Learn & DB",    icon: BookOpen,  mobileShow: true,  isMain: true },
+  { id: "team",      label: "Team",          icon: Users,     mobileShow: false, isMain: false },
+  { id: "scheduler", label: "Scheduler",     icon: Calendar,  mobileShow: false, isMain: false },
+  { id: "studio",    label: "Content Studio",icon: Layout,    mobileShow: false, isMain: false },
+  { id: "curator",   label: "Curator",       icon: Music2,    mobileShow: false, isMain: false },
+  { id: "profile",   label: "Artist Profile",icon: User,      mobileShow: false, isMain: false },
 ]
 
 const BOTTOM_NAV_ITEMS = MENU_ITEMS.filter(m => m.mobileShow)
 const MORE_ITEMS       = MENU_ITEMS.filter(m => !m.mobileShow)
+const MAIN_ITEMS       = MENU_ITEMS.filter(m => m.isMain)
+const OTHER_ITEMS      = MENU_ITEMS.filter(m => !m.isMain)
 
 export function DashboardShell({ children, activeTab, setActiveTab }: DashboardShellProps) {
   const { user, profile } = useAuth()
@@ -43,12 +46,65 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
 
   const isMoreActive = MORE_ITEMS.some(m => m.id === activeTab)
 
+  function SidebarNavItem({ item }: { item: typeof MENU_ITEMS[number] }) {
+    const Icon = item.icon
+    const active = activeTab === item.id
+
+    if (item.isMain) {
+      return (
+        <motion.button
+          key={item.id}
+          onClick={() => setActiveTab(item.id)}
+          className={`relative w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-300 group overflow-hidden ${
+            active ? "bg-[#FFD700] text-black" : "text-white/50 hover:text-white"
+          }`}
+        >
+          {/* Animated gold border when not active */}
+          {!active && (
+            <span
+              className="pointer-events-none absolute inset-0 rounded-2xl"
+              style={{
+                background: 'linear-gradient(135deg,rgba(255,215,0,0.12),rgba(255,215,0,0.04))',
+                border: '1px solid rgba(255,215,0,0.15)',
+              }}
+            />
+          )}
+          {/* Shimmer sweep on hover */}
+          {!active && (
+            <motion.span
+              initial={{ x: '-100%', opacity: 0 }}
+              whileHover={{ x: '150%', opacity: 0.4 }}
+              transition={{ duration: 0.6, ease: 'easeInOut' }}
+              className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-[#FFD700]/20 to-transparent skew-x-12"
+            />
+          )}
+          <Icon size={18} className={active ? "text-black" : "text-[#FFD700]/60 group-hover:text-[#FFD700] transition-colors"} />
+          <span className="font-black text-[11px] uppercase tracking-widest">{item.label}</span>
+          {active && <motion.div layoutId="activeTab" className="ml-auto w-1.5 h-1.5 bg-black rounded-full" />}
+        </motion.button>
+      )
+    }
+
+    return (
+      <button
+        onClick={() => setActiveTab(item.id)}
+        className={`w-full flex items-center gap-4 px-5 py-3 rounded-2xl transition-all duration-300 ${
+          active ? "bg-white/10 text-white" : "text-white/25 hover:bg-white/5 hover:text-white/60"
+        }`}
+      >
+        <Icon size={17} />
+        <span className="font-black text-[11px] uppercase tracking-widest">{item.label}</span>
+        {active && <div className="ml-auto w-1.5 h-1.5 bg-white/60 rounded-full" />}
+      </button>
+    )
+  }
+
   return (
     <div className="flex h-dvh bg-[#050505] text-white overflow-hidden">
       {/* ── Sidebar — desktop only ─────────────────────────── */}
       <aside className="hidden lg:flex w-60 bg-black border-r border-white/5 flex-col z-50 shrink-0">
         {/* Logo */}
-        <div className="p-8 flex items-center gap-4 mb-6">
+        <div className="p-8 flex items-center gap-4 mb-2">
           <img src="/gu-logo.png" alt="GrounduP" className="h-10 w-auto" />
           <div className="flex flex-col">
             <span className="text-white font-black text-sm tracking-tighter">GROUNDUP</span>
@@ -56,27 +112,17 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
           </div>
         </div>
 
-        <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-          {MENU_ITEMS.map(item => {
-            const Icon = item.icon
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-300 group ${
-                  activeTab === item.id
-                    ? "bg-[#FFD700] text-black"
-                    : "text-white/40 hover:bg-white/5 hover:text-white"
-                }`}
-              >
-                <Icon size={20} className={activeTab === item.id ? "text-black" : "text-inherit"} />
-                <span className="font-black text-[11px] uppercase tracking-widest">{item.label}</span>
-                {activeTab === item.id && (
-                  <motion.div layoutId="activeTab" className="ml-auto w-1.5 h-1.5 bg-black rounded-full" />
-                )}
-              </button>
-            )
-          })}
+        <nav className="flex-1 px-4 space-y-1 overflow-y-auto pb-4">
+          {/* Main 4 — gold-treated */}
+          <p className="text-[#FFD700]/30 text-[8px] font-black uppercase tracking-[0.35em] px-2 pb-2 pt-2">Core</p>
+          {MAIN_ITEMS.map(item => <SidebarNavItem key={item.id} item={item} />)}
+
+          {/* Divider */}
+          <div className="my-3 border-t border-white/5" />
+
+          {/* Others */}
+          <p className="text-white/15 text-[8px] font-black uppercase tracking-[0.35em] px-2 pb-2">Tools</p>
+          {OTHER_ITEMS.map(item => <SidebarNavItem key={item.id} item={item} />)}
         </nav>
 
         <div className="p-6 border-t border-white/5 space-y-4">
@@ -167,14 +213,15 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
               <button
                 key={item.id}
                 onClick={() => selectTab(item.id)}
-                className="flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all min-w-[52px]"
+                className="flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all min-w-[52px] relative"
               >
-                <Icon
-                  size={22}
-                  className={`transition-colors ${active ? 'text-[#FFD700]' : 'text-white/30'}`}
-                />
+                {/* Gold dot for main items */}
+                {item.isMain && !active && (
+                  <span className="absolute top-1 right-2 w-1 h-1 rounded-full bg-[#FFD700]/50" />
+                )}
+                <Icon size={22} className={`transition-colors ${active ? 'text-[#FFD700]' : 'text-white/30'}`} />
                 <span className={`text-[9px] font-black uppercase tracking-wide transition-colors ${active ? 'text-[#FFD700]' : 'text-white/20'}`}>
-                  {item.id === 'home' ? 'Home' : item.label.split(' ')[0]}
+                  {item.id === 'home' ? 'Home' : item.id === 'learn' ? 'Learn' : item.label.split(' ')[0]}
                 </span>
               </button>
             )
@@ -216,7 +263,7 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
               style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 80px)' }}
             >
               <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/5">
-                <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">More</p>
+                <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">More Tools</p>
                 <button onClick={() => setMoreOpen(false)} className="text-white/30 hover:text-white transition-colors">
                   <X size={18} />
                 </button>

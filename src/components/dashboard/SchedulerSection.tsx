@@ -184,17 +184,32 @@ function PhoneModal({ onClose }: { onClose: () => void }) {
 }
 
 export function SchedulerSection() {
-  const [currentMonth, setCurrentMonth] = useState(4) // May
-  const [currentYear] = useState(2026)
+  const today = new Date()
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth())
+  const [currentYear, setCurrentYear] = useState(today.getFullYear())
   const [events, setEvents] = useState<CalEvent[]>([])
   const [showAddEvent, setShowAddEvent] = useState(false)
   const [showPhone, setShowPhone] = useState(false)
+
+  function prevMonth() {
+    if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y - 1) }
+    else setCurrentMonth(m => m - 1)
+  }
+  function nextMonth() {
+    if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(y => y + 1) }
+    else setCurrentMonth(m => m + 1)
+  }
+
+  // Accurate days-in-month and start offset
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+  const startDayOfWeek = new Date(currentYear, currentMonth, 1).getDay() // 0=Sun
 
   function addEvent(ev: CalEvent) {
     setEvents(prev => [...prev, ev].sort((a, b) => a.day - b.day))
   }
 
-  const upcomingEvents = events.slice(0, 3)
+  const todayDay = today.getMonth() === currentMonth && today.getFullYear() === currentYear ? today.getDate() : -1
+  const upcomingEvents = events.filter(e => e.day >= (todayDay > 0 ? todayDay : 1)).slice(0, 3)
 
   return (
     <div className="space-y-12 pb-20">
@@ -205,7 +220,7 @@ export function SchedulerSection() {
         </div>
         <div className="flex items-center gap-4">
           <button
-            onClick={() => setCurrentMonth(m => Math.max(0, m - 1))}
+            onClick={prevMonth}
             className="p-4 rounded-2xl bg-zinc-900 border border-white/5 text-white/40 hover:text-white transition-colors"
           >
             <ChevronLeft size={20} />
@@ -214,7 +229,7 @@ export function SchedulerSection() {
             {MONTHS[currentMonth]} {currentYear}
           </div>
           <button
-            onClick={() => setCurrentMonth(m => Math.min(11, m + 1))}
+            onClick={nextMonth}
             className="p-4 rounded-2xl bg-zinc-900 border border-white/5 text-white/40 hover:text-white transition-colors"
           >
             <ChevronRight size={20} />
@@ -238,14 +253,23 @@ export function SchedulerSection() {
               ))}
             </div>
             <div className="grid grid-cols-7 gap-4 auto-rows-fr">
-              {Array.from({ length: 31 }).map((_, i) => {
+              {/* blank cells for the start-day offset */}
+              {Array.from({ length: startDayOfWeek }).map((_, i) => (
+                <div key={`blank-${i}`} className="min-h-[140px]" />
+              ))}
+              {Array.from({ length: daysInMonth }).map((_, i) => {
                 const dayNum = i + 1
                 const event = events.find(e => e.day === dayNum)
+                const isToday = dayNum === todayDay
                 return (
                   <div key={i} className={`min-h-[140px] rounded-2xl border p-4 transition-all duration-300 relative group ${
+                    isToday ? "border-[#FFD700]/40 bg-[#FFD700]/5" :
                     event ? "border-white/10 bg-white/5" : "border-white/5 hover:border-white/10 hover:bg-white/5"
                   }`}>
-                    <span className={`text-xs font-black ${event ? "text-white" : "text-white/20 group-hover:text-white/40"}`}>{dayNum}</span>
+                    <span className={`text-xs font-black ${isToday ? "text-[#FFD700]" : event ? "text-white" : "text-white/20 group-hover:text-white/40"}`}>
+                      {dayNum}
+                    </span>
+                    {isToday && <div className="absolute top-3 right-3 w-1.5 h-1.5 bg-[#FFD700] rounded-full" />}
                     {event && (
                       <div className={`mt-4 p-3 rounded-xl text-[9px] font-black leading-tight uppercase tracking-tight ${event.color}`}>
                         {event.title}

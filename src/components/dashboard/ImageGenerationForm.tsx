@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, Upload, X } from 'lucide-react';
 import type { ImageStyle, ImageMood, AspectRatio, GenerateImageParams } from '../../types/imageGeneration.types';
 
 interface Props {
@@ -9,21 +9,40 @@ interface Props {
   configured: boolean;
 }
 
-const STYLES: ImageStyle[]      = ['Album Art', 'Social Post', 'Thumbnail', 'Promotional', 'Release Cover'];
-const MOODS: ImageMood[]        = ['Energetic', 'Dark', 'Vibrant', 'Minimal', 'Cinematic', 'Psychedelic'];
-const RATIOS: AspectRatio[]     = ['1:1', '16:9', '9:16', '3:4'];
+const STYLES: ImageStyle[]  = ['Album Art', 'Social Post', 'Thumbnail', 'Promotional', 'Release Cover'];
+const MOODS: ImageMood[]    = ['Energetic', 'Dark', 'Vibrant', 'Minimal', 'Cinematic', 'Psychedelic'];
+const RATIOS: AspectRatio[] = ['1:1', '16:9', '9:16', '3:4'];
 
 export default function ImageGenerationForm({ onGenerate, loading, configured }: Props) {
-  const [description, setDescription]   = useState('');
-  const [style, setStyle]               = useState<ImageStyle>('Album Art');
-  const [mood, setMood]                 = useState<ImageMood>('Vibrant');
-  const [aspectRatio, setAspectRatio]   = useState<AspectRatio>('1:1');
+  const [description, setDescription]     = useState('');
+  const [style, setStyle]                 = useState<ImageStyle>('Album Art');
+  const [mood, setMood]                   = useState<ImageMood>('Vibrant');
+  const [aspectRatio, setAspectRatio]     = useState<AspectRatio>('1:1');
   const [useBrandColors, setUseBrandColors] = useState(false);
+  const [refImage, setRefImage]           = useState<string | undefined>();
+  const [refFileName, setRefFileName]     = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setRefFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = ev => setRefImage(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!description.trim()) return;
-    onGenerate({ description, style, mood, aspect_ratio: aspectRatio, use_brand_colors: useBrandColors });
+    onGenerate({
+      description,
+      style,
+      mood,
+      aspect_ratio: aspectRatio,
+      use_brand_colors: useBrandColors,
+      reference_image_url: refImage,
+    });
   }
 
   return (
@@ -47,6 +66,36 @@ export default function ImageGenerationForm({ onGenerate, loading, configured }:
           className="w-full bg-zinc-900/60 border border-white/8 rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#FFD700]/30 transition-colors resize-none"
           required
         />
+      </div>
+
+      {/* Reference image */}
+      <div>
+        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">
+          Reference Image <span className="normal-case font-normal text-gray-600">(optional)</span>
+        </label>
+        <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
+        {refImage ? (
+          <div className="flex items-center gap-3 bg-zinc-900/60 border border-white/8 rounded-xl p-3">
+            <img src={refImage} alt="reference" className="w-12 h-12 rounded-lg object-cover" />
+            <span className="text-sm text-gray-300 flex-1 truncate">{refFileName}</span>
+            <button
+              type="button"
+              onClick={() => { setRefImage(undefined); setRefFileName(''); }}
+              className="text-gray-500 hover:text-white transition-colors"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="w-full border border-dashed border-white/15 rounded-xl py-4 flex items-center justify-center gap-2 text-xs text-gray-500 hover:border-white/30 hover:text-gray-300 transition-all"
+          >
+            <Upload size={14} />
+            Upload reference image
+          </button>
+        )}
       </div>
 
       {/* Style */}
