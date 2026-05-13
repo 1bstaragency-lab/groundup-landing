@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { TrendingUp, Music2, Share2, Play, ExternalLink, BarChart2 } from 'lucide-react';
+import { TrendingUp, Music2, Share2, Play, ExternalLink, BarChart2, Headphones, Mic2, MessageCircle, Radio } from 'lucide-react';
 
 interface StatCardProps {
   label: string;
@@ -57,21 +57,49 @@ const PLATFORMS = [
     icon: <Music2 size={20} />,
     color: 'text-green-400',
     bg: 'bg-green-400/10 border-green-400/20',
-    description: 'Stream counts, listeners, playlist adds',
+    description: 'Stream counts, monthly listeners, playlist adds, saves',
+  },
+  {
+    name: 'Apple Music',
+    icon: <Headphones size={20} />,
+    color: 'text-pink-300',
+    bg: 'bg-pink-300/10 border-pink-300/20',
+    description: 'Plays, listeners, Shazam data, radio airplay',
+  },
+  {
+    name: 'TikTok',
+    icon: <Mic2 size={20} />,
+    color: 'text-sky-400',
+    bg: 'bg-sky-400/10 border-sky-400/20',
+    description: 'Sound uses, video views, followers, trending data',
   },
   {
     name: 'Instagram',
     icon: <Share2 size={20} />,
     color: 'text-pink-400',
     bg: 'bg-pink-400/10 border-pink-400/20',
-    description: 'Reach, engagement, follower growth',
+    description: 'Reach, story views, engagement rate, follower growth',
   },
   {
     name: 'YouTube',
     icon: <Play size={20} />,
     color: 'text-red-400',
     bg: 'bg-red-400/10 border-red-400/20',
-    description: 'Views, watch time, subscribers',
+    description: 'Views, watch time, subscribers, shorts performance',
+  },
+  {
+    name: 'SoundCloud',
+    icon: <Radio size={20} />,
+    color: 'text-orange-400',
+    bg: 'bg-orange-400/10 border-orange-400/20',
+    description: 'Plays, reposts, comments, follower activity',
+  },
+  {
+    name: 'Twitter / X',
+    icon: <MessageCircle size={20} />,
+    color: 'text-white',
+    bg: 'bg-white/5 border-white/10',
+    description: 'Mentions, impressions, song-link shares, growth',
   },
 ];
 
@@ -90,12 +118,19 @@ export function AnalyticsSection() {
         </div>
       </div>
 
-      {/* Stat Cards */}
+      {/* Stat Cards — top 4 */}
       <div className="grid grid-cols-4 gap-4">
         <StatCard label="Total Streams" value="—" sub="Connect Spotify" color="text-green-400" />
         <StatCard label="Monthly Listeners" value="—" sub="Connect Spotify" color="text-[#FFD700]" />
         <StatCard label="IG Followers" value="—" sub="Connect Instagram" color="text-pink-400" />
         <StatCard label="YT Views" value="—" sub="Connect YouTube" color="text-red-400" />
+      </div>
+
+      {/* Secondary stats row */}
+      <div className="grid grid-cols-3 gap-4">
+        <StatCard label="TikTok Sound Uses" value="—" sub="Connect TikTok" color="text-sky-400" />
+        <StatCard label="Apple Music Plays" value="—" sub="Connect Apple Music" color="text-pink-300" />
+        <StatCard label="SoundCloud Plays" value="—" sub="Connect SoundCloud" color="text-orange-400" />
       </div>
 
       {/* Charts */}

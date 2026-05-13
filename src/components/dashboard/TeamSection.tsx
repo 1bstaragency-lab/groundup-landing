@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Users, Crown, Briefcase, Mic2, Mail, X, Trash2 } from 'lucide-react';
+import { Plus, Users, Crown, Briefcase, Mic2, Mail, X, Trash2, Shield, Star } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 
 type MemberRole = 'Artist' | 'Manager' | 'A&R' | 'Producer' | 'Marketing' | 'PR';
 
@@ -13,21 +14,24 @@ interface TeamMember {
 }
 
 const ROLE_META: Record<MemberRole, { icon: React.ReactNode; color: string; bg: string }> = {
-  Artist:    { icon: <Mic2 size={14} />,     color: 'text-[#FFD700]',  bg: 'bg-[#FFD700]/10 border-[#FFD700]/20' },
-  Manager:   { icon: <Crown size={14} />,    color: 'text-blue-400',   bg: 'bg-blue-400/10 border-blue-400/20' },
+  Artist:    { icon: <Mic2 size={14} />,      color: 'text-[#FFD700]',  bg: 'bg-[#FFD700]/10 border-[#FFD700]/20' },
+  Manager:   { icon: <Crown size={14} />,     color: 'text-blue-400',   bg: 'bg-blue-400/10 border-blue-400/20' },
   'A&R':     { icon: <Briefcase size={14} />, color: 'text-purple-400', bg: 'bg-purple-400/10 border-purple-400/20' },
-  Producer:  { icon: <Mic2 size={14} />,     color: 'text-green-400',  bg: 'bg-green-400/10 border-green-400/20' },
-  Marketing: { icon: <Mail size={14} />,     color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/20' },
-  PR:        { icon: <Mail size={14} />,     color: 'text-pink-400',   bg: 'bg-pink-400/10 border-pink-400/20' },
+  Producer:  { icon: <Mic2 size={14} />,      color: 'text-green-400',  bg: 'bg-green-400/10 border-green-400/20' },
+  Marketing: { icon: <Mail size={14} />,      color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/20' },
+  PR:        { icon: <Mail size={14} />,      color: 'text-pink-400',   bg: 'bg-pink-400/10 border-pink-400/20' },
 };
 
 function uid() { return Math.random().toString(36).slice(2); }
 
 export function TeamSection() {
+  const { user, profile } = useAuth();
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [showInvite, setShowInvite] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', role: 'Manager' as MemberRole });
   const [sent, setSent] = useState(false);
+
+  const displayName = profile?.artist_name ?? user?.artistName ?? user?.email?.split('@')[0] ?? 'Artist';
 
   function invite() {
     if (!form.name || !form.email) return;
@@ -116,20 +120,23 @@ export function TeamSection() {
                     onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                     className="wait-input"
                   />
-                  <div className="grid grid-cols-3 gap-2">
-                    {(Object.keys(ROLE_META) as MemberRole[]).map(r => (
-                      <button
-                        key={r}
-                        onClick={() => setForm(f => ({ ...f, role: r }))}
-                        className={`p-3 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition-all ${
-                          form.role === r
-                            ? `${ROLE_META[r].bg} ${ROLE_META[r].color}`
-                            : 'bg-zinc-800 border-white/5 text-white/30 hover:text-white'
-                        }`}
-                      >
-                        {r}
-                      </button>
-                    ))}
+                  <div>
+                    <p className="text-white/20 text-[10px] font-black uppercase tracking-widest mb-3">Role</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(Object.keys(ROLE_META) as MemberRole[]).filter(r => r !== 'Artist').map(r => (
+                        <button
+                          key={r}
+                          onClick={() => setForm(f => ({ ...f, role: r }))}
+                          className={`p-3 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition-all ${
+                            form.role === r
+                              ? `${ROLE_META[r].bg} ${ROLE_META[r].color}`
+                              : 'bg-zinc-800 border-white/5 text-white/30 hover:text-white'
+                          }`}
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <button
                     onClick={invite}
@@ -145,11 +152,32 @@ export function TeamSection() {
         )}
       </AnimatePresence>
 
+      {/* Admin / Artist Card */}
+      <div>
+        <div className="flex items-center gap-3 mb-3">
+          <Shield size={12} className="text-[#FFD700]" />
+          <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.3em]">Admin Access</p>
+        </div>
+        <div className="flex items-center gap-5 p-5 bg-[#FFD700]/5 border border-[#FFD700]/20 rounded-2xl">
+          <div className="w-12 h-12 bg-[#FFD700]/20 rounded-2xl flex items-center justify-center font-black text-[#FFD700] text-lg uppercase border border-[#FFD700]/30">
+            {displayName[0]}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-black text-sm uppercase tracking-tight">{displayName}</p>
+            <p className="text-white/30 text-[11px] font-medium truncate">{user?.email ?? ''}</p>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-widest bg-[#FFD700]/10 border-[#FFD700]/20 text-[#FFD700]">
+            <Star size={12} fill="currentColor" /> Artist · Admin
+          </div>
+        </div>
+      </div>
+
+      {/* Team Members */}
       {members.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center justify-center py-32 text-center"
+          className="flex flex-col items-center justify-center py-24 text-center"
         >
           <div className="w-20 h-20 bg-zinc-900 rounded-3xl flex items-center justify-center mb-6 border border-white/5">
             <Users size={32} className="text-white/20" />
@@ -167,7 +195,7 @@ export function TeamSection() {
         </motion.div>
       ) : (
         <div className="space-y-3">
-          <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Members</p>
+          <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Team Members</p>
           {members.map(m => {
             const meta = ROLE_META[m.role];
             return (

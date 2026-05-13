@@ -43,7 +43,7 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
   return (
     <div className="flex h-screen bg-[#050505] text-white overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-72 bg-black border-r border-white/5 flex flex-col z-50 shrink-0">
+      <aside className="w-60 bg-black border-r border-white/5 flex flex-col z-50 shrink-0">
         {/* Logo */}
         <div className="p-8 flex items-center gap-4 mb-6">
           <img src="/gu-logo.png" alt="GrounduP" className="h-10 w-auto" />
@@ -129,7 +129,7 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
         </header>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-10 relative">
+        <div className="flex-1 overflow-y-auto px-8 py-8 relative">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}

@@ -1,8 +1,19 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Grid, Calendar, Users, Image as ImageIcon, Settings, Plus, TrendingUp, Rocket, BarChart2 } from 'lucide-react';
+import { Bell, Grid, Calendar, Users, Image as ImageIcon, Settings, Plus, TrendingUp, Rocket, BarChart2, X } from 'lucide-react';
 
 type MockTab = 'Dashboard' | 'Rollouts' | 'Analytics' | 'Team';
+
+const EVENT_TYPES = [
+  'Promotional Campaign',
+  'Interview',
+  'TikTok Post',
+  'Blog Post',
+  'Twitter Promotion',
+  'Release',
+  'PR Outreach',
+  'Team Meeting',
+];
 
 function EmptyState({ icon, title, sub }: { icon: React.ReactNode; title: string; sub: string }) {
   return (
@@ -23,7 +34,13 @@ function EmptyState({ icon, title, sub }: { icon: React.ReactNode; title: string
   );
 }
 
-function DashboardTab() {
+interface CalendarEvent {
+  day: number;
+  title: string;
+  type: string;
+}
+
+function DashboardTab({ onAddEvent }: { onAddEvent: () => void }) {
   return (
     <div className="flex gap-8">
       {/* Calendar */}
@@ -53,8 +70,11 @@ function DashboardTab() {
           </div>
           <p className="text-white/20 text-[10px] font-black uppercase tracking-widest leading-relaxed">No tasks yet</p>
         </div>
-        <button className="w-full py-3.5 bg-[#FFD700] rounded-2xl text-black font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,215,0,0.15)] flex items-center justify-center gap-2">
-          <Plus size={12} /> Add Task
+        <button
+          onClick={onAddEvent}
+          className="w-full py-3.5 bg-[#FFD700] rounded-2xl text-black font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,215,0,0.15)] flex items-center justify-center gap-2"
+        >
+          <Plus size={12} /> Add Event
         </button>
       </div>
     </div>
@@ -108,8 +128,100 @@ function TeamTab() {
   );
 }
 
+interface AddEventModalProps {
+  onClose: () => void;
+  onSave: (event: CalendarEvent) => void;
+}
+
+function AddEventModal({ onClose, onSave }: AddEventModalProps) {
+  const [title, setTitle] = useState('');
+  const [day, setDay] = useState('');
+  const [type, setType] = useState(EVENT_TYPES[0]);
+
+  function handleSave() {
+    if (!title || !day) return;
+    onSave({ day: Number(day), title, type });
+    onClose();
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6"
+    >
+      <motion.div
+        initial={{ scale: 0.95, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.95, y: 20 }}
+        className="bg-zinc-900 border border-white/10 rounded-3xl p-8 w-full max-w-md shadow-2xl"
+      >
+        <div className="flex items-center justify-between mb-8">
+          <h3 className="text-white font-black text-xl uppercase tracking-tighter">Add Event</h3>
+          <button onClick={onClose} className="text-white/30 hover:text-white transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Event Title"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            className="w-full bg-zinc-800 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold text-sm outline-none focus:border-[#FFD700]/40 transition-all placeholder:text-white/20"
+          />
+
+          <div>
+            <p className="text-white/20 text-[10px] font-black uppercase tracking-widest mb-3">Event Type</p>
+            <div className="grid grid-cols-2 gap-2">
+              {EVENT_TYPES.map(t => (
+                <button
+                  key={t}
+                  onClick={() => setType(t)}
+                  className={`p-3 rounded-xl border text-[10px] font-black uppercase tracking-wide transition-all text-left ${
+                    type === t
+                      ? 'bg-[#FFD700] border-transparent text-black'
+                      : 'bg-zinc-800 border-white/5 text-white/40 hover:text-white'
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-white/20 text-[10px] font-black uppercase tracking-widest mb-2">Day of Month</p>
+            <input
+              type="number"
+              min={1}
+              max={31}
+              placeholder="Day (1–31)"
+              value={day}
+              onChange={e => setDay(e.target.value)}
+              className="w-full bg-zinc-800 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold text-sm outline-none focus:border-[#FFD700]/40 transition-all placeholder:text-white/20"
+            />
+          </div>
+
+          <button
+            onClick={handleSave}
+            disabled={!title || !day}
+            className="w-full py-4 bg-[#FFD700] text-black font-black text-[11px] uppercase tracking-widest rounded-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none mt-2"
+          >
+            Add to Calendar
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export function TeamDashboardMockup() {
   const [activeTab, setActiveTab] = useState<MockTab>('Dashboard');
+  const [showAddEvent, setShowAddEvent] = useState(false);
+  const [, setEvents] = useState<CalendarEvent[]>([]);
 
   const TABS: MockTab[] = ['Dashboard', 'Rollouts', 'Analytics', 'Team'];
 
@@ -119,6 +231,10 @@ export function TeamDashboardMockup() {
     Analytics: <TrendingUp size={13} />,
     Team:      <Users size={13} />,
   };
+
+  function addEvent(event: CalendarEvent) {
+    setEvents(prev => [...prev, event]);
+  }
 
   return (
     <div className="w-full mx-auto p-6 sm:p-10 bg-zinc-950 rounded-[40px] border border-white/5 shadow-[0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden">
@@ -191,7 +307,10 @@ export function TeamDashboardMockup() {
             {activeTab === 'Dashboard' && (
               <div className="flex gap-3">
                 <button className="px-5 py-3 bg-zinc-900 border border-white/10 rounded-2xl text-white text-[11px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-all">Export</button>
-                <button className="px-5 py-3 bg-[#FFD700] rounded-2xl text-black text-[11px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,215,0,0.2)] flex items-center gap-2">
+                <button
+                  onClick={() => setShowAddEvent(true)}
+                  className="px-5 py-3 bg-[#FFD700] rounded-2xl text-black text-[11px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,215,0,0.2)] flex items-center gap-2"
+                >
                   <Plus size={14} /> Add Event
                 </button>
               </div>
@@ -206,7 +325,7 @@ export function TeamDashboardMockup() {
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
-              {activeTab === 'Dashboard'  && <DashboardTab />}
+              {activeTab === 'Dashboard'  && <DashboardTab onAddEvent={() => setShowAddEvent(true)} />}
               {activeTab === 'Rollouts'   && <RolloutsTab />}
               {activeTab === 'Analytics'  && <AnalyticsTab />}
               {activeTab === 'Team'       && <TeamTab />}
@@ -214,6 +333,15 @@ export function TeamDashboardMockup() {
           </AnimatePresence>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showAddEvent && (
+          <AddEventModal
+            onClose={() => setShowAddEvent(false)}
+            onSave={addEvent}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

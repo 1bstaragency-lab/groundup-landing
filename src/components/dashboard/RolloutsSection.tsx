@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Calendar, Music, Trash2, ChevronRight, CheckSquare, Square, X } from 'lucide-react';
+import { Plus, Calendar, Trash2, ChevronRight, CheckSquare, Square, X, Disc3, Layers, Music, ListMusic } from 'lucide-react';
 
 type ReleaseType = 'Single' | 'EP' | 'Album' | 'Mixtape';
 
@@ -26,6 +26,13 @@ const DEFAULT_CHECKLIST: Omit<ChecklistItem, 'id'>[] = [
   { label: 'Pitch to playlists', done: false },
   { label: 'Send to press contacts', done: false },
 ];
+
+const TYPE_META: Record<ReleaseType, { color: string; bg: string; border: string; icon: React.ReactNode; desc: string }> = {
+  Single:  { color: 'text-[#FFD700]',  bg: 'bg-[#FFD700]/10',  border: 'border-[#FFD700]/20',  icon: <Disc3 size={28} />,    desc: 'One track, one moment. Perfect for testing an idea or building momentum.' },
+  EP:      { color: 'text-blue-400',   bg: 'bg-blue-500/10',   border: 'border-blue-500/20',   icon: <Layers size={28} />,   desc: '3–6 tracks. Introduce a sound or chapter without full album pressure.' },
+  Album:   { color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', icon: <Music size={28} />,    desc: 'Your full statement. Plan the rollout months in advance.' },
+  Mixtape: { color: 'text-green-400',  bg: 'bg-green-500/10',  border: 'border-green-500/20',  icon: <ListMusic size={28} />, desc: 'Raw, uncut, no label needed. Rapid fire and community-first.' },
+};
 
 function uid() { return Math.random().toString(36).slice(2); }
 
@@ -155,25 +162,30 @@ export function RolloutsSection() {
       </AnimatePresence>
 
       {releases.length === 0 ? (
-        /* Empty State */
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center justify-center py-32 text-center"
-        >
-          <div className="w-20 h-20 bg-zinc-900 rounded-3xl flex items-center justify-center mb-6 border border-white/5">
-            <Music size={32} className="text-white/20" />
+        /* Type Card Empty States */
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+          <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.3em]">Choose a release type to get started</p>
+          <div className="grid grid-cols-2 gap-5">
+            {(Object.keys(TYPE_META) as ReleaseType[]).map(type => {
+              const meta = TYPE_META[type];
+              return (
+                <motion.button
+                  key={type}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => { setForm(f => ({ ...f, type })); setShowForm(true); }}
+                  className={`group flex flex-col items-start p-8 rounded-3xl border ${meta.bg} ${meta.border} hover:shadow-[0_0_40px_rgba(0,0,0,0.4)] transition-all duration-300 text-left`}
+                >
+                  <div className={`mb-5 ${meta.color}`}>{meta.icon}</div>
+                  <p className={`font-black text-xl uppercase tracking-tighter mb-2 ${meta.color}`}>{type}</p>
+                  <p className="text-white/30 text-[11px] font-medium leading-relaxed mb-6">{meta.desc}</p>
+                  <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${meta.color} group-hover:translate-x-1 transition-transform`}>
+                    Plan {type} <ChevronRight size={12} />
+                  </div>
+                </motion.button>
+              );
+            })}
           </div>
-          <h3 className="text-white font-black text-2xl uppercase tracking-tighter mb-3">No Releases Yet</h3>
-          <p className="text-white/30 font-medium text-sm max-w-xs mb-8">
-            Start planning your next release. Add a single, EP, album, or mixtape to get your rollout checklist.
-          </p>
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-3 px-6 py-3 border border-[#FFD700]/40 text-[#FFD700] rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-[#FFD700]/10 transition-all"
-          >
-            <Plus size={14} /> Plan Your First Release
-          </button>
         </motion.div>
       ) : (
         <div className="grid grid-cols-12 gap-6">
