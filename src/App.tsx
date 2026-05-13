@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@supabase/supabase-js';
 import { TrendingUp, CheckCircle, Globe, ChevronRight } from 'lucide-react';
 import { TeamDashboardMockup } from './components/ui/TeamDashboardMockup';
+import ShaderShowcase from './components/ui/hero';
 import './App.css';
 
 // Initialize Supabase
@@ -71,38 +72,8 @@ function App() {
       </nav>
 
       {/* Hero Section */}
-      <section className="hero-section min-h-screen flex flex-col items-center justify-center pt-32 pb-20 relative">
-        <div className="hero-orb absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[#FFD700]/20 blur-[100px] rounded-full" />
-        
-        <div className="container relative z-10 text-center px-6">
-          <motion.h1 
-            className="text-6xl md:text-8xl font-black tracking-tight leading-[0.9] mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            The Artist OS <br />
-            For Artists Who <br />
-            <span className="text-[#FFD700] italic">Own The uP.</span>
-          </motion.h1>
-          <motion.p 
-            className="text-gray-400 text-lg md:text-xl max-w-xl mx-auto mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            Built for how music gets made. GrounduP brings together intelligence, planning, and collaboration in one seamless experience.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 }}
-            className="flex justify-center"
-          >
-            <button className="waitlist-btn-main" onClick={() => document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' })}>
-              SIGN UP NOW <span className="opacity-40 font-normal ml-2">— Free to start →</span>
-            </button>
-          </motion.div>
-        </div>
+      <section className="relative">
+        <ShaderShowcase />
       </section>
 
       {/* Real Patterns Section */}
