@@ -1,147 +1,122 @@
-import { Calendar, Users, Image as ImageIcon, Plus, Bell, Search, Settings, LayoutGrid, ChevronRight } from 'lucide-react';
+import { Calendar, Users, Image as ImageIcon, Bell, Grid, Settings, ChevronRight } from 'lucide-react';
 
-export const TeamDashboardMockup = () => {
+export function TeamDashboardMockup() {
   return (
-    <div className="w-full aspect-[16/10] bg-[#0A0A0A] rounded-[2rem] border border-white/10 overflow-hidden flex flex-col shadow-[0_0_100px_rgba(255,215,0,0.05)] relative">
-      {/* Top Navigation Bar */}
-      <div className="h-14 border-b border-white/5 px-6 flex items-center justify-between bg-zinc-900/40 backdrop-blur-md">
+    <div className="w-full max-w-5xl mx-auto p-4 sm:p-10 bg-zinc-950 rounded-[40px] border border-white/5 shadow-[0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden">
+      {/* Top Navigation */}
+      <div className="flex items-center justify-between mb-16 px-4">
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-             <div className="w-6 h-6 rounded bg-[#FFD700] flex items-center justify-center">
-                <span className="text-[10px] font-black text-black">uP</span>
-             </div>
-             <span className="text-xs font-black tracking-tighter text-white">GROUNDUP OS</span>
-          </div>
-          <div className="h-4 w-[1px] bg-white/10 mx-2" />
-          <div className="flex items-center gap-4 text-gray-500 text-[10px] font-bold uppercase tracking-widest">
-             <span className="text-white">DASHBOARD</span>
-             <span className="hover:text-white transition-colors cursor-pointer">ANALYTICS</span>
-             <span className="hover:text-white transition-colors cursor-pointer">TEAM</span>
+          <div className="w-14 h-14 bg-[#FFD700] rounded-2xl flex items-center justify-center font-black text-black text-2xl shadow-[0_0_30px_rgba(255,215,0,0.3)]">uP</div>
+          <div>
+            <h3 className="text-white font-black text-xl tracking-tighter uppercase">GrounduP</h3>
+            <p className="text-[#FFD700] text-[11px] font-black tracking-[0.25em] opacity-80">MANAGEMENT OS</p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
-             <Search className="w-3 h-3 text-gray-500 mr-2" />
-             <span className="text-[10px] text-gray-500 uppercase font-black">Search...</span>
+        <div className="hidden lg:flex items-center gap-12 text-[12px] font-black text-white/30 uppercase tracking-[0.2em]">
+          <span className="text-white border-b-2 border-[#FFD700] pb-2 cursor-pointer">Dashboard</span>
+          <span className="hover:text-white transition-colors cursor-pointer">Rollouts</span>
+          <span className="hover:text-white transition-colors cursor-pointer">Analytics</span>
+          <span className="hover:text-white transition-colors cursor-pointer">Team</span>
+        </div>
+        <div className="flex items-center gap-6">
+          <div className="bg-zinc-900/50 px-5 py-2.5 rounded-full border border-white/5 flex items-center gap-4">
+            <div className="w-2.5 h-2.5 bg-[#FFD700] rounded-full animate-pulse shadow-[0_0_10px_#FFD700]" />
+            <span className="text-white/60 font-black text-[10px] tracking-widest">LIVE SYNC</span>
           </div>
-          <Bell className="w-4 h-4 text-gray-400" />
-          <div className="w-8 h-8 rounded-full bg-zinc-800 border border-[#FFD700]/30 overflow-hidden">
-             <div className="w-full h-full bg-gradient-to-br from-[#FFD700]/20 to-transparent" />
-          </div>
+          <Bell className="text-white/20 hover:text-white transition-colors cursor-pointer" size={24} />
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Compact Sidebar */}
-        <div className="w-16 border-r border-white/5 py-6 flex flex-col items-center gap-8 bg-zinc-900/10">
-          <LayoutGrid className="w-5 h-5 text-[#FFD700]" />
-          <Calendar className="w-5 h-5 text-gray-600 hover:text-white transition-colors cursor-pointer" />
-          <Users className="w-5 h-5 text-gray-600 hover:text-white transition-colors cursor-pointer" />
-          <ImageIcon className="w-5 h-5 text-gray-600 hover:text-white transition-colors cursor-pointer" />
-          <div className="mt-auto mb-4 space-y-6">
-             <Settings className="w-5 h-5 text-gray-700" />
-          </div>
+      <div className="flex gap-14">
+        {/* Sidebar Icons */}
+        <div className="flex flex-col gap-12 pt-4 px-2 border-r border-white/5 pr-12">
+          <div className="text-[#FFD700] bg-[#FFD700]/10 p-3 rounded-2xl"><Grid size={28} /></div>
+          <div className="text-white/20 hover:text-white/60 transition-colors cursor-pointer p-3"><Calendar size={28} /></div>
+          <div className="text-white/20 hover:text-white/60 transition-colors cursor-pointer p-3"><Users size={28} /></div>
+          <div className="text-white/20 hover:text-white/60 transition-colors cursor-pointer p-3"><ImageIcon size={28} /></div>
+          <div className="mt-auto text-white/10 hover:text-white/40 transition-colors cursor-pointer p-3"><Settings size={28} /></div>
         </div>
 
-        {/* Main Content Dashboard */}
-        <div className="flex-1 p-8 grid grid-cols-12 gap-8 overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(255,215,0,0.03),transparent)]">
-          
-          {/* Left Column: Calendar & Management */}
-          <div className="col-span-8 space-y-6">
-            <div className="flex items-center justify-between">
-               <div>
-                  <h3 className="text-2xl font-black tracking-tighter text-white">Team Rollout</h3>
-                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">October 2026 • 12 Active Deadlines</p>
-               </div>
-               <div className="flex gap-2">
-                  <button className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/10 transition-all">Export</button>
-                  <button className="px-4 py-2 bg-[#FFD700] rounded-xl text-[10px] font-black uppercase tracking-widest text-black shadow-[0_0_20px_rgba(255,215,0,0.2)]">+ Add Event</button>
-               </div>
+        {/* Main Content Area */}
+        <div className="flex-1">
+          <div className="flex items-end justify-between mb-16">
+            <div>
+              <h2 className="text-white text-6xl font-black mb-4 tracking-tighter leading-none">Team Rollout</h2>
+              <p className="text-white/30 text-sm font-black uppercase tracking-[0.4em]">
+                October 2026 • <span className="text-[#FFD700]">12 Active Deadlines</span>
+              </p>
             </div>
+            <div className="flex gap-4">
+               <button className="px-8 py-4 bg-zinc-900 border border-white/10 rounded-2xl text-white text-xs font-black uppercase tracking-widest hover:bg-zinc-800 transition-all">Export</button>
+               <button className="px-8 py-4 bg-[#FFD700] rounded-2xl text-black text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,215,0,0.2)]">+ Add Event</button>
+            </div>
+          </div>
 
-            <div className="bg-zinc-900/30 rounded-3xl border border-white/5 p-6 backdrop-blur-xl">
-               <div className="grid grid-cols-7 gap-4 mb-4">
-                  {['S','M','T','W','T','F','S'].map(d => (
-                     <div key={d} className="text-center text-[10px] font-black text-gray-600 uppercase">{d}</div>
-                  ))}
+          <div className="grid grid-cols-12 gap-12">
+            {/* Calendar View */}
+            <div className="col-span-8 bg-zinc-900/20 rounded-[40px] border border-white/5 p-10 relative overflow-hidden group">
+               <div className="grid grid-cols-7 gap-8 text-center text-xs font-black text-white/20 uppercase tracking-[0.3em] mb-12">
+                  <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
                </div>
-               <div className="grid grid-cols-7 gap-4">
-                  {Array.from({ length: 28 }).map((_, i) => (
-                    <div key={i} className={`aspect-square rounded-2xl border border-white/5 flex flex-col p-2 relative group/cell hover:bg-white/5 transition-all cursor-pointer ${i === 12 ? 'bg-[#FFD700]/5 border-[#FFD700]/20' : ''}`}>
-                      <span className={`text-[10px] font-bold ${i === 12 ? 'text-[#FFD700]' : 'text-gray-500'}`}>{i + 1}</span>
+               <div className="grid grid-cols-7 gap-y-12 gap-x-8 text-center">
+                  {[...Array(31)].map((_, i) => (
+                    <div key={i} className={`relative flex items-center justify-center aspect-square text-lg font-black ${i === 12 ? 'text-black' : 'text-white/40 hover:text-white transition-colors cursor-pointer'}`}>
                       {i === 12 && (
-                         <div className="mt-auto">
-                            <div className="h-1 w-full bg-[#FFD700] rounded-full shadow-[0_0_10px_#FFD700]" />
-                            <span className="text-[6px] font-black uppercase text-[#FFD700] mt-1 block">Release Day</span>
-                         </div>
+                        <div className="absolute inset-0 bg-[#FFD700] rounded-2xl scale-125 shadow-[0_0_40px_rgba(255,215,0,0.5)] rotate-3" />
                       )}
-                      {i === 5 && <div className="mt-auto h-1 w-2 bg-white/40 rounded-full" />}
-                      {i === 22 && <div className="mt-auto h-1 w-4 bg-white/40 rounded-full" />}
+                      <span className="relative z-10">{i + 1}</span>
+                      {i === 5 && <div className="absolute -bottom-4 w-2 h-2 bg-white/20 rounded-full" />}
+                      {i === 22 && <div className="absolute -bottom-4 w-5 h-2 bg-white/10 rounded-full" />}
                     </div>
                   ))}
                </div>
+               {/* Label for Release Day */}
+               <div className="absolute top-[45%] right-10 transform -translate-y-1/2 pointer-events-none rotate-3">
+                  <div className="bg-zinc-950 p-6 rounded-3xl border border-[#FFD700]/50 shadow-2xl animate-pulse">
+                    <p className="text-[#FFD700] text-xs font-black uppercase tracking-widest leading-none mb-1">13 Oct</p>
+                    <p className="text-white opacity-40 text-[10px] font-black uppercase tracking-tighter">Release Day</p>
+                  </div>
+               </div>
             </div>
-          </div>
 
-          {/* Right Column: Tasks & Assets */}
-          <div className="col-span-4 space-y-6">
-             <div className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-500">Live Tasks</h4>
-                <div className="space-y-3">
-                   {[
-                      { name: 'Spotify Canvas Upload', val: 90, color: '#FFD700' },
-                      { name: 'Press Kit V2 Distribution', val: 45, color: '#FFFFFF' },
-                      { name: 'Merch Drop Logistics', val: 15, color: '#FFFFFF' }
-                   ].map((t, i) => (
-                      <div key={i} className="p-4 rounded-2xl bg-zinc-900/50 border border-white/5 group/task hover:border-[#FFD700]/20 transition-all">
-                         <div className="flex justify-between items-center mb-2">
-                            <span className="text-[10px] font-bold text-white uppercase tracking-tight">{t.name}</span>
-                            <span className="text-[10px] font-black text-gray-500">{t.val}%</span>
-                         </div>
-                         <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                            <div className="h-full transition-all duration-1000" style={{ width: `${t.val}%`, backgroundColor: t.color, boxShadow: t.color === '#FFD700' ? '0 0 10px #FFD700' : 'none' }} />
-                         </div>
-                      </div>
-                   ))}
+            {/* Side Tasks */}
+            <div className="col-span-4 space-y-8">
+              <p className="text-white/20 text-xs font-black uppercase tracking-[0.4em] mb-6">Live Tasks</p>
+              
+              <div className="bg-zinc-900/40 p-8 rounded-3xl border border-white/5 group hover:border-[#FFD700]/30 transition-all hover:bg-zinc-900/60">
+                <div className="flex justify-between items-start mb-6">
+                  <h4 className="text-white text-sm font-black uppercase tracking-tight leading-tight">Spotify Canvas<br/>Upload</h4>
+                  <span className="text-[#FFD700] text-sm font-black">90%</span>
                 </div>
-             </div>
+                <div className="h-2 bg-zinc-800 rounded-full overflow-hidden shadow-inner">
+                  <div className="h-full bg-[#FFD700] w-[90%] shadow-[0_0_15px_rgba(255,215,0,0.6)]" />
+                </div>
+              </div>
 
-             <div className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-500">Shared Assets</h4>
-                <div className="grid grid-cols-2 gap-4">
-                   {[1, 2].map((i) => (
-                      <div key={i} className="aspect-square rounded-2xl bg-zinc-900 border border-white/5 relative overflow-hidden group/asset cursor-pointer">
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
-                         <div className="absolute bottom-3 left-3">
-                            <span className="text-[8px] font-black uppercase tracking-widest text-white">Album_Master_V{i}</span>
-                            <div className="flex gap-1 mt-1">
-                               <div className="w-1 h-1 rounded-full bg-[#FFD700]" />
-                               <div className="w-1 h-1 rounded-full bg-[#FFD700]" />
-                            </div>
-                         </div>
-                         <div className="absolute top-2 right-2 p-1.5 bg-black/40 backdrop-blur-md rounded-lg border border-white/10 opacity-0 group-hover/asset:opacity-100 transition-opacity">
-                            <Plus className="w-3 h-3 text-[#FFD700]" />
-                         </div>
-                      </div>
-                   ))}
+              <div className="bg-zinc-900/40 p-8 rounded-3xl border border-white/5">
+                <div className="flex justify-between items-start mb-6">
+                  <h4 className="text-white text-sm font-black uppercase tracking-tight leading-tight">Press Kit V2<br/>Distribution</h4>
+                  <span className="text-white/40 text-sm font-black">45%</span>
                 </div>
-             </div>
+                <div className="h-2 bg-zinc-800 rounded-full overflow-hidden shadow-inner">
+                  <div className="h-full bg-white/20 w-[45%]" />
+                </div>
+              </div>
+
+              <div className="mt-14 p-8 bg-[#FFD700] rounded-[32px] flex items-center justify-between group cursor-pointer overflow-hidden relative shadow-[0_20px_40px_rgba(255,215,0,0.15)]">
+                <div className="absolute inset-0 bg-white/30 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
+                <div className="relative z-10">
+                  <p className="text-black font-black text-lg uppercase tracking-tighter mb-1">Ready For Launch</p>
+                  <p className="text-black/40 text-[10px] font-black uppercase tracking-widest">October 12, 2026</p>
+                </div>
+                <div className="relative z-10 w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-[#FFD700] shadow-xl group-hover:scale-110 transition-transform">
+                  <ChevronRight size={24} strokeWidth={4} />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Glass Corner Overlay */}
-      <div className="absolute bottom-6 right-6 p-4 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl flex items-center gap-4">
-         <div className="w-10 h-10 rounded-full border-2 border-[#FFD700] flex items-center justify-center p-1">
-            <div className="w-full h-full rounded-full bg-[#FFD700] flex items-center justify-center">
-               <ChevronRight className="w-4 h-4 text-black" />
-            </div>
-         </div>
-         <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-white">Ready for Launch</p>
-            <p className="text-[8px] font-bold text-gray-500 uppercase tracking-tighter">OCTOBER 12, 2026</p>
-         </div>
-      </div>
     </div>
-  );
-};
+  )
+}
