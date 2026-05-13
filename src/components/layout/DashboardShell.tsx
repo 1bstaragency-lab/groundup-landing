@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   Home, BookOpen, Calendar, Layout, User,
   Bell, TrendingUp, Users, Network,
-  MoreHorizontal, X, Music2,
+  MoreHorizontal, X, Music2, Settings, Zap, Search,
 } from "lucide-react"
 import { useAuth } from "../../hooks/useAuth"
 import { CdRocketIcon } from "../ui/CdRocketIcon"

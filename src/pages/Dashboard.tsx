@@ -73,7 +73,7 @@ export function Dashboard() {
   }
 
   return (
-    <>}
+    <>
 
       {/* Email confirmed banner */}
       <AnimatePresence>
