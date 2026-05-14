@@ -104,7 +104,7 @@ export function JoinPage() {
       <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-10">
-          <img src="/logo.png" alt="GrounduP" className="h-10 opacity-80" />
+          <img src="/logo.webp" alt="GrounduP" className="h-10 opacity-80" />
         </div>
 
         <AnimatePresence mode="wait">

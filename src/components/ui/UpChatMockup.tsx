@@ -229,7 +229,7 @@ export function UpOrbMascot() {
       }}>
         {/* The image — white bg disappears against black via multiply */}
         <img
-          src="/assets/silver.png"
+          src="/assets/silver.webp"
           alt=""
           style={{
             width: '100%',

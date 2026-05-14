@@ -138,7 +138,7 @@ function LandingPage() {
       {/* Navigation */}
       <nav className="nav-container">
         <div className="nav-logo">
-          <img src="/logo.png" alt="GrounduP" className="h-12 md:h-16" />
+          <img src="/logo.webp" alt="GrounduP" className="h-12 md:h-16" />
         </div>
 
         {/* Centered nav links — desktop only */}
@@ -203,7 +203,7 @@ function LandingPage() {
           <div className="fixed top-0 left-0 right-0 z-[190] bg-zinc-950 border-b border-white/10 rounded-b-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] md:hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
-              <img src="/logo.png" alt="GrounduP" className="h-10" />
+              <img src="/logo.webp" alt="GrounduP" className="h-10" />
               <button
                 onClick={() => setMobileNavOpen(false)}
                 className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white transition-colors"
