@@ -1,6 +1,5 @@
 "use client"
 import { useRef } from "react"
-import { MeshGradient } from "@paper-design/shaders-react"
 import { motion } from "framer-motion"
 import { LiquidButton } from "./liquid-glass-button"
 import { AwardBadge } from "./award-badge"
@@ -62,16 +61,10 @@ export default function ShaderShowcase() {
         </defs>
       </svg>
 
-      <MeshGradient
-        className="absolute inset-0 w-full h-full"
-        colors={["#000000", "#FFD700", "#B8860B", "#1A1A1A", "#000000"]}
-        speed={0.3}
-      />
-      <MeshGradient
-        className="absolute inset-0 w-full h-full opacity-30"
-        colors={["#000000", "#ffffff", "#FFD700", "#000000"]}
-        speed={0.2}
-      />
+      <div className="absolute inset-0 w-full h-full"
+        style={{ background: "radial-gradient(ellipse 80% 60% at 50% 40%, rgba(184,134,11,0.18) 0%, rgba(255,215,0,0.07) 40%, transparent 70%)" }} />
+      <div className="absolute inset-0 w-full h-full opacity-30"
+        style={{ background: "radial-gradient(ellipse 60% 50% at 50% 60%, rgba(255,215,0,0.12) 0%, transparent 65%)" }} />
 
       <main className="relative z-20 w-full">
         <div className="container mx-auto px-6 text-center">

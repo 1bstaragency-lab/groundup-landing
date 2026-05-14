@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { PulsingBorder } from "@paper-design/shaders-react"
+
 import { Search, Phone, Settings, Mic, Smile, Send } from "lucide-react"
 
 const MESSAGES = [
@@ -40,22 +40,8 @@ const MESSAGES = [
 function UpOrbAvatar({ size = 36 }: { size?: number }) {
   return (
     <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
-      <PulsingBorder
-        colors={["#FFD700", "#B8860B", "#ffffff", "#000000", "#FFD700"]}
-        colorBack="#00000000"
-        speed={1.5}
-        roundness={1}
-        thickness={0.18}
-        softness={0.2}
-        intensity={6}
-        pulse={0.15}
-        smoke={0.4}
-        smokeSize={3}
-        scale={0.7}
-        rotation={0}
-        frame={9161408}
-        style={{ width: size, height: size, borderRadius: "50%", position: "absolute", inset: 0 }}
-      />
+      <span className="absolute inset-0 rounded-full border border-[#FFD700]/50 animate-pulse"
+        style={{ boxShadow: "0 0 10px rgba(255,215,0,0.35)" }} />
       {/* Rotating text ring */}
       <motion.svg
         className="absolute inset-0 w-full h-full pointer-events-none"
@@ -203,23 +189,9 @@ export function UpOrbMascot() {
         pointerEvents: 'none',
       }} />
 
-      {/* Gold pulsing ring */}
-      <PulsingBorder
-        colors={["#FFD700", "#B8860B", "#ffffff", "#000000", "#FFD700"]}
-        colorBack="#00000000"
-        speed={1.4}
-        roundness={1}
-        thickness={0.06}
-        softness={0.15}
-        intensity={8}
-        pulse={0.18}
-        smoke={0.3}
-        smokeSize={3}
-        scale={0.82}
-        rotation={0}
-        frame={9161408}
-        style={{ width: 160, height: 160, borderRadius: '50%', position: 'absolute', inset: 0 }}
-      />
+      {/* Gold pulsing ring — CSS only */}
+      <span className="absolute inset-0 rounded-full border border-[#FFD700]/40 animate-pulse"
+        style={{ boxShadow: "0 0 24px rgba(255,215,0,0.3), inset 0 0 12px rgba(255,215,0,0.1)" }} />
 
       {/* Silver ball — white bg removed via multiply, gold tint overlay */}
       <div style={{
