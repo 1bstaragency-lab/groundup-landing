@@ -6,7 +6,7 @@ import {
   Grid, Calendar, Users, TrendingUp, Plus, Rocket, BarChart2,
   CheckSquare, Square, Crown, Music2, Briefcase, Link2,
   Disc3, Layers, Music, ListMusic, X, Check, MoreVertical,
-  Trash2, Edit2, Flag,
+  Trash2, Edit2, Flag, MessageCircle,
 } from 'lucide-react'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
@@ -14,10 +14,11 @@ import { usePoints } from '../../hooks/usePoints'
 import { TaskCards } from '../ui/task-cards'
 import { MusicStatsCard } from '../ui/music-stats-card'
 import { PointsWidget } from '../ui/points-widget'
+import { UpSection } from './UpSection'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type DashTab = 'Overview' | 'Releases' | 'Analytics' | 'Team'
+type DashTab = 'Overview' | 'Releases' | 'Analytics' | 'Team' | 'uP'
 
 interface CalEvent {
   id: string
@@ -701,11 +702,12 @@ function TeamTab({ members, loading }: { members: TeamMember[]; loading: boolean
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const TABS: { id: DashTab; icon: React.ReactNode; label: string }[] = [
-  { id: 'Overview',  icon: <Grid size={13} />,      label: 'Overview' },
-  { id: 'Releases',  icon: <Rocket size={13} />,    label: 'Releases' },
-  { id: 'Analytics', icon: <TrendingUp size={13} />, label: 'Analytics' },
-  { id: 'Team',      icon: <Users size={13} />,     label: 'Team' },
+const TABS: { id: DashTab; icon: React.ReactNode; label: string; highlight?: boolean }[] = [
+  { id: 'Overview',  icon: <Grid size={13} />,           label: 'Overview' },
+  { id: 'Releases',  icon: <Rocket size={13} />,         label: 'Releases' },
+  { id: 'Analytics', icon: <TrendingUp size={13} />,     label: 'Analytics' },
+  { id: 'Team',      icon: <Users size={13} />,          label: 'Team' },
+  { id: 'uP',        icon: <MessageCircle size={13} />,  label: 'uP', highlight: true },
 ]
 
 export function HomeDashboard() {
@@ -791,14 +793,19 @@ export function HomeDashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${
                 activeTab === tab.id
                   ? 'bg-[#FFD700] text-black shadow-[0_4px_16px_rgba(255,215,0,0.2)]'
+                  : tab.highlight
+                  ? 'text-[#FFD700]/60 hover:text-[#FFD700]'
                   : 'text-white/30 hover:text-white'
               }`}
             >
               {tab.icon}
               <span className="hidden sm:inline">{tab.label}</span>
+              {tab.highlight && activeTab !== tab.id && (
+                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-[#FFD700] rounded-full animate-pulse shadow-[0_0_4px_#FFD700]" />
+              )}
             </button>
           ))}
         </div>
@@ -818,6 +825,7 @@ export function HomeDashboard() {
             {activeTab === 'Releases'  && `${releases.length} active ${releases.length === 1 ? 'release' : 'releases'}`}
             {activeTab === 'Analytics' && 'Connect platforms to see live data'}
             {activeTab === 'Team'      && `${members.length} ${members.length === 1 ? 'member' : 'members'}`}
+            {activeTab === 'uP'        && 'Your AI music career co-pilot'}
           </p>
         </div>
 
@@ -854,6 +862,7 @@ export function HomeDashboard() {
             {activeTab === 'Releases'  && <ReleasesTab releases={releases} loading={loadingReleases} onUpdate={loadReleases} />}
             {activeTab === 'Analytics' && <AnalyticsTab />}
             {activeTab === 'Team'      && <TeamTab members={members} loading={loadingTeam} />}
+            {activeTab === 'uP'        && <UpSection pointsAvailable={points} totalEarned={totalEarned} />}
           </motion.div>
         </AnimatePresence>
       </div>
