@@ -42,6 +42,17 @@ export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
     return (
       <div className="fixed inset-0 z-[200] bg-black overflow-y-auto scroll-overlay">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.05)_0%,transparent_70%)] pointer-events-none" />
+
+        {/* Back button */}
+        <button
+          onClick={() => setStep(step === 'tone' ? 'profile' : 'signup')}
+          className="absolute top-5 left-5 z-20 flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-white hover:border-white/20 transition-all text-[11px] font-black uppercase tracking-widest"
+          aria-label="Back"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          Back
+        </button>
+
         <div className="min-h-full flex flex-col items-center justify-center px-6 py-10">
 
           {/* Progress */}

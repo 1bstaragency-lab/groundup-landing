@@ -2,14 +2,15 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ChevronRight, ChevronLeft, Sparkles, Music, Users, Target, Rocket } from "lucide-react"
+import { ChevronRight, ChevronLeft, Sparkles, Music, Users, Target, Rocket, X } from "lucide-react"
 import { LiquidButton } from "./liquid-glass-button"
 
 interface OnboardingProps {
   onComplete: (data: any) => void
+  onSkip?: () => void
 }
 
-export function OnboardingFlow({ onComplete }: OnboardingProps) {
+export function OnboardingFlow({ onComplete, onSkip }: OnboardingProps) {
   const [step, setStep] = useState(1)
   const [data, setData] = useState({
     artistType: "",
@@ -66,6 +67,17 @@ export function OnboardingFlow({ onComplete }: OnboardingProps) {
     <div className="fixed inset-0 z-[200] bg-black overflow-y-auto scroll-overlay">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.05)_0%,transparent_70%)] pointer-events-none" />
       <div className="min-h-full flex flex-col items-center justify-center px-6 py-10">
+
+      {/* Skip / close */}
+      {onSkip && (
+        <button
+          onClick={onSkip}
+          className="absolute top-5 right-5 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white hover:border-white/20 transition-all"
+          aria-label="Skip onboarding"
+        >
+          <X size={15} />
+        </button>
+      )}
 
       {/* Progress Bar */}
       <div className="w-full max-w-xl flex gap-2 mb-20 relative z-10">

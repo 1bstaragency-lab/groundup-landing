@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { HomeSection } from './pages/dashboard/HomeSection';
 import { LearnSection } from './components/dashboard/LearnSection';
@@ -83,6 +83,7 @@ function LandingPage() {
   const [referralCode, setReferralCode] = useState('');
   const [referredBy, setReferredBy] = useState<string | null>(null);
   const [activePopup, setActivePopup] = useState<NavKey | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -137,7 +138,7 @@ function LandingPage() {
           <img src="/logo.png" alt="GrounduP" className="h-12 md:h-16" />
         </div>
 
-        {/* Centered nav links (absolute so they're truly centered regardless of logo/CTA widths) */}
+        {/* Centered nav links — desktop only */}
         <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-10 pointer-events-auto">
           {(Object.keys(NAV_POPUPS) as NavKey[]).map(key => {
             const item = NAV_POPUPS[key]
@@ -156,7 +157,6 @@ function LandingPage() {
                     onClick={e => e.stopPropagation()}
                     className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-64 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-[110]"
                   >
-                    {/* arrow */}
                     <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-zinc-900/95 border-l border-t border-white/10 rotate-45" />
                     <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.3em] mb-1">{item.label}</p>
                     <p className="text-white font-black text-sm uppercase tracking-tight leading-tight mb-2">{item.heading}</p>
@@ -176,18 +176,80 @@ function LandingPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="nav-cta" onClick={() => navigate('/login')}>
-            Sign In
-          </button>
+          {/* Desktop CTAs */}
+          <button className="nav-cta hidden md:block" onClick={() => navigate('/login')}>Sign In</button>
+          <button className="nav-cta hidden md:block" style={{ background: '#FFD700', color: '#000' }} onClick={() => navigate('/signup')}>Join Now</button>
+
+          {/* Mobile hamburger */}
           <button
-            className="nav-cta"
-            style={{ background: '#FFD700', color: '#000' }}
-            onClick={() => navigate('/signup')}
+            className="md:hidden flex flex-col justify-center items-center w-10 h-10 gap-1.5 rounded-xl border border-white/10 bg-white/5"
+            onClick={() => setMobileNavOpen(true)}
+            aria-label="Open menu"
           >
-            Join Now
+            <span className="w-5 h-0.5 bg-white rounded-full" />
+            <span className="w-5 h-0.5 bg-white rounded-full" />
+            <span className="w-3.5 h-0.5 bg-white/50 rounded-full" />
           </button>
         </div>
       </nav>
+
+      {/* Mobile nav drawer */}
+      {mobileNavOpen && (
+        <>
+          <div className="fixed inset-0 z-[180] bg-black/70 backdrop-blur-sm md:hidden" onClick={() => setMobileNavOpen(false)} />
+          <div className="fixed top-0 left-0 right-0 z-[190] bg-zinc-950 border-b border-white/10 rounded-b-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] md:hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
+              <img src="/logo.png" alt="GrounduP" className="h-10" />
+              <button
+                onClick={() => setMobileNavOpen(false)}
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white transition-colors"
+                aria-label="Close menu"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+
+            {/* Nav links */}
+            <div className="px-6 py-4 space-y-1">
+              {(Object.keys(NAV_POPUPS) as NavKey[]).map(key => {
+                const item = NAV_POPUPS[key]
+                return (
+                  <a
+                    key={key}
+                    href={`#${key}`}
+                    onClick={() => setMobileNavOpen(false)}
+                    className="flex items-center justify-between w-full px-4 py-3.5 rounded-2xl hover:bg-white/5 transition-colors group"
+                  >
+                    <div>
+                      <p className="text-white font-black text-sm uppercase tracking-widest">{item.label}</p>
+                      <p className="text-white/30 text-[11px] font-medium mt-0.5">{item.heading}</p>
+                    </div>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-white/20 group-hover:text-[#FFD700] transition-colors flex-shrink-0"><path d="M1 7h12M8 2l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </a>
+                )
+              })}
+            </div>
+
+            {/* CTAs */}
+            <div className="px-6 pb-6 pt-2 flex gap-3">
+              <button
+                className="flex-1 py-3 rounded-2xl border border-white/10 text-white/60 font-black text-[11px] uppercase tracking-widest hover:text-white hover:border-white/20 transition-all"
+                onClick={() => { navigate('/login'); setMobileNavOpen(false) }}
+              >
+                Sign In
+              </button>
+              <button
+                className="flex-1 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all"
+                style={{ background: '#FFD700', color: '#000' }}
+                onClick={() => { navigate('/signup'); setMobileNavOpen(false) }}
+              >
+                Join Now
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Hero */}
       <section className="relative">
@@ -352,7 +414,7 @@ function LandingPage() {
 // ─── Onboarding (legacy preview flow) ────────────────────────────────────────
 function OnboardingPage() {
   const navigate = useNavigate();
-  return <OnboardingFlow onComplete={() => navigate('/dashboard')} />;
+  return <OnboardingFlow onComplete={() => navigate('/dashboard')} onSkip={() => navigate('/dashboard')} />;
 }
 
 // ─── Root Router ─────────────────────────────────────────────────────────────
