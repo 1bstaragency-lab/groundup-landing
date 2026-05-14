@@ -18,11 +18,13 @@ import type { Handler } from '@netlify/functions'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 
-const BLOOIO_API_KEY      = process.env.BLOOIO_API_KEY          ?? ''
-const BLOOIO_WEBHOOK_SECRET = process.env.BLOOIO_WEBHOOK_SECRET  ?? ''
-const ANTHROPIC_KEY       = process.env.ANTHROPIC_API_KEY        ?? ''
-const SUPABASE_URL        = process.env.VITE_SUPABASE_URL        ?? ''
-const SUPABASE_KEY        = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
+const BLOOIO_API_KEY        = process.env.BLOOIO_API_KEY            ?? ''
+const BLOOIO_WEBHOOK_SECRET = process.env.BLOOIO_WEBHOOK_SECRET     ?? ''
+const ANTHROPIC_KEY         = process.env.ANTHROPIC_API_KEY          ?? ''
+const SUPABASE_URL          = process.env.VITE_SUPABASE_URL          ?? ''
+// Service role bypasses RLS; fall back to anon key if not set
+const SUPABASE_KEY          = process.env.SUPABASE_SERVICE_ROLE_KEY  ??
+                              process.env.VITE_SUPABASE_ANON_KEY     ?? ''
 
 const BLOOIO_URL = 'https://backend.blooio.com/v1/api/messages'
 
@@ -94,17 +96,31 @@ export const handler: Handler = async (event) => {
     return { statusCode: 200, body: 'Not configured' }
   }
 
+  console.log('[blooio-webhook] Supabase config — URL set:', !!SUPABASE_URL, '| Key set:', !!SUPABASE_KEY, '| Key type:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'service_role' : process.env.VITE_SUPABASE_ANON_KEY ? 'anon' : 'MISSING')
+
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
   // ─── Look up artist by phone ───────────────────────────────────────────────
   const normalizedPhone = normalizePhone(fromPhone)
-  const { data: profile } = await supabase
+  console.log('[blooio-webhook] Looking up phone:', normalizedPhone)
+
+  const { data: profile, error: profileError } = await supabase
     .from('artist_profiles')
-    .select('user_id, artist_name, tone')
+    .select('user_id, artist_name, tone, phone_number')
     .eq('phone_number', normalizedPhone)
     .single()
 
+  console.log('[blooio-webhook] Profile lookup result:', JSON.stringify({ profile, error: profileError?.message }))
+
   if (!profile) {
+    // Try a broader search to diagnose format issues
+    const { data: allPhones } = await supabase
+      .from('artist_profiles')
+      .select('phone_number')
+      .not('phone_number', 'is', null)
+      .limit(10)
+    console.log('[blooio-webhook] All stored phones for comparison:', JSON.stringify(allPhones))
+
     await sendBlooio(fromPhone, "Hey! I don't recognize this number. Log into your GrounduP account and connect your phone under Profile to chat with uP 🎵")
     return { statusCode: 200, body: 'Unknown number' }
   }
