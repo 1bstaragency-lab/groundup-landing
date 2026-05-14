@@ -85,7 +85,21 @@ export const handler: Handler = async (event) => {
         }, null, 2),
       }
     }
-    return { statusCode: 405, body: 'Use POST for inbound webhooks. GET ?ping=1 for diagnostics.' }
+    if (params.recent === '1') {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+      const { data, error } = await supabase
+        .from('up_conversations')
+        .select('role, content, channel, created_at')
+        .eq('channel', 'imessage')
+        .order('created_at', { ascending: false })
+        .limit(20)
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data, error: error?.message }, null, 2),
+      }
+    }
+    return { statusCode: 405, body: 'Use POST for inbound webhooks. GET ?ping=1 or ?recent=1 for diagnostics.' }
   }
 
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method not allowed' }
