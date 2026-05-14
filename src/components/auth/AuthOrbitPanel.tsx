@@ -118,21 +118,17 @@ export const AuthOrbitPanel = memo(function AuthOrbitPanel() {
         })}
 
         {/* Center branding */}
-        <div className="relative z-10 flex flex-col items-center gap-3">
-          <div
-            className="flex items-center justify-center rounded-2xl font-black text-black"
+        <div className="relative z-10 flex flex-col items-center gap-4">
+          <img
+            src="/gu-logo.png"
+            alt="GrounduP"
             style={{
-              width: 56,
-              height: 56,
-              background: "#FFD700",
-              fontSize: 22,
-              letterSpacing: "-0.05em",
-              boxShadow: "0 0 40px rgba(255,215,0,0.5)",
+              height: 72,
+              width: "auto",
+              filter: "drop-shadow(0 0 24px rgba(255,215,0,0.45))",
               animation: "gold-pulse 3s ease-in-out infinite",
             }}
-          >
-            uP
-          </div>
+          />
           <div className="text-center">
             <p className="text-white font-black text-xl tracking-tighter uppercase leading-none">
               GrounduP
