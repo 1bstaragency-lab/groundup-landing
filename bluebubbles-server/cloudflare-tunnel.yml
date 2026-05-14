@@ -1,0 +1,20 @@
+# Cloudflare Tunnel config — exposes BlueBubbles at messages.groundupapp.com
+# Place this file at: ~/.cloudflared/config.yml  (on your always-on Mac)
+#
+# Setup steps (one-time):
+#   1. brew install cloudflared
+#   2. cloudflared tunnel login          ← opens browser, authorise groundupapp.com
+#   3. cloudflared tunnel create groundup-bb
+#      → copies a tunnel ID, paste it below as `tunnel:`
+#   4. Copy this file to ~/.cloudflared/config.yml
+#   5. cloudflared tunnel route dns groundup-bb messages.groundupapp.com
+#   6. cloudflared service install       ← runs as a launchd daemon (survives lid-close & reboots)
+#   7. sudo launchctl start com.cloudflare.cloudflared
+
+tunnel: <YOUR_TUNNEL_ID>           # from step 3 — looks like a UUID
+credentials-file: /Users/<you>/.cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  - hostname: messages.groundupapp.com
+    service: http://localhost:1234   # BlueBubbles default port — change if you moved it
+  - service: http_status:404

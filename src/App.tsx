@@ -90,6 +90,16 @@ function LandingPage() {
         referral_code: newRefCode, referred_by: referredBy
       }]);
       if (error) console.warn('Waitlist insert failed, proceeding anyway:', error);
+
+      // Fire welcome SMS (non-blocking — don't await, don't fail signup if it errors)
+      if (formData.phone) {
+        fetch('/.netlify/functions/waitlist-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: formData.phone, name: formData.name }),
+        }).catch(() => {/* swallow — SMS is best-effort */});
+      }
+
       setSubmitted(true);
     } catch (err) {
       console.error('Waitlist error:', err);
