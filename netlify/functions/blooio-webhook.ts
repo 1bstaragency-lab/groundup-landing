@@ -126,16 +126,21 @@ export const handler: Handler = async (event) => {
   }
 
   const userId = profile.user_id
+  const voice  = TONE_VOICE[profile.tone ?? ''] ?? TONE_VOICE['Assistant Manager']
 
-  // ─── Pull artist context ───────────────────────────────────────────────────
-  const [releasesRes, eventsRes] = await Promise.all([
+  // ─── Parallel: fetch releases, events, conversation history all at once ────
+  const today = new Date().toISOString().split('T')[0]
+  const [releasesRes, eventsRes, historyRes] = await Promise.all([
     supabase.from('releases').select('title, type, release_date, checklist').eq('user_id', userId).order('release_date', { ascending: true }).limit(5),
-    supabase.from('calendar_events').select('title, event_type, event_date').eq('user_id', userId).gte('event_date', new Date().toISOString().split('T')[0]).order('event_date', { ascending: true }).limit(5),
+    supabase.from('calendar_events').select('title, event_type, event_date').eq('user_id', userId).gte('event_date', today).order('event_date', { ascending: true }).limit(5),
+    supabase.from('up_conversations').select('role, content').eq('user_id', userId).eq('channel', 'imessage').order('created_at', { ascending: false }).limit(6),
   ])
 
   const releases = releasesRes.data ?? []
   const events   = eventsRes.data ?? []
-  const voice    = TONE_VOICE[profile.tone ?? ''] ?? TONE_VOICE['Assistant Manager']
+  const priorMessages = (historyRes.data ?? [])
+    .reverse()
+    .map(h => ({ role: h.role as 'user' | 'assistant', content: h.content }))
 
   const releaseSummary = releases.length > 0
     ? releases.map(r => {
@@ -161,26 +166,13 @@ TASK EXTRACTION: If you identify any action items for the artist, append them at
 <up_tasks>["Task 1 (5-10 words)", "Task 2"]</up_tasks>
 Only if genuinely actionable. Omit entirely if no tasks.`
 
-  // ─── Pull recent iMessage conversation history ─────────────────────────────
-  const { data: history } = await supabase
-    .from('up_conversations')
-    .select('role, content')
-    .eq('user_id', userId)
-    .eq('channel', 'imessage')
-    .order('created_at', { ascending: false })
-    .limit(10)
-
-  const priorMessages = (history ?? [])
-    .reverse()
-    .map(h => ({ role: h.role as 'user' | 'assistant', content: h.content }))
-
-  // ─── Call Claude ───────────────────────────────────────────────────────────
+  // ─── Call Claude — use Haiku for speed (perfect for short iMessage replies) ─
   const anthropic = new Anthropic({ apiKey: ANTHROPIC_KEY })
   let reply = ''
   try {
     const res = await anthropic.messages.create({
-      model:      'claude-opus-4-5',
-      max_tokens: 300,
+      model:      'claude-haiku-4-5',
+      max_tokens: 200,
       system:     systemPrompt,
       messages:   [...priorMessages, { role: 'user', content: inboundText }],
     })
@@ -193,21 +185,19 @@ Only if genuinely actionable. Omit entirely if no tasks.`
   // ─── Extract tasks + clean reply ─────────────────────────────────────────
   const { cleaned: cleanReply, tasks } = extractTasks(reply)
 
-  // ─── Send reply via Blooio ────────────────────────────────────────────────
+  // ─── Send reply + log to Supabase in parallel (don't block on logging) ────
   await sendBlooio(fromPhone, cleanReply)
 
-  // ─── Log both sides to Supabase ───────────────────────────────────────────
-  await supabase.from('up_conversations').insert([
-    { user_id: userId, role: 'user',      content: inboundText, channel: 'imessage' },
-    { user_id: userId, role: 'assistant', content: cleanReply,  channel: 'imessage' },
-  ])
-
-  // ─── Save extracted tasks ─────────────────────────────────────────────────
-  if (tasks.length > 0) {
-    await supabase.from('up_tasks').insert(
-      tasks.map(content => ({ user_id: userId, content, source: 'imessage' }))
-    )
-  }
+  // Fire-and-forget logging so we return fast
+  Promise.all([
+    supabase.from('up_conversations').insert([
+      { user_id: userId, role: 'user',      content: inboundText, channel: 'imessage' },
+      { user_id: userId, role: 'assistant', content: cleanReply,  channel: 'imessage' },
+    ]),
+    tasks.length > 0
+      ? supabase.from('up_tasks').insert(tasks.map(content => ({ user_id: userId, content, source: 'imessage' })))
+      : Promise.resolve(),
+  ]).catch(err => console.error('[blooio-webhook] Logging error:', err))
 
   return { statusCode: 200, body: 'OK' }
 }
