@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { X, ChevronRight, ChevronLeft, TrendingUp, Calendar, BookOpen,
   Users, Network, BarChart2, Zap, Check, Play, Disc3,
   MessageCircle, Sparkles } from "lucide-react"
@@ -536,27 +536,16 @@ export function DemoModal({ onClose }: DemoModalProps) {
         <div className="flex flex-col md:flex-row flex-1 min-h-0">
           {/* Left info panel */}
           <div className="w-full md:w-[38%] p-6 flex flex-col justify-between border-b md:border-b-0 md:border-r border-white/5 shrink-0">
-            <div className="relative flex-1 overflow-hidden mb-6">
-              <AnimatePresence mode="sync">
-                <motion.div
-                  key={slide.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.18 }}
-                  className="absolute inset-0"
-                >
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-4" style={{ color: slide.accent }}>
-                    {slide.label}
-                  </p>
-                  <h2 className="text-2xl md:text-3xl font-black text-white tracking-tighter leading-tight mb-4">
-                    {slide.title}
-                  </h2>
-                  <p className="text-white/40 text-sm font-medium leading-relaxed">
-                    {slide.subtitle}
-                  </p>
-                </motion.div>
-              </AnimatePresence>
+            <div className="flex-1 mb-6">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-4" style={{ color: slide.accent }}>
+                {slide.label}
+              </p>
+              <h2 className="text-2xl md:text-3xl font-black text-white tracking-tighter leading-tight mb-4">
+                {slide.title}
+              </h2>
+              <p className="text-white/40 text-sm font-medium leading-relaxed">
+                {slide.subtitle}
+              </p>
             </div>
 
             <div className="flex items-center gap-3">
@@ -584,23 +573,12 @@ export function DemoModal({ onClose }: DemoModalProps) {
 
           {/* Right mockup panel */}
           <div className="flex-1 p-5 relative min-h-[320px]">
-            <AnimatePresence mode="sync">
-              <motion.div
-                key={slide.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.18 }}
-                className="absolute inset-5 relative"
-              >
-                <div className="w-full h-full" style={{ minHeight: 320 }}>
-                  <Mockup />
-                </div>
-                {slide.callouts.map((callout, i) => (
-                  <CalloutBubble key={i} callout={callout} slideKey={slide.id} />
-                ))}
-              </motion.div>
-            </AnimatePresence>
+            <div className="w-full h-full relative" style={{ minHeight: 320 }}>
+              <Mockup />
+              {slide.callouts.map((callout, i) => (
+                <CalloutBubble key={`${slide.id}-${i}`} callout={callout} slideKey={slide.id} />
+              ))}
+            </div>
           </div>
         </div>
       </motion.div>
