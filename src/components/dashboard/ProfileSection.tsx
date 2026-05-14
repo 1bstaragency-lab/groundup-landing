@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import {
   Camera, MapPin, Link as LinkIcon, Globe, Plus,
-  CheckCircle, Clock, ChevronRight, ExternalLink,
-  Music as MusicIcon, Phone, Save, Loader2, MessageCircle,
+  CheckCircle, CheckCircle2, Clock, ChevronRight, ExternalLink,
+  Music as MusicIcon, Phone, Save, Loader2,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { supabase } from "../../lib/supabaseClient"
@@ -34,6 +34,7 @@ export function ProfileSection() {
   const [original, setOriginal] = useState<Profile | null>(null)
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [phoneState, setPhoneState] = useState<'idle' | 'saving' | 'sent' | 'error'>('idle')
+  const [countryCode, setCountryCode] = useState('+1')
   const [loading, setLoading]   = useState(true)
 
   // ─── Load profile ──────────────────────────────────────────────────────────
@@ -67,8 +68,6 @@ export function ProfileSection() {
     profile.tone        !== original.tone
   )
 
-  const phoneChanged = original !== null && profile.phone_number !== original.phone_number
-
   // ─── Save general profile ──────────────────────────────────────────────────
   async function saveProfile() {
     if (!user || !isDirty) return
@@ -95,15 +94,16 @@ export function ProfileSection() {
 
   // ─── Save phone number + trigger welcome iMessage ─────────────────────────
   async function savePhone() {
-    if (!user || !phoneChanged || !profile.phone_number) return
+    if (!user || !profile.phone_number.trim()) return
     setPhoneState('saving')
+    const fullPhone = countryCode + profile.phone_number.trim()
 
     // 1. Persist to Supabase
     const { error } = await supabase
       .from('artist_profiles')
       .upsert({
         user_id:      user.id,
-        phone_number: profile.phone_number,
+        phone_number: fullPhone,
         updated_at:   new Date().toISOString(),
       }, { onConflict: 'user_id' })
 
@@ -113,7 +113,7 @@ export function ProfileSection() {
       return
     }
 
-    setOriginal(prev => prev ? { ...prev, phone_number: profile.phone_number } : null)
+    setOriginal(prev => prev ? { ...prev, phone_number: fullPhone } : null)
 
     // 2. Send welcome iMessage via LoopMessage
     try {
@@ -121,7 +121,7 @@ export function ProfileSection() {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phone:      profile.phone_number,
+          phone:      fullPhone,
           artistName: profile.artist_name || user.email,
           tone:       profile.tone,
         }),
@@ -221,12 +221,18 @@ export function ProfileSection() {
 
           {/* uP iMessage Connection */}
           <div className="bg-zinc-900/20 border border-[#FFD700]/10 p-8 rounded-[2.5rem] relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-6 text-[#FFD700]/5 pointer-events-none">
-              <MessageCircle size={80} />
-            </div>
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-1">
                 <h4 className="text-white font-black text-xs uppercase tracking-widest">Connect via iMessage</h4>
+                {/* Blue verified badge */}
+                <span
+                  style={{ backgroundColor: '#1D9BF0', width: 16, height: 16 }}
+                  className="inline-flex items-center justify-center rounded-full flex-shrink-0"
+                >
+                  <svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </span>
                 <span className="text-[8px] font-black uppercase tracking-widest text-[#FFD700] bg-[#FFD700]/10 border border-[#FFD700]/20 px-2 py-0.5 rounded-full">uP</span>
               </div>
               <p className="text-white/30 text-[10px] font-medium mb-6">
@@ -234,31 +240,57 @@ export function ProfileSection() {
               </p>
 
               <div className="flex gap-3">
-                <div className="flex-1 flex items-center gap-2 bg-zinc-950 border border-white/5 focus-within:border-[#FFD700]/25 rounded-xl px-4 py-3 transition-all">
-                  <Phone size={13} className="text-white/20 flex-shrink-0" />
+                <div className="flex-1 flex items-center bg-zinc-950 border border-white/5 focus-within:border-[#FFD700]/25 rounded-xl transition-all overflow-hidden">
+                  <Phone size={13} className="text-white/20 flex-shrink-0 ml-4" />
+                  {/* Country code select */}
+                  <select
+                    value={countryCode}
+                    onChange={e => setCountryCode(e.target.value)}
+                    className="bg-transparent text-white text-sm font-medium outline-none cursor-pointer py-3 pl-2 pr-1 flex-shrink-0 focus:ring-0 appearance-none"
+                    style={{ width: 90 }}
+                  >
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+1CA">🇨🇦 +1 CA</option>
+                    <option value="+1JM">🇯🇲 +1 JM</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+61">🇦🇺 +61</option>
+                    <option value="+234">🇳🇬 +234</option>
+                    <option value="+81">🇯🇵 +81</option>
+                    <option value="+49">🇩🇪 +49</option>
+                    <option value="+33">🇫🇷 +33</option>
+                    <option value="+55">🇧🇷 +55</option>
+                    <option value="+52">🇲🇽 +52</option>
+                    <option value="+27">🇿🇦 +27</option>
+                    <option value="+82">🇰🇷 +82</option>
+                    <option value="+31">🇳🇱 +31</option>
+                    <option value="+34">🇪🇸 +34</option>
+                  </select>
+                  {/* Subtle divider */}
+                  <div className="w-px h-5 bg-white/10 flex-shrink-0" />
+                  {/* Local phone number */}
                   <input
                     type="tel"
                     value={profile.phone_number}
                     onChange={e => set('phone_number', e.target.value)}
-                    placeholder="+1 (555) 000-0000"
-                    className="flex-1 bg-transparent text-white text-sm font-medium placeholder-white/15 outline-none"
+                    placeholder="(555) 000-0000"
+                    className="flex-1 bg-transparent text-white text-sm font-medium placeholder-white/15 outline-none px-3 py-3"
                   />
                 </div>
 
                 <button
                   onClick={savePhone}
-                  disabled={!phoneChanged || !profile.phone_number || phoneState === 'saving' || phoneState === 'sent'}
+                  disabled={!profile.phone_number.trim() || phoneState === 'saving' || phoneState === 'sent'}
                   className={`flex items-center gap-2 px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex-shrink-0 ${
                     phoneState === 'sent'
                       ? 'bg-green-500/15 border border-green-500/20 text-green-400'
-                      : phoneChanged && profile.phone_number
+                      : profile.phone_number.trim()
                       ? 'bg-[#FFD700] text-black hover:scale-105 shadow-[0_0_16px_rgba(255,215,0,0.2)]'
                       : 'bg-white/5 text-white/20 cursor-not-allowed'
                   }`}
                 >
                   {phoneState === 'saving' && <Loader2 size={11} className="animate-spin" />}
                   {phoneState === 'sent'   && <CheckCircle size={11} />}
-                  {phoneState === 'idle' || phoneState === 'error' ? <MessageCircle size={11} /> : null}
+                  {(phoneState === 'idle' || phoneState === 'error') && <CheckCircle2 size={11} />}
                   {phoneState === 'saving' ? 'Sending…' :
                    phoneState === 'sent'   ? 'Check your texts!' :
                    phoneState === 'error'  ? 'Error — retry' :
