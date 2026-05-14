@@ -5,10 +5,9 @@ import { motion, AnimatePresence } from "framer-motion"
 import { PulsingBorder } from "@paper-design/shaders-react"
 import { X, ArrowRight } from "lucide-react"
 
-const QUICK_ACTIONS = [
+const QUICK_LINKS = [
   { label: "How does GrounduP work?", href: "#features" },
   { label: "See pricing plans", href: "#pricing" },
-  { label: "Join the waitlist", href: "#waitlist" },
 ]
 
 const MESSAGES = [
@@ -17,7 +16,7 @@ const MESSAGES = [
   "Let's build your career from the ground up. 🎵",
 ]
 
-export function UpBot() {
+export function UpBot({ onViewDemo }: { onViewDemo?: () => void }) {
   const [open, setOpen] = useState(false)
   const [msgIdx] = useState(() => Math.floor(Math.random() * MESSAGES.length))
 
@@ -79,7 +78,7 @@ export function UpBot() {
               {/* Quick actions */}
               <p className="text-white/20 text-[9px] font-black uppercase tracking-widest mb-2">Quick links</p>
               <div className="flex flex-col gap-1.5">
-                {QUICK_ACTIONS.map(action => (
+                {QUICK_LINKS.map(action => (
                   <a
                     key={action.href}
                     href={action.href}
@@ -90,6 +89,13 @@ export function UpBot() {
                     <ArrowRight size={11} className="text-white/20 group-hover:text-[#FFD700] transition-colors flex-shrink-0" />
                   </a>
                 ))}
+                <button
+                  onClick={() => { setOpen(false); onViewDemo?.() }}
+                  className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-[#FFD700]/10 hover:bg-[#FFD700]/20 border border-[#FFD700]/20 hover:border-[#FFD700]/40 group transition-all"
+                >
+                  <span className="text-[#FFD700] text-[11px] font-black uppercase tracking-widest">View Demo</span>
+                  <ArrowRight size={11} className="text-[#FFD700]/60 group-hover:text-[#FFD700] transition-colors flex-shrink-0" />
+                </button>
               </div>
             </div>
 

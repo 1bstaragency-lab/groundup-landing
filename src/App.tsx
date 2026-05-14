@@ -17,9 +17,11 @@ import { BentoPricing } from './components/ui/bento-pricing';
 import { GlobeLive } from './components/ui/cobe-globe-live';
 import { SupportBot } from './components/ui/support-bot';
 import { CinematicFooter } from './components/ui/motion-footer';
+import { DemoModal } from './components/ui/DemoModal';
 import { AwardBadge } from './components/ui/award-badge';
 import { OnboardingFlow } from './components/ui/OnboardingFlow';
 import { UpBot } from './components/ui/UpBot';
+import { AnimatePresence } from 'framer-motion';
 import { UpChatMockup, UpOrbMascot } from './components/ui/UpChatMockup';
 import { SignUpPage } from './pages/SignUp';
 import { LoginPage } from './pages/Login';
@@ -84,6 +86,7 @@ function LandingPage() {
   const [referredBy, setReferredBy] = useState<string | null>(null);
   const [activePopup, setActivePopup] = useState<NavKey | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -405,8 +408,11 @@ function LandingPage() {
         </div>
       </section>
 
-      <CinematicFooter />
-      <UpBot />
+      <CinematicFooter onViewDemo={() => setShowDemo(true)} />
+      <UpBot onViewDemo={() => setShowDemo(true)} />
+      <AnimatePresence>
+        {showDemo && <DemoModal onClose={() => setShowDemo(false)} />}
+      </AnimatePresence>
     </div>
   );
 }

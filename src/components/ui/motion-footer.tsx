@@ -1,12 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { DemoModal } from "./DemoModal";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -113,10 +111,9 @@ const MarqueeItem = () => (
   </div>
 );
 
-export function CinematicFooter() {
+export function CinematicFooter({ onViewDemo }: { onViewDemo?: () => void }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const giantTextRef = useRef<HTMLDivElement>(null);
-  const [showDemo, setShowDemo] = useState(false);
 
   useEffect(() => {
     if (!wrapperRef.current) return;
@@ -154,7 +151,7 @@ export function CinematicFooter() {
                 <MagneticButton as="a" href="#signup" className="footer-glass-pill px-12 py-6 rounded-full text-[#FFD700] font-black text-sm uppercase tracking-widest flex items-center gap-3">
                   Get Early Access
                 </MagneticButton>
-                <MagneticButton as="button" onClick={() => setShowDemo(true)} className="footer-glass-pill px-12 py-6 rounded-full text-white/60 font-black text-sm uppercase tracking-widest hover:text-white transition-colors">
+                <MagneticButton as="button" onClick={onViewDemo} className="footer-glass-pill px-12 py-6 rounded-full text-white/60 font-black text-sm uppercase tracking-widest hover:text-white transition-colors">
                   View Demo
                 </MagneticButton>
               </div>
@@ -177,9 +174,6 @@ export function CinematicFooter() {
           </div>
         </footer>
       </div>
-      <AnimatePresence>
-        {showDemo && <DemoModal onClose={() => setShowDemo(false)} />}
-      </AnimatePresence>
     </>
   );
 }
