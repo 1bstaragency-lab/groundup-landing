@@ -258,18 +258,14 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
         {/* Content — extra bottom padding on mobile for the nav bar */}
         <div className="flex-1 overflow-y-auto px-4 py-5 lg:px-8 lg:py-8 pb-24 lg:pb-8 relative">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="h-full"
-            >
-              {children}
-            </motion.div>
-          </AnimatePresence>
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {children}
+          </motion.div>
         </div>
       </main>
 
