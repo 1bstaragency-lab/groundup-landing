@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
-import { MorphingCardStack } from '../ui/morphing-card-stack'
+import { TaskCards } from '../ui/task-cards'
 import { MusicStatsCard } from '../ui/music-stats-card'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -832,7 +832,7 @@ export function HomeDashboard() {
                 </div>
                 <OverviewTab events={events} setEvents={setEvents} loadingEvents={loadingEvents} userId={user.id} onEventAdded={ev => setEvents(prev => [...prev, ev])} />
                 <div className="mt-6 pt-6 border-t border-white/5">
-                  <MorphingCardStack title="Quick Tasks" />
+                  <TaskCards title="Quick Tasks" />
                 </div>
               </>
             )}

@@ -33,7 +33,7 @@ import { JoinPage } from './pages/JoinPage';
 import { ForgotPasswordPage } from './pages/ForgotPassword';
 import { ResetPasswordPage } from './pages/ResetPassword';
 import { MarkerHighlight } from './components/ui/marker-highlight';
-import { RippleCircles } from './components/ui/ripple-circles';
+import { Loader } from './components/ui/loader';
 import { useAuth } from './hooks/useAuth';
 import { supabase } from './supabaseClient';
 import './App.css';
@@ -42,7 +42,7 @@ import './App.css';
 function AuthLoader() {
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center">
-      <RippleCircles />
+      <Loader />
     </div>
   );
 }

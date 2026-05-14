@@ -9,11 +9,11 @@ export interface AuthUser {
 }
 
 export type ArtistTone =
-  | 'Professional'
-  | 'Conversational'
-  | 'Direct'
-  | 'Analytical'
-  | 'Strategic';
+  | 'Assistant Manager'
+  | 'Your Boy'
+  | 'Label Rep'
+  | 'Road Manager'
+  | 'Creative Partner';
 
 export type PlanTier = 'free' | 'pro' | 'growth';
 

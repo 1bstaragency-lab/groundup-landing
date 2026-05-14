@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   Play, Pause, Square, X, BookOpen, TrendingUp, Music2,
   Truck, Megaphone, Globe, ChevronRight, Volume2, Loader2,
-  FileText, Clock, ExternalLink,
+  FileText, Clock, ExternalLink, Newspaper,
 } from "lucide-react"
+import { ArticleCard } from "../ui/article-card"
 
 // ─── PDF Library ──────────────────────────────────────────────────────────────
 
@@ -126,6 +127,71 @@ const CATEGORY_META: Record<string, { icon: React.ReactNode; color: string; bord
   'Distribution':     { icon: <Globe size={14} />,      color: 'text-blue-400',   border: 'border-blue-400/20' },
   'PR & Press':       { icon: <Megaphone size={14} />,  color: 'text-pink-400',   border: 'border-pink-400/20' },
 }
+
+// ─── Industry Articles ────────────────────────────────────────────────────────
+interface Article {
+  id: string
+  tag: string
+  tagColor: string
+  coverGradient: string
+  readingTime: string
+  headline: string
+  excerpt: string
+  writer: string
+  publishedAt: string
+  href?: string
+}
+
+const ARTICLES: Article[] = [
+  {
+    id: "a1", tag: "Business", tagColor: "#FFD700",
+    coverGradient: "from-yellow-900/80 via-zinc-900 to-zinc-950",
+    readingTime: "5 min", publishedAt: "Oct 2024",
+    headline: "Why Independent Artists Are Outpacing Major Labels in 2024",
+    excerpt: "With distributor royalties climbing and social discovery leveling the field, the indie artist is no longer the underdog.",
+    writer: "Music Business Worldwide", href: "https://www.musicbusinessworldwide.com",
+  },
+  {
+    id: "a2", tag: "Streaming", tagColor: "#22c55e",
+    coverGradient: "from-green-900/60 via-zinc-900 to-zinc-950",
+    readingTime: "7 min", publishedAt: "Sep 2024",
+    headline: "Spotify's Royalty Overhaul: What Artists Actually Need to Know",
+    excerpt: "The minimum stream threshold and noise-floor policy changes have real implications for how and when you get paid.",
+    writer: "Hypebot", href: "https://www.hypebot.com",
+  },
+  {
+    id: "a3", tag: "Social", tagColor: "#f43f5e",
+    coverGradient: "from-rose-900/60 via-zinc-900 to-zinc-950",
+    readingTime: "4 min", publishedAt: "Oct 2024",
+    headline: "TikTok x Music: The Virality Formula Is Changing Again",
+    excerpt: "Algorithm shifts in late 2024 are rewarding long-form performance content over 15-second snippets. Here's how to adapt.",
+    writer: "The FADER", href: "https://www.thefader.com",
+  },
+  {
+    id: "a4", tag: "Licensing", tagColor: "#a855f7",
+    coverGradient: "from-purple-900/60 via-zinc-900 to-zinc-950",
+    readingTime: "8 min", publishedAt: "Sep 2024",
+    headline: "Sync Licensing 101: How Indie Artists Land Film & TV Placements",
+    excerpt: "Catalog ownership, metadata hygiene, and the right pitching channels — everything you need before your first sync deal.",
+    writer: "Tunecore Blog", href: "https://www.tunecore.com/blog",
+  },
+  {
+    id: "a5", tag: "AI", tagColor: "#3b82f6",
+    coverGradient: "from-blue-900/60 via-zinc-900 to-zinc-950",
+    readingTime: "6 min", publishedAt: "Oct 2024",
+    headline: "AI in Music Production: Tools That Are Changing the Creative Process",
+    excerpt: "From stem separation to mastering, AI tools are now standard in indie artist workflows — for better and for worse.",
+    writer: "Rolling Stone", href: "https://www.rollingstone.com",
+  },
+  {
+    id: "a6", tag: "Touring", tagColor: "#f97316",
+    coverGradient: "from-orange-900/60 via-zinc-900 to-zinc-950",
+    readingTime: "5 min", publishedAt: "Sep 2024",
+    headline: "Small Venues Are Back — And Indie Artists Are Winning",
+    excerpt: "The 300-cap room is having a moment. Why intimate shows are generating more lifetime fans than festival slots for most artists.",
+    writer: "Pollstar", href: "https://www.pollstar.com",
+  },
+]
 
 // ─── Video playlists ──────────────────────────────────────────────────────────
 interface PlaylistVideo { id: string; title: string; duration?: string; description?: string }
@@ -645,6 +711,37 @@ export function LearnSection() {
               </motion.button>
             )
           })}
+        </div>
+      </div>
+
+      {/* ── Industry Articles ── */}
+      <div>
+        <div className="flex items-center gap-2 mb-6">
+          <Newspaper size={14} className="text-[#FFD700]" />
+          <h2 className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.3em]">Industry Articles</h2>
+          <span className="text-white/20 text-[10px] font-bold ml-auto">{ARTICLES.length} articles</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {ARTICLES.map((article, i) => (
+            <motion.div
+              key={article.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+            >
+              <ArticleCard
+                coverGradient={article.coverGradient}
+                tag={article.tag}
+                tagColor={article.tagColor}
+                readingTime={article.readingTime}
+                headline={article.headline}
+                excerpt={article.excerpt}
+                writer={article.writer}
+                publishedAt={article.publishedAt}
+                href={article.href}
+              />
+            </motion.div>
+          ))}
         </div>
       </div>
 

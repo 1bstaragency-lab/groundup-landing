@@ -1,5 +1,6 @@
 import React from "react"
 import { Check, Zap, Star, Building2 } from "lucide-react"
+import { GlowingShadow } from "./glowing-shadow"
 
 function PricingCard({
   planName, description, price, priceDescription, features,
@@ -151,9 +152,15 @@ export function PricingPage({ onSelect }: PricingPageProps) {
       </div>
 
       <div className="flex flex-col lg:flex-row items-center justify-center gap-6">
-        {plans.map((plan) => (
-          <PricingCard key={plan.planName} {...plan} onSelect={() => onSelect?.(plan.planName)} />
-        ))}
+        {plans.map((plan) =>
+          plan.isPopular ? (
+            <GlowingShadow key={plan.planName} radius="1rem" intensity={0.6} duration={4}>
+              <PricingCard {...plan} onSelect={() => onSelect?.(plan.planName)} />
+            </GlowingShadow>
+          ) : (
+            <PricingCard key={plan.planName} {...plan} onSelect={() => onSelect?.(plan.planName)} />
+          )
+        )}
       </div>
     </div>
   )

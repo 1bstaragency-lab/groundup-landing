@@ -9,9 +9,9 @@ interface EarlyAccessPopupProps {
 }
 
 const STREAM_ITEMS = [
-  "Spotify Editorial", "Apple Music", "TikTok LIVE", "DistroKid", "YouTube Music",
-  "SoundCloud Pro", "Bandcamp", "Tidal HiFi", "Amazon Music", "Deezer Premium",
-  "Audiomack", "iHeartRadio", "Pandora", "Beatport", "Boomplay",
+  "Rollout Tools", "Influencer Networks", "Playlist Curators", "Blog Networks",
+  "Show Promoters", "Radio Pluggers", "Press Outlets", "Sync Agencies",
+  "Editorial Contacts", "Booking Agents", "Brand Partnerships", "DSP Promo",
 ]
 
 function GoldMetallicCard({ artistName }: { artistName?: string }) {
@@ -121,7 +121,7 @@ export function EarlyAccessPopup({ open, artistName, onClose }: EarlyAccessPopup
 
             {/* Stream machine */}
             <div className="border-t border-white/5 pb-4">
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20 px-6 pt-4 mb-1">Connecting to</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20 px-6 pt-4 mb-1">Unlocking</p>
               <CardStream />
             </div>
 

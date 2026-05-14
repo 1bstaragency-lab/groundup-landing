@@ -1,7 +1,5 @@
 "use client"
 
-import * as React from "react"
-
 export function RippleCircles() {
   return (
     <div className="relative h-[160px] aspect-square">
