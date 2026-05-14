@@ -466,35 +466,42 @@ export function RolloutsSection() {
   const artistName = profile?.artist_name ?? user?.artistName ?? 'Artist';
 
   const [releases, setReleases] = useState<Release[]>([]);
-  const [_loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showWizard, setShowWizard] = useState(false);
   const [wizardInitialType, setWizardInitialType] = useState<ReleaseType | undefined>();
   const [selected, setSelected] = useState<string | null>(null);
 
   const loadReleases = useCallback(async () => {
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     setLoading(true);
-    const { data } = await supabase
-      .from('releases')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('release_date', { ascending: true });
-    if (data) {
-      // Map DB columns → local Release shape
-      setReleases((data as any[]).map(r => ({
-        id: r.id,
-        title: r.title,
-        type: r.type as ReleaseType,
-        date: r.release_date,
-        coverArt: r.cover_art ?? undefined,
-        feature: r.feature ?? '',
-        budget: r.budget as BudgetLevel,
-        focusAreas: r.focus_areas as FocusArea[],
-        timeline: r.timeline as RolloutWeeks,
-        checklist: r.checklist as ChecklistItem[],
-      })));
+    setLoadError(null);
+    try {
+      const { data, error } = await supabase
+        .from('releases')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('release_date', { ascending: true });
+      if (error) throw error;
+      if (data) {
+        setReleases((data as any[]).map(r => ({
+          id: r.id,
+          title: r.title,
+          type: r.type as ReleaseType,
+          date: r.release_date,
+          coverArt: r.cover_art ?? undefined,
+          feature: r.feature ?? '',
+          budget: r.budget as BudgetLevel,
+          focusAreas: r.focus_areas as FocusArea[],
+          timeline: r.timeline as RolloutWeeks,
+          checklist: r.checklist as ChecklistItem[],
+        })));
+      }
+    } catch (err: any) {
+      setLoadError(err?.message ?? 'Failed to load releases. Check your connection and try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [user]);
 
   useEffect(() => { loadReleases(); }, [loadReleases]);
@@ -506,28 +513,34 @@ export function RolloutsSection() {
 
   async function handleCreate(release: Release) {
     if (!user) return;
-    const { data, error } = await supabase
-      .from('releases')
-      .insert({
-        user_id: user.id,
-        title: release.title,
-        type: release.type,
-        release_date: release.date,
-        cover_art: release.coverArt ?? null,
-        feature: release.feature ?? null,
-        budget: release.budget,
-        focus_areas: release.focusAreas,
-        timeline: release.timeline,
-        checklist: release.checklist,
-      })
-      .select()
-      .single();
-    if (!error && data) {
-      const saved: Release = { ...release, id: (data as any).id };
-      setReleases(prev => [...prev, saved].sort((a, b) => a.date.localeCompare(b.date)));
-      setSelected(saved.id);
+    try {
+      const { data, error } = await supabase
+        .from('releases')
+        .insert({
+          user_id: user.id,
+          title: release.title,
+          type: release.type,
+          release_date: release.date,
+          cover_art: release.coverArt ?? null,
+          feature: release.feature ?? null,
+          budget: release.budget,
+          focus_areas: release.focusAreas,
+          timeline: release.timeline,
+          checklist: release.checklist,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      if (data) {
+        const saved: Release = { ...release, id: (data as any).id };
+        setReleases(prev => [...prev, saved].sort((a, b) => a.date.localeCompare(b.date)));
+        setSelected(saved.id);
+      }
+    } catch (err: any) {
+      setLoadError(err?.message ?? 'Failed to save release. Please try again.');
+    } finally {
+      setShowWizard(false);
     }
-    setShowWizard(false);
   }
 
   async function toggleCheck(releaseId: string, itemId: string) {
@@ -548,6 +561,26 @@ export function RolloutsSection() {
   const completedCount = activeRelease?.checklist.filter(c => c.done).length ?? 0;
   const totalCount = activeRelease?.checklist.length ?? 0;
   const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center py-32 gap-4">
+      <div className="w-8 h-8 border-2 border-[#FFD700]/30 border-t-[#FFD700] rounded-full animate-spin" />
+      <p className="text-white/30 text-[11px] font-black uppercase tracking-widest">Loading releases…</p>
+    </div>
+  );
+
+  if (loadError) return (
+    <div className="flex flex-col items-center justify-center py-32 gap-4 text-center">
+      <p className="text-red-400 font-black text-sm uppercase tracking-widest">Failed to load</p>
+      <p className="text-white/30 text-xs max-w-sm">{loadError}</p>
+      <button
+        onClick={loadReleases}
+        className="mt-2 px-5 py-2 rounded-xl bg-[#FFD700] text-black font-black text-[11px] uppercase tracking-widest hover:scale-105 transition-transform"
+      >
+        Retry
+      </button>
+    </div>
+  );
 
   return (
     <div className="space-y-8">

@@ -192,12 +192,14 @@ function useTts() {
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
+  const ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window
+
   function stop() {
     if (ELEVENLABS_KEY) {
       audioRef.current?.pause()
       if (audioRef.current) { audioRef.current.currentTime = 0 }
-    } else {
-      window.speechSynthesis.cancel()
+    } else if (ttsSupported) {
+      try { window.speechSynthesis.cancel() } catch {}
     }
     setTtsState('idle')
   }
@@ -205,8 +207,8 @@ function useTts() {
   function pause() {
     if (ELEVENLABS_KEY) {
       audioRef.current?.pause()
-    } else {
-      window.speechSynthesis.pause()
+    } else if (ttsSupported) {
+      try { window.speechSynthesis.pause() } catch {}
     }
     setTtsState('paused')
   }
@@ -214,8 +216,8 @@ function useTts() {
   function resume() {
     if (ELEVENLABS_KEY) {
       audioRef.current?.play()
-    } else {
-      window.speechSynthesis.resume()
+    } else if (ttsSupported) {
+      try { window.speechSynthesis.resume() } catch {}
     }
     setTtsState('playing')
   }
@@ -231,17 +233,27 @@ function useTts() {
           headers: { 'xi-api-key': ELEVENLABS_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify({ text, model_id: 'eleven_monolingual_v1', voice_settings: { stability: 0.5, similarity_boost: 0.75 } }),
         })
+        if (!res.ok) throw new Error(`ElevenLabs ${res.status}`)
         const blob = await res.blob()
         const url = URL.createObjectURL(blob)
         const audio = new Audio(url)
         audioRef.current = audio
         audio.onended = () => setTtsState('idle')
-        audio.play()
+        audio.onerror = () => setTtsState('idle')
+        audio.play().catch(() => setTtsState('idle'))
         setTtsState('playing')
       } catch {
         setTtsState('idle')
       }
-    } else {
+      return
+    }
+
+    if (!ttsSupported) {
+      setTtsState('idle')
+      return
+    }
+
+    try {
       const utterance = new SpeechSynthesisUtterance(text)
       utterance.rate = 0.88
       utterance.pitch = 1.0
@@ -279,6 +291,8 @@ function useTts() {
       utteranceRef.current = utterance
       window.speechSynthesis.speak(utterance)
       setTtsState('playing')
+    } catch {
+      setTtsState('idle')
     }
   }
 

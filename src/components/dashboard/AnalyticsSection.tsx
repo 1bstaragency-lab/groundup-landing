@@ -18,7 +18,9 @@ function StatCard({ label, value, sub, color }: StatCardProps) {
   );
 }
 
+let chartCounter = 0;
 function EmptyChart({ label }: { label: string }) {
+  const gradId = `chartGrad-${++chartCounter}`;
   const points = [40, 35, 45, 30, 50, 38, 55, 42, 60, 48, 65, 52];
   const max = 80;
   const w = 400;
@@ -35,12 +37,12 @@ function EmptyChart({ label }: { label: string }) {
       <div className="relative">
         <svg viewBox={`0 0 ${w} ${h}`} className="w-full opacity-10" preserveAspectRatio="none" style={{ height: '80px' }}>
           <defs>
-            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#FFD700" stopOpacity="0.3" />
               <stop offset="100%" stopColor="#FFD700" stopOpacity="0" />
             </linearGradient>
           </defs>
-          <path d={`${pathD} L ${w} ${h} L 0 ${h} Z`} fill="url(#chartGrad)" />
+          <path d={`${pathD} L ${w} ${h} L 0 ${h} Z`} fill={`url(#${gradId})`} />
           <path d={pathD} fill="none" stroke="#FFD700" strokeWidth="2" />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
