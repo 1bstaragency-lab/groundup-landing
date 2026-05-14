@@ -235,8 +235,6 @@ export function UpOrbMascot() {
             width: '100%',
             height: '100%',
             objectFit: 'contain',
-            mixBlendMode: 'multiply',
-            filter: 'contrast(1.08) brightness(1.05)',
             display: 'block',
           }}
         />
