@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { useState, useRef, type ReactNode } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Home, BookOpen, Calendar, Layout, User,
   Bell, TrendingUp, Users, Network,
   MoreHorizontal, X, Music2, Settings, Zap, Search,
+  LogOut, ChevronDown,
 } from "lucide-react"
 import { useAuth } from "../../hooks/useAuth"
 import { CdRocketIcon } from "../ui/CdRocketIcon"
@@ -36,8 +37,19 @@ const MAIN_ITEMS       = MENU_ITEMS.filter(m => m.isMain)
 const OTHER_ITEMS      = MENU_ITEMS.filter(m => !m.isMain)
 
 export function DashboardShell({ children, activeTab, setActiveTab }: DashboardShellProps) {
-  const { user, profile } = useAuth()
+  const { user, profile, signOut } = useAuth()
   const [moreOpen, setMoreOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 })
+  const userBtnRef = useRef<HTMLButtonElement>(null)
+
+  function toggleUserMenu() {
+    if (!userMenuOpen && userBtnRef.current) {
+      const rect = userBtnRef.current.getBoundingClientRect()
+      setMenuPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right })
+    }
+    setUserMenuOpen(o => !o)
+  }
 
   const displayName = profile?.artist_name ?? user?.artistName ?? user?.email?.split('@')[0] ?? 'Artist'
 
@@ -128,7 +140,12 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
         </nav>
 
         <div className="p-6 border-t border-white/5 space-y-4">
-          <button className="w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl text-white/20 hover:text-white transition-colors">
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-colors ${
+              activeTab === 'profile' ? 'text-white bg-white/5' : 'text-white/20 hover:text-white'
+            }`}
+          >
             <Settings size={20} />
             <span className="font-black text-[11px] uppercase tracking-widest">Settings</span>
           </button>
@@ -171,9 +188,14 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
               <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-[#FFD700] rounded-full border border-black" />
             </button>
             <div className="h-6 w-px bg-white/5 hidden lg:block" />
-            <div className="flex items-center gap-3 group cursor-pointer">
+            {/* User menu trigger */}
+            <button
+              ref={userBtnRef}
+              onClick={toggleUserMenu}
+              className={`flex items-center gap-3 group transition-all rounded-2xl px-2 py-1.5 hover:bg-white/5 ${userMenuOpen ? 'bg-white/5' : ''}`}
+            >
               <div className="hidden lg:block text-right">
-                <p className="text-white font-black text-xs tracking-tight group-hover:text-[#FFD700] transition-colors uppercase">
+                <p className={`font-black text-xs tracking-tight uppercase transition-colors ${userMenuOpen ? 'text-[#FFD700]' : 'text-white group-hover:text-[#FFD700]'}`}>
                   {displayName}
                 </p>
                 <p className="text-white/20 text-[9px] font-black uppercase tracking-widest">Artist Account</p>
@@ -181,7 +203,54 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
               <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl lg:rounded-2xl bg-[#FFD700]/10 border border-[#FFD700]/20 flex items-center justify-center font-black text-[#FFD700] text-sm uppercase">
                 {displayName[0]}
               </div>
-            </div>
+              <ChevronDown
+                size={13}
+                className={`hidden lg:block text-white/20 transition-transform duration-200 ${userMenuOpen ? 'rotate-180 text-[#FFD700]/60' : ''}`}
+              />
+            </button>
+
+            {/* User dropdown — rendered via fixed positioning to escape overflow */}
+            <AnimatePresence>
+              {userMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-[150]" onClick={() => setUserMenuOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                    transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                    style={{ position: 'fixed', top: menuPos.top, right: menuPos.right }}
+                    className="z-[200] w-52 bg-zinc-950 border border-white/10 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden"
+                  >
+                    {/* Account info header */}
+                    <div className="px-4 py-3.5 border-b border-white/5">
+                      <p className="text-white font-black text-[11px] uppercase tracking-widest truncate">{displayName}</p>
+                      <p className="text-white/30 text-[10px] font-medium truncate mt-0.5">{user?.email}</p>
+                    </div>
+
+                    {/* Settings */}
+                    <button
+                      onClick={() => { setUserMenuOpen(false); setActiveTab('profile') }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-white/60 hover:text-white hover:bg-white/5 transition-all text-[11px] font-black uppercase tracking-widest"
+                    >
+                      <Settings size={13} className="text-white/30" />
+                      Settings
+                    </button>
+
+                    {/* Sign out */}
+                    <div className="border-t border-white/5">
+                      <button
+                        onClick={() => { setUserMenuOpen(false); signOut() }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all text-[11px] font-black uppercase tracking-widest"
+                      >
+                        <LogOut size={13} />
+                        Sign Out
+                      </button>
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
           </div>
         </header>
 
