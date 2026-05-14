@@ -14,6 +14,9 @@ import { TeamDashboardMockup } from './components/ui/TeamDashboardMockup';
 import ShaderShowcase from './components/ui/hero';
 import { LiquidButton } from './components/ui/liquid-glass-button';
 import { BentoPricing } from './components/ui/bento-pricing';
+import { MarketingBadges } from './components/ui/marketing-badges';
+import { MagnifiedBento } from './components/ui/magnified-bento';
+import { InfiniteBentoPan } from './components/ui/infinite-bento-pan';
 import { GlobeLive } from './components/ui/cobe-globe-live';
 import { SupportBot } from './components/ui/support-bot';
 import { CinematicFooter } from './components/ui/motion-footer';
@@ -259,16 +262,29 @@ function LandingPage() {
         <ShaderShowcase />
       </section>
 
+      {/* Infinite Bento Pan — desktop only */}
+      <section className="py-20 bg-black overflow-hidden hidden md:block">
+        <div className="max-w-7xl mx-auto px-6 mb-10 text-center">
+          <h2 className="text-3xl font-black text-white tracking-tighter uppercase">Your Career, In Numbers</h2>
+          <p className="text-white/30 text-sm font-medium mt-2">Real-time metrics powering your Artist OS</p>
+        </div>
+        <InfiniteBentoPan />
+      </section>
+
       {/* Features */}
       <section id="features" className="py-32 px-6 md:px-12 bg-black overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-24">
+          <div className="text-center mb-16">
             <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-6 leading-tight">
               Built for the <br/><span className="text-[#FFD700]">Next Generation</span>
             </h2>
             <p className="text-white/40 text-lg max-w-2xl mx-auto font-medium">
               The most advanced OS for music management, production tracking, and team scaling ever built.
             </p>
+          </div>
+          {/* MarketingBadges — desktop only */}
+          <div className="hidden md:block mb-20">
+            <MarketingBadges label="Our Ecosystem" subtitle="Everything an artist needs, unified in one intelligent platform." />
           </div>
           <TeamDashboardMockup />
         </div>
@@ -309,6 +325,16 @@ function LandingPage() {
               <UpChatMockup />
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* MagnifiedBento — intelligent workflows */}
+      <section className="py-24 px-6 bg-black overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter">Powered by Intelligent Workflows</h2>
+          </div>
+          <MagnifiedBento />
         </div>
       </section>
 

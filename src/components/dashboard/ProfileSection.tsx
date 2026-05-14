@@ -1,10 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { 
+import {
   Camera,
-  MapPin, 
-  Link as LinkIcon, 
+  MapPin,
+  Link as LinkIcon,
   Globe,
   Plus,
   CheckCircle,
@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Music as MusicIcon
 } from "lucide-react"
+import { GlassAccountSettingsCard } from "../ui/glass-account-settings-card"
 
 export function ProfileSection() {
   const [bio, setBio] = useState("Rising alternative pop artist based in Los Angeles. Crafting futuristic sounds for the new wave.")
@@ -158,6 +159,11 @@ export function ProfileSection() {
                </div>
             </div>
          </div>
+      </div>
+      {/* Subscription & Account Settings */}
+      <div>
+        <h3 className="text-white font-black text-2xl uppercase tracking-tighter mb-6">Subscription</h3>
+        <GlassAccountSettingsCard />
       </div>
     </div>
   )

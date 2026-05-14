@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "../../hooks/useAuth"
 import { CdRocketIcon } from "../ui/CdRocketIcon"
+import { GlowMenu } from "../ui/glow-menu"
 
 interface DashboardShellProps {
   children: ReactNode
@@ -265,6 +266,16 @@ export function DashboardShell({ children }: DashboardShellProps) {
           </motion.div>
         </div>
       </main>
+
+      {/* ── GlowMenu — mobile quick nav ────────────────────── */}
+      <div className="lg:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-50">
+        <GlowMenu
+          onHome={() => navigate('/dashboard/home')}
+          onNotifications={() => {}}
+          onSettings={() => navigate('/dashboard/profile')}
+          onProfile={() => navigate('/dashboard/profile')}
+        />
+      </div>
 
       {/* ── Bottom nav — mobile only ────────────────────────── */}
       <nav

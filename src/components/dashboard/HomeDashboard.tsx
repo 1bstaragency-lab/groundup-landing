@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
+import { MorphingCardStack } from '../ui/morphing-card-stack'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -823,7 +824,14 @@ export function HomeDashboard() {
             exit={{ opacity: 0, x: -8 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
           >
-            {activeTab === 'Overview'  && <OverviewTab events={events} setEvents={setEvents} loadingEvents={loadingEvents} userId={user.id} onEventAdded={ev => setEvents(prev => [...prev, ev])} />}
+            {activeTab === 'Overview'  && (
+              <>
+                <OverviewTab events={events} setEvents={setEvents} loadingEvents={loadingEvents} userId={user.id} onEventAdded={ev => setEvents(prev => [...prev, ev])} />
+                <div className="mt-6 pt-6 border-t border-white/5">
+                  <MorphingCardStack title="Quick Tasks" />
+                </div>
+              </>
+            )}
             {activeTab === 'Releases'  && <ReleasesTab releases={releases} loading={loadingReleases} onUpdate={loadReleases} />}
             {activeTab === 'Analytics' && <AnalyticsTab />}
             {activeTab === 'Team'      && <TeamTab members={members} loading={loadingTeam} />}
