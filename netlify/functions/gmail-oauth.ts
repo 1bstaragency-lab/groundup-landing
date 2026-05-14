@@ -22,10 +22,14 @@ export const handler: Handler = async (event) => {
   const APP_URL = `https://${host}`
   const params = event.queryStringParameters ?? {}
 
-  // ── Step 1: Initiate OAuth (called with ?init=1&user_id=xxx) ──────────────
+  // ── Step 1: Initiate OAuth (called with ?init=1&user_id=xxx&return_to=yyy) ─
   if (params.init === '1') {
-    const userId = params.user_id
+    const userId   = params.user_id
+    const returnTo = params.return_to ?? '/dashboard/influencers'
     if (!userId) return { statusCode: 400, body: 'user_id required' }
+
+    // Encode both userId and returnTo in state (base64 JSON)
+    const statePayload = Buffer.from(JSON.stringify({ uid: userId, ret: returnTo })).toString('base64')
 
     const url = new URL('https://accounts.google.com/o/oauth2/v2/auth')
     url.searchParams.set('client_id',     GOOGLE_CLIENT_ID)
@@ -34,16 +38,29 @@ export const handler: Handler = async (event) => {
     url.searchParams.set('scope',         'https://www.googleapis.com/auth/gmail.send email profile')
     url.searchParams.set('access_type',   'offline')
     url.searchParams.set('prompt',        'consent')
-    url.searchParams.set('state',         userId)
+    url.searchParams.set('state',         statePayload)
 
     return { statusCode: 302, headers: { Location: url.toString() }, body: '' }
   }
 
   // ── Step 2: Handle callback from Google ───────────────────────────────────
-  const { code, state: userId, error } = params
+  const { code, state: rawState, error } = params
+
+  // Decode state — support both new base64-JSON and legacy plain userId
+  let userId   = ''
+  let returnTo = '/dashboard/influencers'
+  if (rawState) {
+    try {
+      const parsed = JSON.parse(Buffer.from(rawState, 'base64').toString('utf8'))
+      userId   = parsed.uid  ?? rawState
+      returnTo = parsed.ret  ?? returnTo
+    } catch {
+      userId = rawState
+    }
+  }
 
   if (error) {
-    return { statusCode: 302, headers: { Location: `${APP_URL}/dashboard?gmail_error=${encodeURIComponent(error)}` }, body: '' }
+    return { statusCode: 302, headers: { Location: `${APP_URL}${returnTo}?gmail_error=${encodeURIComponent(error)}` }, body: '' }
   }
 
   if (!code || !userId) {
@@ -81,7 +98,7 @@ export const handler: Handler = async (event) => {
 
   return {
     statusCode: 302,
-    headers: { Location: `${APP_URL}/dashboard?gmail_connected=1` },
+    headers: { Location: `${APP_URL}${returnTo}?gmail_connected=1` },
     body: '',
   }
 }

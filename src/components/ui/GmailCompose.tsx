@@ -14,7 +14,8 @@ export function GmailConnectButton({ className, saveBeforeRedirect }: { classNam
   function connect() {
     if (!user) return
     saveBeforeRedirect?.()
-    const url = `/.netlify/functions/gmail-oauth?init=1&user_id=${user.id}`
+    const returnTo = encodeURIComponent(window.location.pathname)
+    const url = `/.netlify/functions/gmail-oauth?init=1&user_id=${user.id}&return_to=${returnTo}`
     window.location.href = url
   }
 

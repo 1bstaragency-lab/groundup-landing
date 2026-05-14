@@ -21,11 +21,11 @@ export function Dashboard() {
   }, [emailJustConfirmed, clearEmailConfirmed]);
 
   // Show Gmail connected banner from redirect params
+  // URL cleanup is handled by the section component (InfluencerSection) so we just read here
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('gmail_connected') === '1') {
       setGmailBanner(true);
-      window.history.replaceState({}, '', window.location.pathname);
       setTimeout(() => setGmailBanner(false), 5000);
     }
   }, []);

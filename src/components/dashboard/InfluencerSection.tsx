@@ -79,7 +79,7 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
 }
 
 export function InfluencerSection() {
-  const { profile }                   = useAuth();
+  const { profile, refreshProfile }    = useAuth();
   const [activePlatform, setActivePlatform] = useState<Platform | 'All'>('All');
   const [activeTier, setActiveTier]         = useState<TikTokTier | 'All'>('All');
   const [search, setSearch]                 = useState('');
@@ -88,10 +88,13 @@ export function InfluencerSection() {
 
   const isGmailConnected = !!(profile as any)?.gmail_refresh_token;
 
-  // Restore outreach panel if user just returned from Gmail OAuth
+  // Restore outreach panel and refresh profile after Gmail OAuth redirect
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('gmail_connected') !== '1') return;
+
+    // Re-fetch profile so gmail_refresh_token is reflected immediately
+    refreshProfile();
 
     const saved = sessionStorage.getItem('gu_outreach_return');
     if (saved) {
@@ -101,8 +104,7 @@ export function InfluencerSection() {
       sessionStorage.removeItem('gu_outreach_return');
     }
     // Clean the query param from the URL without a page reload
-    const clean = window.location.pathname;
-    window.history.replaceState({}, '', clean);
+    window.history.replaceState({}, '', window.location.pathname);
   }, []);
 
   const isPro = profile?.plan_tier === 'pro' || profile?.plan_tier === 'growth';
