@@ -117,7 +117,7 @@ export function ProfileSection() {
 
     // 2. Send welcome iMessage via LoopMessage
     try {
-      await fetch('/.netlify/functions/up-welcome', {
+      const welcomeRes = await fetch('/.netlify/functions/up-welcome', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -126,8 +126,13 @@ export function ProfileSection() {
           tone:       profile.tone,
         }),
       })
-    } catch {
-      // Non-blocking — welcome message is best-effort
+      const welcomeData = await welcomeRes.json().catch(() => ({}))
+      console.log('[ProfileSection] up-welcome result:', welcomeData)
+      if (!welcomeData.ok) {
+        console.warn('[ProfileSection] LoopMessage did not confirm send:', welcomeData)
+      }
+    } catch (err) {
+      console.error('[ProfileSection] up-welcome fetch failed:', err)
     }
 
     setPhoneState('sent')

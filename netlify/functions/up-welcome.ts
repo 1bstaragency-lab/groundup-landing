@@ -73,19 +73,34 @@ export const handler: Handler = async (event) => {
     const sendBody: Record<string, string> = { recipient: to, text: message }
     if (LOOP_SENDER) sendBody.sender = LOOP_SENDER
 
+    console.log('[up-welcome] Sending to LoopMessage:', {
+      url:    LOOP_SEND_URL,
+      to,
+      hasSender:    !!LOOP_SENDER,
+      senderValue:  LOOP_SENDER || '(not set)',
+      hasApiKey:    !!LOOP_API_KEY,
+      hasSecretKey: !!LOOP_SECRET_KEY,
+    })
+
     const res = await fetch(LOOP_SEND_URL, {
       method:  'POST',
       headers,
       body:    JSON.stringify(sendBody),
     })
 
-    const data = await res.json().catch(() => ({}))
+    const rawText = await res.text()
+    let data: unknown
+    try { data = JSON.parse(rawText) } catch { data = rawText }
+
+    console.log('[up-welcome] LoopMessage response:', res.status, rawText)
+
     return {
       statusCode: 200,
       headers: { ...CORS, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ok: res.ok, data }),
+      body: JSON.stringify({ ok: res.ok, status: res.status, data }),
     }
   } catch (err) {
+    console.error('[up-welcome] fetch error:', err)
     return {
       statusCode: 502,
       headers: { ...CORS, 'Content-Type': 'application/json' },
