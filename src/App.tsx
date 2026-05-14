@@ -300,19 +300,22 @@ function LandingPage() {
               <div className="mb-10">
                 <UpOrbMascot />
               </div>
-              <h3 className="text-4xl md:text-5xl font-black mb-6 tracking-tighter leading-none">
-                Meet uP.<br/><span className="text-white/40">Your Music Concierge.</span>
+              <h3 className="text-4xl md:text-5xl font-black mb-4 tracking-tighter leading-none">
+                Meet uP.<br/><span className="text-white/40">Your Assistant Manager.</span>
               </h3>
-              <ul className="text-white/60 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 lg:w-[65%] text-[14px] font-bold">
+              <p className="text-white/40 text-base font-medium mb-8 leading-relaxed max-w-sm">
+                uP lives in your iMessage. Like having a manager in your pocket — checking in, catching deadlines, and keeping your career moving forward.
+              </p>
+              <ul className="text-white/60 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5 lg:w-[75%] text-[14px] font-bold">
                 {[
-                  'Standard Management OS',
-                  'Content Bundle (6 Content, 2 Viz, 2 Lyric)',
-                  'Personalized Rollout Strategy',
-                  'Real-time Performance Data',
-                  'Priority AI Processing',
-                  '35 Infrastructure Credits'
+                  'Checks in on your release progress',
+                  'Recommends next steps for your career',
+                  'Alerts you before deadlines hit',
+                  'Answers music industry questions',
+                  'Connects your rollout to your goals',
+                  'Available 24/7 over iMessage',
                 ].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2"><span className="text-[#FFD700]">•</span> {f}</li>
+                  <li key={i} className="flex items-start gap-2"><span className="text-[#FFD700] mt-0.5">•</span> {f}</li>
                 ))}
               </ul>
               <div className="flex gap-4 pt-10">
