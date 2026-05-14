@@ -94,12 +94,12 @@ const NAV_POPUPS = {
   pricing: {
     label: 'Pricing',
     heading: 'Simple. Transparent.',
-    body: 'Start free forever. Pro and Agency plans unlock advanced AI tools, unlimited team seats, and priority support. Lock in founder pricing before launch.',
+    body: 'Pro starts at $29/mo with a 7-day free trial. Growth at $55/mo. Plant is custom for managers scaling a roster. No credit card required to start.',
   },
-  waitlist: {
-    label: 'Waitlist',
-    heading: 'Get early access',
-    body: 'Join 1,000+ artists already on the list. Early members get founder pricing, exclusive features, and direct input on the roadmap.',
+  signup: {
+    label: 'Get Started',
+    heading: 'Launch your Artist OS',
+    body: 'Create your account in under 2 minutes. Your releases, calendar, AI assistant, and team — all in one place from day one.',
   },
 } as const;
 type NavKey = keyof typeof NAV_POPUPS;
@@ -193,13 +193,31 @@ function LandingPage() {
                     <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.3em] mb-1">{item.label}</p>
                     <p className="text-white font-black text-sm uppercase tracking-tight leading-tight mb-2">{item.heading}</p>
                     <p className="text-white/40 text-[11px] font-medium leading-relaxed">{item.body}</p>
-                    <a
-                      href={`#${key}`}
-                      onClick={() => setActivePopup(null)}
-                      className="inline-block mt-3 text-[9px] font-black uppercase tracking-widest text-[#FFD700] hover:text-[#FFD700]/70 transition-colors"
-                    >
-                      Learn more →
-                    </a>
+                    {key === 'signup' ? (
+                      <div className="mt-4 flex flex-col gap-2">
+                        <button
+                          onClick={() => { setActivePopup(null); navigate('/signup') }}
+                          className="w-full py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
+                          style={{ background: '#FFD700', color: '#000' }}
+                        >
+                          Create Account
+                        </button>
+                        <button
+                          onClick={() => { setActivePopup(null); navigate('/login') }}
+                          className="w-full py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-all"
+                        >
+                          Sign In
+                        </button>
+                      </div>
+                    ) : (
+                      <a
+                        href={`#${key}`}
+                        onClick={() => setActivePopup(null)}
+                        className="inline-block mt-3 text-[9px] font-black uppercase tracking-widest text-[#FFD700] hover:text-[#FFD700]/70 transition-colors"
+                      >
+                        Learn more →
+                      </a>
+                    )}
                   </div>
                 )}
               </div>
@@ -242,8 +260,25 @@ function LandingPage() {
               </button>
             </div>
 
+            {/* CTAs — top of drawer so they're immediately visible */}
+            <div className="px-6 pt-5 pb-4 flex gap-3">
+              <button
+                className="flex-1 py-3.5 rounded-2xl border border-white/10 text-white font-black text-[11px] uppercase tracking-widest hover:border-white/25 hover:bg-white/5 transition-all"
+                onClick={() => { navigate('/login'); setMobileNavOpen(false) }}
+              >
+                Sign In
+              </button>
+              <button
+                className="flex-1 py-3.5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(255,215,0,0.2)]"
+                style={{ background: '#FFD700', color: '#000' }}
+                onClick={() => { navigate('/signup'); setMobileNavOpen(false) }}
+              >
+                Join Now
+              </button>
+            </div>
+
             {/* Nav links */}
-            <div className="px-6 py-4 space-y-1">
+            <div className="px-6 pb-6 space-y-1 border-t border-white/5 pt-4">
               {(Object.keys(NAV_POPUPS) as NavKey[]).map(key => {
                 const item = NAV_POPUPS[key]
                 return (
@@ -261,23 +296,6 @@ function LandingPage() {
                   </a>
                 )
               })}
-            </div>
-
-            {/* CTAs */}
-            <div className="px-6 pb-6 pt-2 flex gap-3">
-              <button
-                className="flex-1 py-3 rounded-2xl border border-white/10 text-white/60 font-black text-[11px] uppercase tracking-widest hover:text-white hover:border-white/20 transition-all"
-                onClick={() => { navigate('/login'); setMobileNavOpen(false) }}
-              >
-                Sign In
-              </button>
-              <button
-                className="flex-1 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all"
-                style={{ background: '#FFD700', color: '#000' }}
-                onClick={() => { navigate('/signup'); setMobileNavOpen(false) }}
-              >
-                Join Now
-              </button>
             </div>
           </div>
         </>
