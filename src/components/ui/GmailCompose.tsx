@@ -78,9 +78,9 @@ export function OutreachPanel({ target, onClose }: OutreachPanelProps) {
   const [errMsg, setErrMsg] = useState('')
 
   // Reset fields when target changes
-  const [lastTarget, setLastTarget] = useState(target?.name)
+  const [lastTarget, setLastTarget] = useState<string | undefined>(target?.name)
   if (target?.name !== lastTarget) {
-    setLastTarget(target?.name ?? null)
+    setLastTarget(target?.name ?? undefined)
     setTo(target?.email ?? '')
     setSubject(target ? `Music Submission — ${artistName} × ${target.name}` : '')
     setBody(target
