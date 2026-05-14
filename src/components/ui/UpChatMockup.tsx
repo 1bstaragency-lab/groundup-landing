@@ -171,41 +171,39 @@ export function UpChatMockup() {
   )
 }
 
-const liquidKeyframes = `
-@keyframes liquidMorph {
-  0%   { border-radius: 58% 42% 35% 65% / 55% 38% 62% 45%; }
-  16%  { border-radius: 42% 58% 62% 38% / 48% 62% 38% 52%; }
-  33%  { border-radius: 65% 35% 48% 52% / 35% 55% 45% 65%; }
-  50%  { border-radius: 38% 62% 55% 45% / 62% 42% 58% 38%; }
-  66%  { border-radius: 55% 45% 38% 62% / 45% 58% 42% 55%; }
-  83%  { border-radius: 45% 55% 65% 35% / 58% 35% 65% 42%; }
-  100% { border-radius: 58% 42% 35% 65% / 55% 38% 62% 45%; }
+const orbKeyframes = `
+@keyframes orbWiggle {
+  0%   { transform: translateY(0px) rotate(-1deg); }
+  25%  { transform: translateY(-10px) rotate(1deg); }
+  50%  { transform: translateY(-18px) rotate(-0.5deg); }
+  75%  { transform: translateY(-8px) rotate(1.5deg); }
+  100% { transform: translateY(0px) rotate(-1deg); }
 }
-@keyframes shimmerSweep {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 300% 0; }
+@keyframes goldShimmer {
+  0%   { opacity: 0.15; transform: translateX(-60%) skewX(-12deg); }
+  50%  { opacity: 0.35; transform: translateX(160%) skewX(-12deg); }
+  100% { opacity: 0.15; transform: translateX(-60%) skewX(-12deg); }
 }
-@keyframes goldGlow {
-  0%, 100% { box-shadow: 0 0 18px 4px rgba(255,215,0,0.18), inset 0 0 20px 4px rgba(255,215,0,0.08); }
-  50%       { box-shadow: 0 0 32px 8px rgba(255,215,0,0.30), inset 0 0 28px 8px rgba(255,215,0,0.15); }
+@keyframes bloomPulse {
+  0%, 100% { opacity: 0.18; transform: scale(1); }
+  50%       { opacity: 0.32; transform: scale(1.1); }
 }
 `
 
 export function UpOrbMascot() {
   return (
     <div className="relative flex items-center justify-center" style={{ width: 160, height: 160 }}>
-      <style>{liquidKeyframes}</style>
+      <style>{orbKeyframes}</style>
 
       {/* Ambient gold bloom */}
       <div style={{
-        position: 'absolute', inset: -20,
-        background: 'radial-gradient(circle, rgba(255,215,0,0.12) 0%, transparent 70%)',
-        filter: 'blur(20px)',
-        borderRadius: '50%',
+        position: 'absolute', inset: -30,
+        background: 'radial-gradient(circle, rgba(255,215,0,1) 0%, transparent 65%)',
+        animation: 'bloomPulse 3s ease-in-out infinite',
         pointerEvents: 'none',
       }} />
 
-      {/* Gold pulsing ring — tight */}
+      {/* Gold pulsing ring */}
       <PulsingBorder
         colors={["#FFD700", "#B8860B", "#ffffff", "#000000", "#FFD700"]}
         colorBack="#00000000"
@@ -223,48 +221,42 @@ export function UpOrbMascot() {
         style={{ width: 160, height: 160, borderRadius: '50%', position: 'absolute', inset: 0 }}
       />
 
-      {/* Liquid metallic silver sphere */}
-      <motion.div
-        animate={{ rotateY: [0, 360] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-        style={{ perspective: 400, position: 'relative', zIndex: 10 }}
-      >
+      {/* Silver ball — white bg removed via multiply, gold tint overlay */}
+      <div style={{
+        position: 'relative', zIndex: 10,
+        width: 108, height: 108,
+        animation: 'orbWiggle 3.6s ease-in-out infinite',
+      }}>
+        {/* The image — white bg disappears against black via multiply */}
+        <img
+          src="/assets/silver.png"
+          alt=""
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            mixBlendMode: 'multiply',
+            filter: 'contrast(1.08) brightness(1.05)',
+            display: 'block',
+          }}
+        />
+
+        {/* Gold shimmer sweep on top */}
         <div style={{
-          width: 104,
-          height: 104,
-          animation: 'liquidMorph 6s ease-in-out infinite, goldGlow 3s ease-in-out infinite',
-          background: `
-            radial-gradient(ellipse at 32% 28%, rgba(255,255,255,0.95) 0%, transparent 38%),
-            radial-gradient(ellipse at 68% 72%, rgba(180,180,200,0.6) 0%, transparent 40%),
-            radial-gradient(ellipse at 50% 50%, #c8ccd8 0%, #9098a8 35%, #5a6070 65%, #2a2e38 100%)
-          `,
-          position: 'relative',
+          position: 'absolute', inset: 0,
           overflow: 'hidden',
+          borderRadius: '50%',
+          pointerEvents: 'none',
         }}>
-          {/* Gold shimmer sweep */}
           <div style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(105deg, transparent 20%, rgba(255,215,0,0.22) 45%, rgba(255,200,50,0.35) 50%, rgba(255,215,0,0.22) 55%, transparent 80%)',
-            backgroundSize: '200% 100%',
-            animation: 'shimmerSweep 2.8s ease-in-out infinite',
+            position: 'absolute', top: 0, bottom: 0,
+            width: '55%',
+            background: 'linear-gradient(to bottom, rgba(255,215,0,0.55), rgba(255,180,0,0.3))',
+            animation: 'goldShimmer 2.6s ease-in-out infinite',
             mixBlendMode: 'screen',
           }} />
-          {/* Dark crevice shadow (top-right) */}
-          <div style={{
-            position: 'absolute', top: '8%', right: '12%',
-            width: '40%', height: '35%',
-            background: 'radial-gradient(ellipse, rgba(10,12,18,0.55) 0%, transparent 80%)',
-            borderRadius: '50%',
-          }} />
-          {/* Secondary highlight */}
-          <div style={{
-            position: 'absolute', bottom: '18%', left: '20%',
-            width: '28%', height: '20%',
-            background: 'radial-gradient(ellipse, rgba(255,255,255,0.45) 0%, transparent 80%)',
-            borderRadius: '50%',
-          }} />
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }
