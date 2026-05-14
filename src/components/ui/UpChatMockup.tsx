@@ -172,11 +172,11 @@ export function UpChatMockup() {
 
 const orbKeyframes = `
 @keyframes orbWiggle {
-  0%   { transform: translateY(0px) rotate(-1deg); }
-  25%  { transform: translateY(-5px) rotate(1deg); }
-  50%  { transform: translateY(-8px) rotate(-0.5deg); }
-  75%  { transform: translateY(-4px) rotate(1.5deg); }
-  100% { transform: translateY(0px) rotate(-1deg); }
+  0%   { transform: translateY(0px) rotate(-0.5deg); }
+  25%  { transform: translateY(-2px) rotate(0.5deg); }
+  50%  { transform: translateY(-4px) rotate(-0.3deg); }
+  75%  { transform: translateY(-2px) rotate(0.5deg); }
+  100% { transform: translateY(0px) rotate(-0.5deg); }
 }
 @keyframes goldShimmer {
   0%   { opacity: 0.15; transform: translateX(-60%) skewX(-12deg); }

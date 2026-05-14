@@ -116,11 +116,24 @@ function LandingPage() {
   const [activePopup, setActivePopup] = useState<NavKey | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
+  const [navVisible, setNavVisible] = useState(true);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref');
     if (ref) setReferredBy(ref);
+  }, []);
+
+  // Fade nav out once hero scrolls off screen
+  useEffect(() => {
+    function onScroll() {
+      const hero = document.getElementById('hero-section');
+      if (!hero) return;
+      const bottom = hero.getBoundingClientRect().bottom;
+      setNavVisible(bottom > 60);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   const handleJoin = async (e: React.FormEvent) => {
@@ -165,7 +178,7 @@ function LandingPage() {
       )}
 
       {/* Navigation */}
-      <nav className="nav-container">
+      <nav className="nav-container" style={{ opacity: navVisible ? 1 : 0, pointerEvents: navVisible ? 'auto' : 'none', transition: 'opacity 0.4s ease' }}>
         <div className="nav-logo">
           <img src="/logo.webp" alt="GrounduP" className="h-12 md:h-16" />
         </div>
@@ -302,21 +315,12 @@ function LandingPage() {
       )}
 
       {/* Hero */}
-      <section className="relative">
+      <section className="relative" id="hero-section">
         <ShaderShowcase />
       </section>
 
-      {/* Infinite Bento Pan — desktop only */}
-      <section className="py-20 bg-black overflow-hidden hidden md:block">
-        <div className="max-w-7xl mx-auto px-6 mb-10 text-center">
-          <h2 className="text-3xl font-black text-white tracking-tighter uppercase">Your Career, In Numbers</h2>
-          <p className="text-white/30 text-sm font-medium mt-2">Real-time metrics powering your Artist OS</p>
-        </div>
-        <InfiniteBentoPan />
-      </section>
-
-      {/* Features */}
-      <section id="features" className="py-32 px-6 md:px-12 bg-black overflow-hidden">
+      {/* Built for the Next Generation — moved above bento */}
+      <section id="features" className="py-24 px-6 md:px-12 bg-black overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-6 leading-tight">
@@ -333,6 +337,16 @@ function LandingPage() {
           <TeamDashboardMockup />
         </div>
       </section>
+
+      {/* Infinite Bento Pan — desktop only */}
+      <section className="py-20 bg-black overflow-hidden hidden md:block">
+        <div className="max-w-7xl mx-auto px-6 mb-10 text-center">
+          <h2 className="text-3xl font-black text-white tracking-tighter uppercase">Your Career, In Numbers</h2>
+          <p className="text-white/30 text-sm font-medium mt-2">Real-time metrics powering your Artist OS</p>
+        </div>
+        <InfiniteBentoPan />
+      </section>
+
 
       {/* Meet uP */}
       <section className="py-32 px-6 bg-[#050505] overflow-hidden">
