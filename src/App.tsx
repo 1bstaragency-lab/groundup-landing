@@ -9,6 +9,7 @@ import { SupportBot } from './components/ui/support-bot';
 import { CinematicFooter } from './components/ui/motion-footer';
 import { AwardBadge } from './components/ui/award-badge';
 import { OnboardingFlow } from './components/ui/OnboardingFlow';
+import { UpBot } from './components/ui/UpBot';
 import { SignUpPage } from './pages/SignUp';
 import { LoginPage } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
@@ -42,6 +43,25 @@ function RedirectIfAuthed({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+const NAV_POPUPS = {
+  features: {
+    label: 'Features',
+    heading: 'Everything in one place',
+    body: 'AI-powered rollout planning, content scheduling, streaming analytics, team collaboration tools, and a smart inbox — built exclusively for artists and their teams.',
+  },
+  pricing: {
+    label: 'Pricing',
+    heading: 'Simple. Transparent.',
+    body: 'Start free forever. Pro and Agency plans unlock advanced AI tools, unlimited team seats, and priority support. Lock in founder pricing before launch.',
+  },
+  waitlist: {
+    label: 'Waitlist',
+    heading: 'Get early access',
+    body: 'Join 1,000+ artists already on the list. Early members get founder pricing, exclusive features, and direct input on the roadmap.',
+  },
+} as const;
+type NavKey = keyof typeof NAV_POPUPS;
+
 // ─── Landing Page ────────────────────────────────────────────────────────────
 function LandingPage() {
   const navigate = useNavigate();
@@ -51,6 +71,7 @@ function LandingPage() {
   const [submitted, setSubmitted] = useState(false);
   const [referralCode, setReferralCode] = useState('');
   const [referredBy, setReferredBy] = useState<string | null>(null);
+  const [activePopup, setActivePopup] = useState<NavKey | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -84,16 +105,55 @@ function LandingPage() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#FFD700]/5 blur-[120px] rounded-full" />
       </div>
 
+      {/* Nav popup click-away */}
+      {activePopup && (
+        <div className="fixed inset-0 z-[90]" onClick={() => setActivePopup(null)} />
+      )}
+
       {/* Navigation */}
       <nav className="nav-container">
         <div className="nav-logo">
           <img src="/logo.png" alt="GrounduP" className="h-12 md:h-16" />
         </div>
-        <nav className="hidden md:flex items-center gap-12 text-[11px] font-black uppercase tracking-[0.2em] text-white/40">
-          <a href="#features" className="hover:text-[#FFD700] transition-colors">Features</a>
-          <a href="#pricing" className="hover:text-[#FFD700] transition-colors">Pricing</a>
-          <a href="#waitlist" className="hover:text-[#FFD700] transition-colors">Waitlist</a>
-        </nav>
+
+        {/* Centered nav links (absolute so they're truly centered regardless of logo/CTA widths) */}
+        <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-10 pointer-events-auto">
+          {(Object.keys(NAV_POPUPS) as NavKey[]).map(key => {
+            const item = NAV_POPUPS[key]
+            const isOpen = activePopup === key
+            return (
+              <div key={key} className="relative">
+                <button
+                  onClick={e => { e.stopPropagation(); setActivePopup(isOpen ? null : key) }}
+                  className={`text-[11px] font-black uppercase tracking-[0.2em] transition-colors ${isOpen ? 'text-[#FFD700]' : 'text-white/40 hover:text-[#FFD700]'}`}
+                >
+                  {item.label}
+                </button>
+
+                {isOpen && (
+                  <div
+                    onClick={e => e.stopPropagation()}
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-64 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-[110]"
+                  >
+                    {/* arrow */}
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-zinc-900/95 border-l border-t border-white/10 rotate-45" />
+                    <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.3em] mb-1">{item.label}</p>
+                    <p className="text-white font-black text-sm uppercase tracking-tight leading-tight mb-2">{item.heading}</p>
+                    <p className="text-white/40 text-[11px] font-medium leading-relaxed">{item.body}</p>
+                    <a
+                      href={`#${key}`}
+                      onClick={() => setActivePopup(null)}
+                      className="inline-block mt-3 text-[9px] font-black uppercase tracking-widest text-[#FFD700] hover:text-[#FFD700]/70 transition-colors"
+                    >
+                      Learn more →
+                    </a>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
         <div className="flex items-center gap-3">
           <button className="nav-cta" onClick={() => navigate('/login')}>
             Sign In
@@ -260,6 +320,7 @@ function LandingPage() {
       </section>
 
       <CinematicFooter />
+      <UpBot />
     </div>
   );
 }

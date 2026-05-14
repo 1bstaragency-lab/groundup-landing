@@ -148,52 +148,6 @@ export default function ShaderShowcase() {
         </div>
       </main>
 
-      <div className="absolute bottom-12 right-12 z-30">
-        <div className="relative w-24 h-24 flex items-center justify-center">
-          <PulsingBorder
-            colors={["#FFD700", "#B8860B", "#ffffff", "#000000", "#FFD700"]}
-            colorBack="#00000000"
-            speed={1.5}
-            roundness={1}
-            thickness={0.1}
-            softness={0.2}
-            intensity={5}
-            pulse={0.1}
-            smoke={0.5}
-            smokeSize={4}
-            scale={0.65}
-            rotation={0}
-            frame={9161408.251009725}
-            style={{
-              width: "80px",
-              height: "80px",
-              borderRadius: "50%",
-            }}
-          />
-
-          {/* Rotating Text Around the Pulsing Border */}
-          <motion.svg
-            className="absolute inset-0 w-full h-full"
-            viewBox="0 0 100 100"
-            animate={{ rotate: 360 }}
-            transition={{
-              duration: 20,
-              repeat: Number.POSITIVE_INFINITY,
-              ease: "linear",
-            }}
-            style={{ transform: "scale(1.8)" }}
-          >
-            <defs>
-              <path id="circle" d="M 50, 50 m -38, 0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0" />
-            </defs>
-            <text className="text-[6px] fill-white/40 font-black uppercase tracking-[0.2em]">
-              <textPath href="#circle" startOffset="0%">
-                GrounduP OS • Real Artists • Real Patterns • GrounduP OS • Real Artists • Real Patterns •
-              </textPath>
-            </text>
-          </motion.svg>
-        </div>
-      </div>
     </div>
   )
 }

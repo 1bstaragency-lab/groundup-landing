@@ -37,34 +37,42 @@ a, button {
   overscroll-behavior-y: contain;
 }
 
-/* Auth form inputs */
-.auth-input {
-  width: 100%;
-  background: rgba(24, 24, 27, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 1rem;
-  padding: 0.875rem 1.25rem;
-  color: #fff;
-  font-size: 0.875rem;
-  font-weight: 500;
-  outline: none;
-  transition: border-color 0.2s, background 0.2s;
-}
-.auth-input::placeholder { color: rgba(255, 255, 255, 0.2); }
-.auth-input:focus { border-color: rgba(255, 215, 0, 0.35); background: rgba(24, 24, 27, 0.9); }
+/* Auth form inputs — kept in @layer components so Tailwind utilities (pl-*, pr-*) can override padding */
+@layer components {
+  .auth-input {
+    width: 100%;
+    background: rgba(24, 24, 27, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 1rem;
+    padding-top: 0.875rem;
+    padding-bottom: 0.875rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 500;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .auth-input::placeholder { color: rgba(255, 255, 255, 0.2); }
+  .auth-input:focus { border-color: rgba(255, 215, 0, 0.35); background: rgba(24, 24, 27, 0.9); }
 
-/* Legacy alias used by onboarding forms */
-.wait-input {
-  width: 100%;
-  background: rgba(24, 24, 27, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 1rem;
-  padding: 0.875rem 1.25rem;
-  color: #fff;
-  font-size: 0.875rem;
-  font-weight: 500;
-  outline: none;
-  transition: border-color 0.2s, background 0.2s;
+  /* Legacy alias used by onboarding forms */
+  .wait-input {
+    width: 100%;
+    background: rgba(24, 24, 27, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 1rem;
+    padding-top: 0.875rem;
+    padding-bottom: 0.875rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 500;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .wait-input::placeholder { color: rgba(255, 255, 255, 0.2); }
+  .wait-input:focus { border-color: rgba(255, 215, 0, 0.35); background: rgba(24, 24, 27, 0.9); }
 }
-.wait-input::placeholder { color: rgba(255, 255, 255, 0.2); }
-.wait-input:focus { border-color: rgba(255, 215, 0, 0.35); background: rgba(24, 24, 27, 0.9); }

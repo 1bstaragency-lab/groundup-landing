@@ -11,7 +11,7 @@ const PLATFORMS = [
   { name: "Apple Music", slug: "applemusic",  ring: 2 },
   { name: "SoundCloud",  slug: "soundcloud",  ring: 3 },
   { name: "X",           slug: "x",           ring: 3 },
-  { name: "Amazon Music",slug: "amazonmusic", ring: 3 },
+  { name: "Billboard",   slug: "billboard",   ring: 3 },
 ]
 
 const RINGS = [

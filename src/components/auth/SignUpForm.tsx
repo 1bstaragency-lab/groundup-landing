@@ -76,7 +76,7 @@ export function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormProps) {
         <div className="relative group">
           <Mic2
             size={14}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#FFD700] transition-colors"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#FFD700] transition-colors pointer-events-none z-10"
           />
           <input
             type="text"
@@ -84,7 +84,7 @@ export function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormProps) {
             required
             value={formData.artistName}
             onChange={e => setFormData({ ...formData, artistName: e.target.value })}
-            className="auth-input pl-11"
+            className="w-full bg-zinc-900/60 border border-white/[0.06] rounded-2xl py-3.5 pl-11 pr-5 text-white text-sm font-medium outline-none focus:border-[#FFD700]/35 focus:bg-zinc-900/90 transition-[border-color,background] placeholder:text-white/20"
           />
         </div>
 
@@ -92,7 +92,7 @@ export function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormProps) {
         <div className="relative group">
           <Mail
             size={14}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#FFD700] transition-colors"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#FFD700] transition-colors pointer-events-none z-10"
           />
           <input
             type="email"
@@ -100,7 +100,7 @@ export function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormProps) {
             required
             value={formData.email}
             onChange={e => setFormData({ ...formData, email: e.target.value })}
-            className="auth-input pl-11"
+            className="w-full bg-zinc-900/60 border border-white/[0.06] rounded-2xl py-3.5 pl-11 pr-5 text-white text-sm font-medium outline-none focus:border-[#FFD700]/35 focus:bg-zinc-900/90 transition-[border-color,background] placeholder:text-white/20"
           />
         </div>
 
@@ -108,7 +108,7 @@ export function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormProps) {
         <div className="relative group">
           <Lock
             size={14}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#FFD700] transition-colors"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#FFD700] transition-colors pointer-events-none z-10"
           />
           <input
             type={showPassword ? 'text' : 'password'}
@@ -116,7 +116,7 @@ export function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormProps) {
             required
             value={formData.password}
             onChange={e => setFormData({ ...formData, password: e.target.value })}
-            className="auth-input pl-11 pr-12"
+            className="w-full bg-zinc-900/60 border border-white/[0.06] rounded-2xl py-3.5 pl-11 pr-12 text-white text-sm font-medium outline-none focus:border-[#FFD700]/35 focus:bg-zinc-900/90 transition-[border-color,background] placeholder:text-white/20"
           />
           <button
             type="button"
@@ -131,7 +131,7 @@ export function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormProps) {
         <div className="relative group">
           <Lock
             size={14}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#FFD700] transition-colors"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#FFD700] transition-colors pointer-events-none z-10"
           />
           <input
             type={showPassword ? 'text' : 'password'}
@@ -139,7 +139,7 @@ export function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormProps) {
             required
             value={formData.confirmPassword}
             onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
-            className="auth-input pl-11"
+            className="w-full bg-zinc-900/60 border border-white/[0.06] rounded-2xl py-3.5 pl-11 pr-5 text-white text-sm font-medium outline-none focus:border-[#FFD700]/35 focus:bg-zinc-900/90 transition-[border-color,background] placeholder:text-white/20"
           />
         </div>
 
