@@ -273,19 +273,23 @@ Only if genuinely actionable. Omit entirely if no tasks.`
   // ─── Extract tasks + clean reply ─────────────────────────────────────────
   const { cleaned: cleanReply, tasks } = extractTasks(reply)
 
-  // ─── Send reply + log to Supabase in parallel (don't block on logging) ────
-  await sendBlooio(fromPhone, cleanReply)
+  // ─── Send reply + log in parallel; await both so Lambda doesn't freeze logging ──
+  const sendP = sendBlooio(fromPhone, cleanReply)
+  const logP  = supabase.from('up_conversations').insert([
+    { user_id: userId, role: 'user',      content: inboundText, channel: 'imessage' },
+    { user_id: userId, role: 'assistant', content: cleanReply,  channel: 'imessage' },
+  ])
+  const tasksP = tasks.length > 0
+    ? supabase.from('up_tasks').insert(tasks.map(content => ({ user_id: userId, content, source: 'imessage' })))
+    : Promise.resolve()
 
-  // Fire-and-forget logging so we return fast
-  Promise.all([
-    supabase.from('up_conversations').insert([
-      { user_id: userId, role: 'user',      content: inboundText, channel: 'imessage' },
-      { user_id: userId, role: 'assistant', content: cleanReply,  channel: 'imessage' },
-    ]),
-    tasks.length > 0
-      ? supabase.from('up_tasks').insert(tasks.map(content => ({ user_id: userId, content, source: 'imessage' })))
-      : Promise.resolve(),
-  ]).catch(err => console.error('[blooio-webhook] Logging error:', err))
+  const [, logRes, tasksRes] = await Promise.all([sendP, logP, tasksP])
+  if (logRes && (logRes as { error?: unknown }).error) {
+    console.error('[blooio-webhook] Conversation log error:', (logRes as { error: unknown }).error)
+  }
+  if (tasksRes && (tasksRes as { error?: unknown }).error) {
+    console.error('[blooio-webhook] Task log error:', (tasksRes as { error: unknown }).error)
+  }
 
   return { statusCode: 200, body: 'OK' }
 }
