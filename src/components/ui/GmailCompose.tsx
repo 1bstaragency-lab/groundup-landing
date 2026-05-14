@@ -7,12 +7,13 @@ import { cn } from '../../lib/utils'
 
 // ─── Gmail connect button ─────────────────────────────────────────────────────
 
-export function GmailConnectButton({ className }: { className?: string }) {
+export function GmailConnectButton({ className, saveBeforeRedirect }: { className?: string; saveBeforeRedirect?: () => void }) {
   const { user, profile } = useAuth()
   const isConnected = !!(profile as any)?.gmail_refresh_token
 
   function connect() {
     if (!user) return
+    saveBeforeRedirect?.()
     const url = `/.netlify/functions/gmail-oauth?init=1&user_id=${user.id}`
     window.location.href = url
   }
@@ -189,9 +190,14 @@ export function OutreachPanel({ target, onClose }: OutreachPanelProps) {
                     <Mail size={14} className="text-[#FFD700] mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-[#FFD700] font-black text-[10px] uppercase tracking-widest mb-1">Gmail not connected</p>
-                      <p className="text-white/40 text-[10px] font-medium leading-relaxed">Connect to send directly — or copy the draft below to send manually.</p>
+                      <p className="text-white/40 text-[10px] font-medium leading-relaxed">Connect to send directly — draft will be restored when you return.</p>
                     </div>
-                    <GmailConnectButton className="flex-shrink-0 !text-[9px]" />
+                    <GmailConnectButton
+                      className="flex-shrink-0 !text-[9px]"
+                      saveBeforeRedirect={() => {
+                        if (target) sessionStorage.setItem('gu_outreach_return', JSON.stringify(target))
+                      }}
+                    />
                   </div>
                 )}
                 {/* To */}

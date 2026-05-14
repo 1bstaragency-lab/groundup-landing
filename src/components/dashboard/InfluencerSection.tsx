@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, TrendingUp, Users, Music2, Globe, ExternalLink, Zap, Play, Radio, Lock, Crown, X, Mail, Check } from 'lucide-react';
 import { INFLUENCERS, NETWORK_STATS, type Platform, type TikTokTier } from '../../data/influencers';
@@ -87,6 +87,23 @@ export function InfluencerSection() {
   const [outreachTarget, setOutreachTarget] = useState<OutreachTarget | null>(null);
 
   const isGmailConnected = !!(profile as any)?.gmail_refresh_token;
+
+  // Restore outreach panel if user just returned from Gmail OAuth
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('gmail_connected') !== '1') return;
+
+    const saved = sessionStorage.getItem('gu_outreach_return');
+    if (saved) {
+      try {
+        setOutreachTarget(JSON.parse(saved));
+      } catch {}
+      sessionStorage.removeItem('gu_outreach_return');
+    }
+    // Clean the query param from the URL without a page reload
+    const clean = window.location.pathname;
+    window.history.replaceState({}, '', clean);
+  }, []);
 
   const isPro = profile?.plan_tier === 'pro' || profile?.plan_tier === 'growth';
 
