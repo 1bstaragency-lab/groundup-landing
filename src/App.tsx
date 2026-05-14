@@ -20,6 +20,7 @@ import { CinematicFooter } from './components/ui/motion-footer';
 import { AwardBadge } from './components/ui/award-badge';
 import { OnboardingFlow } from './components/ui/OnboardingFlow';
 import { UpBot } from './components/ui/UpBot';
+import { UpChatMockup, UpOrbMascot } from './components/ui/UpChatMockup';
 import { SignUpPage } from './pages/SignUp';
 import { LoginPage } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
@@ -208,11 +209,16 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Meet uP — badge removed from image overlay */}
-      <section className="py-32 px-6 bg-[#050505]">
+      {/* Meet uP */}
+      <section className="py-32 px-6 bg-[#050505] overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-20 items-center">
+            {/* Left — orb mascot + copy */}
             <div>
+              {/* Animated orb mascot */}
+              <div className="mb-10">
+                <UpOrbMascot />
+              </div>
               <h3 className="text-4xl md:text-5xl font-black mb-6 tracking-tighter leading-none">
                 Meet uP.<br/><span className="text-white/40">Your Music Concierge.</span>
               </h3>
@@ -225,19 +231,17 @@ function LandingPage() {
                   'Priority AI Processing',
                   '35 Infrastructure Credits'
                 ].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2"><span>•</span> {f}</li>
+                  <li key={i} className="flex items-center gap-2"><span className="text-[#FFD700]">•</span> {f}</li>
                 ))}
               </ul>
               <div className="flex gap-4 pt-10">
                 <LiquidButton onClick={() => navigate('/signup')}>Start Chatting</LiquidButton>
               </div>
             </div>
+
+            {/* Right — live chat mockup with animated orb avatars */}
             <div className="relative">
-              <img
-                src="/assets/up_assistant_chat_ui_1778628229052.png"
-                alt="uP Assistant"
-                className="w-full rounded-3xl shadow-[0_0_50px_rgba(255,215,0,0.1)] border border-white/5"
-              />
+              <UpChatMockup />
             </div>
           </div>
         </div>
