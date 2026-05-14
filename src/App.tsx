@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence as AP } from 'framer-motion';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { HomeSection } from './pages/dashboard/HomeSection';
 import { LearnSection } from './components/dashboard/LearnSection';
@@ -25,6 +26,27 @@ import { AwardBadge } from './components/ui/award-badge';
 import { OnboardingFlow } from './components/ui/OnboardingFlow';
 import { UpBot } from './components/ui/UpBot';
 import { AnimatePresence } from 'framer-motion';
+
+// ─── Page-level splash (shows once per session for 1.5s) ──────────────────────
+const SPLASH_KEY = 'gup_splash_shown';
+
+function PageSplash({ onDone }: { onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 1500);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center gap-8"
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: 0.5, ease: 'easeInOut' } }}
+    >
+      <Loader />
+      <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.4em]">GrounduP Artist OS</p>
+    </motion.div>
+  );
+}
 import { UpChatMockup, UpOrbMascot } from './components/ui/UpChatMockup';
 import { SignUpPage } from './pages/SignUp';
 import { LoginPage } from './pages/Login';
@@ -450,8 +472,19 @@ function OnboardingPage() {
 
 // ─── Root Router ─────────────────────────────────────────────────────────────
 function App() {
+  const [showSplash, setShowSplash] = useState(() => {
+    // Show once per browser session
+    if (sessionStorage.getItem(SPLASH_KEY)) return false;
+    sessionStorage.setItem(SPLASH_KEY, '1');
+    return true;
+  });
+
   return (
-    <Routes>
+    <>
+      <AP>
+        {showSplash && <PageSplash key="splash" onDone={() => setShowSplash(false)} />}
+      </AP>
+      <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
       <Route
@@ -503,6 +536,7 @@ function App() {
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }
 

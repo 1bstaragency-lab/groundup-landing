@@ -1,97 +1,119 @@
 "use client"
 
-const LETTERS = ["G", "R", "N", "D", "u", "P"]
+// Adapted from ravikatiyar162/loader — 3D rotating cube "LOADING" letters
+// Brand color: #FFD700 gold highlight
+
+const LETTERS = ["L", "O", "A", "D", "I", "N", "G"]
+
+const CSS = `
+  :root {
+    --highlight-color: #FFD700;
+    --cube-color: #00000000;
+    --wrapper-bg: #000000;
+  }
+
+  .loader-wrapper-grid {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .loader-cube {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    transform-style: preserve-3d;
+    perspective: 140px;
+  }
+
+  .loader-cube-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: loader-translate-z 1.6s ease-in-out infinite;
+  }
+
+  .loader-face {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    border: 1px solid rgba(255, 215, 0, 0.15);
+    animation: loader-face-color 1.6s ease-in-out infinite,
+               loader-edge-glow  1.6s ease-in-out infinite;
+    backface-visibility: hidden;
+    background-color: var(--cube-color);
+  }
+
+  .loader-face-front  {
+    transform: translateZ(20px);
+    animation: loader-face-color 1.6s ease-in-out infinite,
+               loader-edge-glow  1.6s ease-in-out infinite,
+               loader-face-glow  1.6s ease-in-out infinite;
+  }
+  .loader-face-back   { transform: rotateY(180deg) translateZ(20px); }
+  .loader-face-right  { transform: rotateY(90deg)  translateZ(20px); }
+  .loader-face-left   { transform: rotateY(-90deg) translateZ(20px); }
+  .loader-face-top    { transform: rotateX(90deg)  translateZ(20px); }
+  .loader-face-bottom { transform: rotateX(-90deg) translateZ(20px); }
+
+  @keyframes loader-translate-z {
+    0%, 40%, 100% { transform: translateZ(-2px); }
+    30%           { transform: translateZ(16px) translateY(-1px); }
+  }
+
+  @keyframes loader-face-color {
+    0%, 50%, 100% { background-color: var(--cube-color); }
+    10%           { background-color: var(--highlight-color); }
+  }
+
+  @keyframes loader-face-glow {
+    0%, 50%, 100% { color: rgba(255,255,255,0); filter: none; }
+    30%           { color: #fff; filter: drop-shadow(0 14px 10px var(--highlight-color)); }
+  }
+
+  @keyframes loader-edge-glow {
+    0%, 40%, 100% {
+      box-shadow: inset 0 0 2px 1px rgba(0,0,0,0.07),
+                  inset 0 0 12px 1px rgba(255,255,255,0.07);
+    }
+    30% {
+      box-shadow: 0 0 2px 0px var(--highlight-color);
+    }
+  }
+`
+
+function Cube({ letter, delay }: { letter: string; delay: string }) {
+  return (
+    <div className="loader-cube">
+      <div className="loader-cube-inner" style={{ animationDelay: delay }}>
+        <div className="loader-face loader-face-front" style={{ animationDelay: delay }}>{letter}</div>
+        <div className="loader-face loader-face-back"   style={{ animationDelay: delay }} />
+        <div className="loader-face loader-face-right"  style={{ animationDelay: delay }} />
+        <div className="loader-face loader-face-left"   style={{ animationDelay: delay }} />
+        <div className="loader-face loader-face-top"    style={{ animationDelay: delay }} />
+        <div className="loader-face loader-face-bottom" style={{ animationDelay: delay }} />
+      </div>
+    </div>
+  )
+}
 
 export function Loader() {
   return (
-    <div className="flex flex-col items-center justify-center gap-6">
-      <style>{`
-        @keyframes cubeRotate {
-          0%   { transform: rotateX(0deg)  rotateY(0deg); }
-          25%  { transform: rotateX(90deg) rotateY(0deg); }
-          50%  { transform: rotateX(90deg) rotateY(90deg); }
-          75%  { transform: rotateX(180deg) rotateY(90deg); }
-          100% { transform: rotateX(360deg) rotateY(360deg); }
-        }
-        @keyframes cubeFaceGlow {
-          0%, 100% { opacity: 0.65; }
-          50%       { opacity: 1; }
-        }
-        @keyframes loaderDot {
-          0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
-          40%            { transform: scale(1);   opacity: 1; }
-        }
-        .cube-scene {
-          perspective: 140px;
-          width: 40px;
-          height: 40px;
-        }
-        .cube-body {
-          width: 40px;
-          height: 40px;
-          position: relative;
-          transform-style: preserve-3d;
-          animation: cubeRotate 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-        }
-        .cube-face {
-          position: absolute;
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 13px;
-          font-weight: 900;
-          color: #FFD700;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          border: 1px solid rgba(255, 215, 0, 0.28);
-          animation: cubeFaceGlow 2.4s ease-in-out infinite;
-          backface-visibility: hidden;
-        }
-        .cube-face.f-front  { transform: translateZ(20px);               background: rgba(255,215,0,0.12); }
-        .cube-face.f-back   { transform: rotateY(180deg) translateZ(20px); background: rgba(255,215,0,0.04); color: transparent; }
-        .cube-face.f-right  { transform: rotateY(90deg)  translateZ(20px); background: rgba(255,215,0,0.07); color: transparent; }
-        .cube-face.f-left   { transform: rotateY(-90deg) translateZ(20px); background: rgba(255,215,0,0.07); color: transparent; }
-        .cube-face.f-top    { transform: rotateX(90deg)  translateZ(20px); background: rgba(255,215,0,0.09); color: transparent; }
-        .cube-face.f-bottom { transform: rotateX(-90deg) translateZ(20px); background: rgba(255,215,0,0.04); color: transparent; }
-        .loader-dot {
-          width: 5px; height: 5px;
-          border-radius: 50%;
-          background: #FFD700;
-          animation: loaderDot 1.2s ease-in-out infinite;
-        }
-      `}</style>
-
-      {/* Cube row */}
-      <div className="flex items-center gap-2.5">
+    <>
+      <style>{CSS}</style>
+      <div className="loader-wrapper-grid">
         {LETTERS.map((letter, i) => (
-          <div key={i} className="cube-scene">
-            <div
-              className="cube-body"
-              style={{ animationDelay: `${i * 0.12}s` }}
-            >
-              <div className="cube-face f-front">{letter}</div>
-              <div className="cube-face f-back" />
-              <div className="cube-face f-right" />
-              <div className="cube-face f-left" />
-              <div className="cube-face f-top" />
-              <div className="cube-face f-bottom" />
-            </div>
-          </div>
+          <Cube key={i} letter={letter} delay={`${i * 0.1}s`} />
         ))}
       </div>
-
-      {/* Dot pulse row */}
-      <div className="flex items-center gap-1.5">
-        {[0, 1, 2].map(i => (
-          <div
-            key={i}
-            className="loader-dot"
-            style={{ animationDelay: `${i * 0.2}s`, opacity: 0.3 }}
-          />
-        ))}
-      </div>
-    </div>
+    </>
   )
 }
