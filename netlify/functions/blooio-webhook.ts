@@ -176,6 +176,17 @@ export const handler: Handler = async (event) => {
     console.log('[blooio-webhook] Exact match result:', JSON.stringify({ found: !!profile, stored: profile?.phone_number }))
   }
 
+  // ─── Auto-normalize mangled phone records to canonical E.164 ──────────────
+  if (profile?.phone_number) {
+    const storedDigits = profile.phone_number.replace(/\D/g, '')
+    const canonical = '+' + (storedDigits.length > 10 ? storedDigits.slice(-11) : '1' + storedDigits)
+    if (profile.phone_number !== canonical) {
+      console.log(`[blooio-webhook] Normalizing stored phone "${profile.phone_number}" → "${canonical}"`)
+      supabase.from('artist_profiles').update({ phone_number: canonical }).eq('user_id', profile.user_id)
+        .then(() => console.log('[blooio-webhook] Phone normalized'))
+    }
+  }
+
   if (!profile) {
     const { data: allPhones } = await supabase
       .from('artist_profiles')
