@@ -12,14 +12,14 @@ function PricingCard({
 }) {
   return (
     <div
-      className="relative rounded-2xl p-6 flex flex-col transition-all duration-300 hover:-translate-y-1 w-full max-w-[300px]"
+      className="relative rounded-2xl p-6 flex flex-col transition-all duration-300 hover:-translate-y-1 w-full max-w-[320px]"
       style={{
         background: isPopular
           ? "radial-gradient(at 0% 64%, rgba(184,134,11,0.35) 0%, transparent 70%), radial-gradient(at 100% 99%, rgba(255,215,0,0.2) 0%, transparent 70%), #0f0f0f"
           : "#0f0f0f",
         boxShadow: isPopular
-          ? "0 0 0 1px rgba(255,215,0,0.3), 0 -16px 24px 0 rgba(255,215,0,0.1) inset, 0 40px 80px rgba(0,0,0,0.5)"
-          : "0 0 0 1px rgba(255,255,255,0.06), 0 40px 80px rgba(0,0,0,0.5)",
+          ? "0 0 0 1.5px rgba(255,215,0,0.5), 0 -16px 24px 0 rgba(255,215,0,0.1) inset, 0 40px 80px rgba(0,0,0,0.5)"
+          : `0 0 0 1px rgba(255,215,0,0.18), 0 40px 80px rgba(0,0,0,0.5)`,
       }}
     >
       {isPopular && (
@@ -55,9 +55,12 @@ function PricingCard({
           <span className="text-sm text-white/30 font-bold">{priceDescription}</span>
         </div>
         {trialBadge ? (
-          <p className="text-[10px] font-black mt-1 uppercase tracking-widest" style={{ color: accentColor }}>
-            ✦ {trialBadge} · No credit card required
-          </p>
+          <div className="mt-2 flex flex-col gap-0.5">
+            <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: accentColor }}>
+              ✦ {trialBadge}
+            </p>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-white/30">No credit card required</p>
+          </div>
         ) : (
           <p className="text-[10px] text-white/20 font-bold mt-1 uppercase tracking-widest">No credit card required</p>
         )}
@@ -83,7 +86,7 @@ function PricingCard({
         style={
           isPopular
             ? { background: "#FFD700", color: "#000", boxShadow: "0 0 20px rgba(255,215,0,0.3)" }
-            : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.8)", border: "1px solid rgba(255,255,255,0.08)" }
+            : { background: "rgba(255,215,0,0.06)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,215,0,0.2)" }
         }
       >
         {buttonText}
