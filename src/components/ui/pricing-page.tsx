@@ -131,7 +131,7 @@ export function PricingPage({ onSelect }: PricingPageProps) {
       planName: "Growth", description: "For established artists",
       price: "$55", priceDescription: "/ mo",
       trialBadge: undefined,
-      icon: <Zap size={16} />, accentColor: "#a78bfa",
+      icon: <Zap size={16} />, accentColor: "#9ca3af",
       features: [
         "Everything in Pro",
         "Multi-project management",
@@ -177,8 +177,12 @@ export function PricingPage({ onSelect }: PricingPageProps) {
       {/* Cards — single col mobile, 3 col desktop */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 px-1">
         {plans.map((plan) =>
-          plan.isPopular ? (
+          plan.planName === "Pro" ? (
             <GlowingShadow key={plan.planName} radius="1rem" intensity={0.6} duration={4} className="w-full">
+              <PricingCard {...plan} trialBadge={plan.trialBadge} onSelect={() => onSelect?.(plan.planName)} />
+            </GlowingShadow>
+          ) : plan.planName === "Plant" ? (
+            <GlowingShadow key={plan.planName} radius="1rem" intensity={0.5} duration={5} glowColor="#22c55e" className="w-full">
               <PricingCard {...plan} trialBadge={plan.trialBadge} onSelect={() => onSelect?.(plan.planName)} />
             </GlowingShadow>
           ) : (
