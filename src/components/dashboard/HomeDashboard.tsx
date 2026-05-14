@@ -832,7 +832,7 @@ export function HomeDashboard() {
                 </div>
                 <OverviewTab events={events} setEvents={setEvents} loadingEvents={loadingEvents} userId={user.id} onEventAdded={ev => setEvents(prev => [...prev, ev])} />
                 <div className="mt-6 pt-6 border-t border-white/5">
-                  <TaskCards title="Quick Tasks" />
+                  <TaskCards title="Quick Tasks" releases={releases} />
                 </div>
               </>
             )}
