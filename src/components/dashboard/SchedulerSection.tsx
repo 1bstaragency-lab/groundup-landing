@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, ChevronRight, Plus, Clock, X, Smartphone, Check } from "lucide-react"
+import { CircularProgressCard } from "../ui/circular-progress-card"
 import { supabase } from "../../lib/supabaseClient"
 import { useAuth } from "../../hooks/useAuth"
 
@@ -335,11 +336,23 @@ export function SchedulerSection() {
             </div>
           </div>
 
-          <div className="bg-zinc-950/60 border border-white/5 p-8 rounded-[2.5rem]">
-            <h3 className="text-xl font-black text-white mb-6 tracking-tight uppercase">Team Activity</h3>
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-white/20 text-[11px] font-black uppercase tracking-widest leading-relaxed">No activity yet.<br />Invite your team to get started.</p>
-            </div>
+          <div className="space-y-4">
+            <CircularProgressCard
+              title="Career Progress"
+              description="Release milestones completed this quarter"
+              currentValue={7}
+              goalValue={10}
+              label="milestones"
+              progressColor="#FFD700"
+            />
+            <CircularProgressCard
+              title="Rollout Health"
+              description="Tasks completed across active releases"
+              currentValue={23}
+              goalValue={30}
+              label="tasks done"
+              progressColor="#4ade80"
+            />
           </div>
         </div>
       </div>

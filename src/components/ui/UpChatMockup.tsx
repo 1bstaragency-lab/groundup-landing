@@ -217,38 +217,51 @@ export function UpOrbMascot() {
           style={{ boxShadow: "0 0 24px rgba(255,215,0,0.3), inset 0 0 12px rgba(255,215,0,0.1)" }} />
       )}
 
-      {/* Silver ball — white bg removed via multiply, gold tint overlay */}
+      {/* Gold 3D sphere — CSS radial gradient sphere */}
       <div style={{
         position: 'relative', zIndex: 10,
         width: 108, height: 108,
         animation: 'orbWiggle 3.6s ease-in-out infinite',
       }}>
-        {/* The image — white bg disappears against black via multiply */}
-        <img
-          src="/assets/silver.webp"
-          alt=""
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            display: 'block',
-          }}
-        />
-
-        {/* Gold shimmer sweep on top */}
         <div style={{
-          position: 'absolute', inset: 0,
-          overflow: 'hidden',
+          width: '100%', height: '100%',
           borderRadius: '50%',
-          pointerEvents: 'none',
+          background: [
+            'radial-gradient(circle at 35% 32%, rgba(255,255,200,0.95) 0%, rgba(255,230,80,0.9) 10%, #FFD700 28%, #B8860B 55%, #7a5500 78%, #3a2800 100%)',
+          ].join(', '),
+          boxShadow: [
+            '0 0 0 2px rgba(255,215,0,0.2)',
+            'inset -8px -8px 24px rgba(0,0,0,0.5)',
+            'inset 4px 4px 12px rgba(255,255,200,0.3)',
+            '0 20px 40px rgba(255,180,0,0.25)',
+            '0 8px 16px rgba(0,0,0,0.6)',
+          ].join(', '),
         }}>
+          {/* Specular highlight */}
           <div style={{
-            position: 'absolute', top: 0, bottom: 0,
-            width: '55%',
-            background: 'linear-gradient(to bottom, rgba(255,215,0,0.55), rgba(255,180,0,0.3))',
-            animation: 'goldShimmer 2.6s ease-in-out infinite',
-            mixBlendMode: 'screen',
+            position: 'absolute',
+            top: '14%', left: '22%',
+            width: '36%', height: '26%',
+            borderRadius: '50%',
+            background: 'radial-gradient(ellipse, rgba(255,255,230,0.75) 0%, rgba(255,240,150,0.3) 50%, transparent 100%)',
+            filter: 'blur(2px)',
+            pointerEvents: 'none',
           }} />
+          {/* Shimmer sweep */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            borderRadius: '50%',
+            overflow: 'hidden',
+            pointerEvents: 'none',
+          }}>
+            <div style={{
+              position: 'absolute', top: 0, bottom: 0,
+              width: '40%',
+              background: 'linear-gradient(to bottom, rgba(255,255,200,0.4), rgba(255,215,0,0.15))',
+              animation: 'goldShimmer 2.6s ease-in-out infinite',
+              mixBlendMode: 'screen',
+            }} />
+          </div>
         </div>
       </div>
     </div>

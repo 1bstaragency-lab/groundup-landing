@@ -13,7 +13,7 @@ import { InfluencerSection } from './components/dashboard/InfluencerSection';
 import { TeamDashboardMockup } from './components/ui/TeamDashboardMockup';
 import ShaderShowcase from './components/ui/hero';
 import { LiquidButton } from './components/ui/liquid-glass-button';
-import { BentoPricing } from './components/ui/bento-pricing';
+import { PricingPage } from './components/ui/pricing-page';
 import { MarketingBadges } from './components/ui/marketing-badges';
 import { MagnifiedBento } from './components/ui/magnified-bento';
 import { InfiniteBentoPan } from './components/ui/infinite-bento-pan';
@@ -33,6 +33,7 @@ import { JoinPage } from './pages/JoinPage';
 import { ForgotPasswordPage } from './pages/ForgotPassword';
 import { ResetPasswordPage } from './pages/ResetPassword';
 import { MarkerHighlight } from './components/ui/marker-highlight';
+import { RippleCircles } from './components/ui/ripple-circles';
 import { useAuth } from './hooks/useAuth';
 import { supabase } from './supabaseClient';
 import './App.css';
@@ -41,7 +42,7 @@ import './App.css';
 function AuthLoader() {
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center">
-      <div className="w-12 h-12 bg-[#FFD700] rounded-2xl animate-pulse" />
+      <RippleCircles />
     </div>
   );
 }
@@ -385,15 +386,7 @@ function LandingPage() {
       {/* Pricing */}
       <section id="pricing" className="py-32 px-6 bg-black">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-24">
-            <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-6 leading-none">
-              Simple Pricing.<br/><span className="text-[#FFD700]">Unlimited Growth.</span>
-            </h2>
-            <p className="text-white/40 text-lg max-w-2xl mx-auto font-medium leading-relaxed">
-              From rising stars to global powerhouses, GrounduP is built to scale with your velocity.
-            </p>
-          </div>
-          <BentoPricing onSelect={() => navigate('/signup')} />
+          <PricingPage onSelect={() => navigate('/signup')} />
         </div>
       </section>
 
