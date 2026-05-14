@@ -7,10 +7,13 @@ import { Grid3X3, Layers, LayoutList, Music2, Share2, Bookmark, Radio, Users, Ro
 
 export type LayoutMode = "stack" | "grid" | "list"
 
+export type CardCategory = "Creative" | "Admin" | "Marketing" | "Social" | "Distribution"
+
 export interface CardData {
   id: string
   title: string
   description: string
+  category: CardCategory
   icon?: ReactNode
   color?: string
 }
@@ -21,18 +24,26 @@ export interface MorphingCardStackProps {
   defaultLayout?: LayoutMode
   title?: string
   onCardClick?: (card: CardData) => void
-  tasks?: unknown // accepted but ignored — kept for compat
+  tasks?: unknown
+}
+
+const CATEGORY_STYLES: Record<CardCategory, { bg: string; border: string; text: string; dot: string }> = {
+  Creative:     { bg: "bg-purple-500/10",  border: "border-purple-500/20",  text: "text-purple-400",  dot: "bg-purple-400" },
+  Admin:        { bg: "bg-blue-500/10",    border: "border-blue-500/20",    text: "text-blue-400",    dot: "bg-blue-400" },
+  Marketing:    { bg: "bg-amber-500/10",   border: "border-amber-500/20",   text: "text-amber-400",   dot: "bg-amber-400" },
+  Social:       { bg: "bg-rose-500/10",    border: "border-rose-500/20",    text: "text-rose-400",    dot: "bg-rose-400" },
+  Distribution: { bg: "bg-green-500/10",  border: "border-green-500/20",  text: "text-green-400",  dot: "bg-green-400" },
 }
 
 const DEFAULT_CARDS: CardData[] = [
-  { id: "1", title: "Upload Cover Art",       description: "3000×3000px JPG or PNG for all platforms",      icon: <Music2 className="h-5 w-5" /> },
-  { id: "2", title: "Submit to Distributor",  description: "DistroKid, TuneCore, or your label portal",     icon: <Share2 className="h-5 w-5" /> },
-  { id: "3", title: "Create Pre-Save Link",   description: "Set up SmartURL or ToneDen pre-save campaign",  icon: <Bookmark className="h-5 w-5" /> },
-  { id: "4", title: "Pitch to Playlist Curators", description: "Submit 4–6 weeks before release date",      icon: <Radio className="h-5 w-5" /> },
-  { id: "5", title: "Schedule Social Posts",  description: "Tease content 2 weeks before drop date",        icon: <Rocket className="h-5 w-5" /> },
-  { id: "6", title: "Analytics Report",       description: "Review streams, saves, and conversion rates",   icon: <BarChart2 className="h-5 w-5" /> },
-  { id: "7", title: "Book Press Interviews",  description: "Reach out to blogs and podcast hosts",          icon: <MapPin className="h-5 w-5" /> },
-  { id: "8", title: "Fan Engagement Push",    description: "Reply to comments, DMs, and story mentions",   icon: <Users className="h-5 w-5" /> },
+  { id: "1", category: "Creative",     title: "Upload Cover Art",          description: "3000×3000px JPG or PNG for all platforms",     icon: <Music2 className="h-5 w-5" /> },
+  { id: "2", category: "Distribution", title: "Submit to Distributor",     description: "DistroKid, TuneCore, or your label portal",    icon: <Share2 className="h-5 w-5" /> },
+  { id: "3", category: "Marketing",    title: "Create Pre-Save Link",      description: "Set up SmartURL or ToneDen pre-save campaign", icon: <Bookmark className="h-5 w-5" /> },
+  { id: "4", category: "Marketing",    title: "Pitch Playlist Curators",   description: "Submit 4–6 weeks before release date",         icon: <Radio className="h-5 w-5" /> },
+  { id: "5", category: "Social",       title: "Schedule Social Posts",     description: "Tease content 2 weeks before drop date",       icon: <Rocket className="h-5 w-5" /> },
+  { id: "6", category: "Admin",        title: "Analytics Report",          description: "Review streams, saves, and conversion rates",  icon: <BarChart2 className="h-5 w-5" /> },
+  { id: "7", category: "Admin",        title: "Book Press Interviews",     description: "Reach out to blogs and podcast hosts",         icon: <MapPin className="h-5 w-5" /> },
+  { id: "8", category: "Social",       title: "Fan Engagement Push",       description: "Reply to comments, DMs, and story mentions",  icon: <Users className="h-5 w-5" /> },
 ]
 
 const layoutIcons = {
@@ -50,10 +61,10 @@ export function MorphingCardStack({
   title,
   onCardClick,
 }: MorphingCardStackProps) {
-  const [layout, setLayout]           = useState<LayoutMode>(defaultLayout)
+  const [layout, setLayout]             = useState<LayoutMode>(defaultLayout)
   const [expandedCard, setExpandedCard] = useState<string | null>(null)
-  const [activeIndex, setActiveIndex] = useState(0)
-  const [isDragging, setIsDragging]   = useState(false)
+  const [activeIndex, setActiveIndex]   = useState(0)
+  const [isDragging, setIsDragging]     = useState(false)
 
   if (!cards || cards.length === 0) return null
 
@@ -87,8 +98,8 @@ export function MorphingCardStack({
 
   const containerStyles: Record<LayoutMode, string> = {
     stack: "relative h-64 w-64",
-    grid:  "grid grid-cols-2 gap-3",
-    list:  "flex flex-col gap-3",
+    grid:  "grid grid-cols-2 gap-2",
+    list:  "flex flex-col gap-2",
   }
 
   const displayCards = layout === "stack"
@@ -97,7 +108,6 @@ export function MorphingCardStack({
 
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Header */}
       {title && (
         <div className="flex items-center justify-between">
           <p className="text-white/50 text-[10px] font-black uppercase tracking-[0.2em]">{title}</p>
@@ -134,6 +144,7 @@ export function MorphingCardStack({
               const styles     = getLayoutStyles(card.stackPosition)
               const isExpanded = expandedCard === card.id
               const isTopCard  = layout === "stack" && card.stackPosition === 0
+              const catStyle   = CATEGORY_STYLES[card.category]
 
               return (
                 <motion.div
@@ -155,32 +166,40 @@ export function MorphingCardStack({
                     onCardClick?.(card)
                   }}
                   className={cn(
-                    "cursor-pointer rounded-2xl border bg-zinc-900/80 backdrop-blur-sm",
-                    "border-white/8 hover:border-[#FFD700]/20 transition-colors",
+                    "cursor-pointer rounded-2xl border bg-zinc-900/80 backdrop-blur-sm transition-colors",
+                    "border-white/8 hover:border-white/20",
                     layout === "stack" && "absolute w-56 h-48",
                     layout === "stack" && isTopCard && "cursor-grab active:cursor-grabbing",
-                    layout === "grid"  && "w-full aspect-square",
+                    layout === "grid"  && "w-full",
                     layout === "list"  && "w-full",
                     isExpanded && "ring-1 ring-[#FFD700]/40",
                     isTopCard  && "shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
                   )}
                 >
-                  <div className="flex items-start gap-3 p-4">
+                  {/* Category stripe */}
+                  <div className={cn("h-1 w-full rounded-t-2xl", catStyle.dot.replace("bg-", "bg-").replace("-400", "-400/60"))} />
+
+                  <div className="flex items-start gap-3 p-3">
                     {card.icon && (
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-white/60">
+                      <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border", catStyle.bg, catStyle.border, catStyle.text)}>
                         {card.icon}
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-bold text-sm text-white truncate">{card.title}</h3>
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <h3 className="font-bold text-sm text-white truncate">{card.title}</h3>
+                      </div>
                       <p className={cn(
-                        "text-xs text-white/40 mt-1 leading-relaxed",
-                        layout === "stack" && "line-clamp-3",
+                        "text-xs text-white/40 leading-relaxed",
+                        layout === "stack" && "line-clamp-2",
                         layout === "grid"  && "line-clamp-2",
                         layout === "list"  && "line-clamp-1",
                       )}>
                         {card.description}
                       </p>
+                      <span className={cn("text-[9px] font-black uppercase tracking-widest mt-1 inline-block", catStyle.text)}>
+                        {card.category}
+                      </span>
                     </div>
                   </div>
 

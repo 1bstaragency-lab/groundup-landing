@@ -4,6 +4,7 @@ import {
   Plus, Calendar, Trash2, ChevronRight, CheckSquare, Square, X,
   Disc3, Layers, Music, ListMusic, Sparkles, Upload, ChevronLeft,
 } from 'lucide-react';
+import { BudgetCard } from '../ui/analytics-bento';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -777,6 +778,21 @@ export function RolloutsSection() {
                       </button>
                     ))}
                   </div>
+
+                  {/* Budget tracker — only shown when release has a budget set */}
+                  {activeRelease.budget && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="mt-8 pt-6 border-t border-white/5"
+                    >
+                      <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.3em] mb-4">
+                        Release Tracker · {activeRelease.budget}
+                      </p>
+                      <BudgetCard />
+                    </motion.div>
+                  )}
                 </motion.div>
               ) : (
                 <motion.div
