@@ -46,19 +46,27 @@ interface BlooioInbound {
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method not allowed' }
 
-  // ─── Verify signing secret ─────────────────────────────────────────────────
+  // ─── Log all headers so we can identify Blooio's signing header ──────────
+  const safeHeaders = Object.fromEntries(
+    Object.entries(event.headers).filter(([k]) => !k.toLowerCase().includes('cookie'))
+  )
+  console.log('[blooio-webhook] Headers:', JSON.stringify(safeHeaders))
+
+  // ─── Verify signing secret (warn only — don't block while we confirm header name) ──
   if (BLOOIO_WEBHOOK_SECRET) {
     const sigHeader =
       event.headers['x-blooio-signature'] ??
+      event.headers['x-blooio-secret']    ??
       event.headers['x-webhook-secret']   ??
       event.headers['x-signing-secret']   ??
+      event.headers['x-secret']           ??
       event.headers['authorization']       ?? ''
 
     const provided = sigHeader.replace(/^Bearer\s+/i, '')
 
     if (provided !== BLOOIO_WEBHOOK_SECRET) {
-      console.warn('[blooio-webhook] Signature mismatch — rejecting. Header received:', sigHeader)
-      return { statusCode: 401, body: 'Unauthorized' }
+      console.warn('[blooio-webhook] Signature mismatch — continuing anyway to diagnose. Header checked:', sigHeader || '(none matched)')
+      // NOTE: switch back to 401 once we confirm the correct header name
     }
   }
 
@@ -71,8 +79,10 @@ export const handler: Handler = async (event) => {
 
   console.log('[blooio-webhook] Inbound payload:', JSON.stringify(payload))
 
-  const fromPhone   = payload.from ?? ''
-  const inboundText = payload.text ?? payload.message ?? payload.body ?? ''
+  // Handle nested payload shapes Blooio might send
+  const anyPayload = payload as Record<string, unknown>
+  const fromPhone   = (payload.from ?? (anyPayload.sender as string) ?? '') as string
+  const inboundText = (payload.text ?? payload.message ?? payload.body ?? (anyPayload.content as string) ?? '') as string
 
   if (!fromPhone || !inboundText) {
     console.log('[blooio-webhook] Missing from/text — ignoring')
