@@ -121,7 +121,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
       <aside className="hidden lg:flex w-60 bg-black border-r border-white/5 flex-col z-50 shrink-0">
         {/* Logo */}
         <div className="px-6 py-6 mb-2 flex flex-col gap-2">
-          <img src="/gu-icon.png" alt="GrounduP" className="h-10 w-auto" />
+          <img src="/gu-icon.png" alt="GrounduP" className="h-10 w-10 object-contain flex-shrink-0" />
           <span className="text-white/20 text-[9px] font-black uppercase tracking-[0.2em]">Artist OS v4.0</span>
         </div>
 
