@@ -173,9 +173,9 @@ export function UpChatMockup() {
 const orbKeyframes = `
 @keyframes orbWiggle {
   0%   { transform: translateY(0px) rotate(-1deg); }
-  25%  { transform: translateY(-10px) rotate(1deg); }
-  50%  { transform: translateY(-18px) rotate(-0.5deg); }
-  75%  { transform: translateY(-8px) rotate(1.5deg); }
+  25%  { transform: translateY(-5px) rotate(1deg); }
+  50%  { transform: translateY(-8px) rotate(-0.5deg); }
+  75%  { transform: translateY(-4px) rotate(1.5deg); }
   100% { transform: translateY(0px) rotate(-1deg); }
 }
 @keyframes goldShimmer {
@@ -220,7 +220,7 @@ export function UpOrbMascot() {
       {/* Gold 3D sphere */}
       <div style={{
         position: 'relative', zIndex: 10,
-        width: 54, height: 54,
+        width: 44, height: 44,
         animation: 'orbWiggle 3.6s ease-in-out infinite',
       }}>
         <div style={{
