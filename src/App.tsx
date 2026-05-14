@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { HomeSection } from './pages/dashboard/HomeSection';
 import { LearnSection } from './components/dashboard/LearnSection';
