@@ -129,21 +129,21 @@ export default function ShaderShowcase() {
           </motion.p>
 
           <motion.div
-            className="flex items-center justify-center gap-10 flex-wrap"
+            className="flex flex-col items-center gap-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.0 }}
           >
-            <div className="flex flex-col items-center gap-4">
-              <AwardBadge type="product-of-the-day" place={2} />
-              <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.3em] hero-text">Trusted by 2,000+ Artists</p>
-            </div>
-            
-            <LiquidButton 
+            <LiquidButton
               onClick={() => document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' })}
             >
               Get Started
             </LiquidButton>
+
+            <div className="flex flex-col items-center gap-3">
+              <AwardBadge type="product-of-the-day" place={2} />
+              <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.3em] hero-text">Trusted by 2,000+ Artists</p>
+            </div>
           </motion.div>
         </div>
       </main>
