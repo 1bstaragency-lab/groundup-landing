@@ -16,7 +16,7 @@ export function PlatformStreamOverview() {
   return (
     <div className="w-full rounded-2xl border border-white/8 bg-zinc-900/50 px-5 py-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/30">Stream Split</p>
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-white/50">Stream Split</p>
         <p className="text-[10px] font-bold text-white/20">Total: 5.03M</p>
       </div>
 

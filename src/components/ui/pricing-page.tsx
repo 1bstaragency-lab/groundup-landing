@@ -4,11 +4,11 @@ import { GlowingShadow } from "./glowing-shadow"
 
 function PricingCard({
   planName, description, price, priceDescription, features,
-  icon, accentColor, isPopular, buttonText, onSelect,
+  icon, accentColor, isPopular, buttonText, trialBadge, onSelect,
 }: {
   planName: string; description: string; price: string; priceDescription: string
   features: string[]; icon: React.ReactNode; accentColor: string
-  isPopular?: boolean; buttonText: string; onSelect?: () => void
+  isPopular?: boolean; buttonText: string; trialBadge?: string; onSelect?: () => void
 }) {
   return (
     <div
@@ -57,7 +57,13 @@ function PricingCard({
           <span className="text-4xl font-black text-white tracking-tight">{price}</span>
           <span className="text-sm text-white/30 font-bold">{priceDescription}</span>
         </div>
-        <p className="text-[10px] text-white/20 font-bold mt-1 uppercase tracking-widest">No credit card required</p>
+        {trialBadge ? (
+          <p className="text-[10px] font-black mt-1 uppercase tracking-widest" style={{ color: accentColor }}>
+            ✦ {trialBadge} · No credit card required
+          </p>
+        ) : (
+          <p className="text-[10px] text-white/20 font-bold mt-1 uppercase tracking-widest">No credit card required</p>
+        )}
       </div>
 
       <ul className="space-y-3 flex-grow mb-6">
@@ -96,46 +102,52 @@ interface PricingPageProps {
 export function PricingPage({ onSelect }: PricingPageProps) {
   const plans = [
     {
-      planName: "Starter", description: "For rising artists",
-      price: "$0", priceDescription: "forever",
-      icon: <Zap size={18} />, accentColor: "#4ade80",
-      features: [
-        "Artist OS dashboard",
-        "1 active release rollout",
-        "Basic analytics",
-        "uP iMessage check-ins (5/mo)",
-        "Community access",
-      ],
-      buttonText: "Get Started Free", isPopular: false,
-    },
-    {
       planName: "Pro", description: "For serious artists",
       price: "$29", priceDescription: "/ month",
+      trialBadge: "7-day free trial",
       icon: <Star size={18} />, accentColor: "#FFD700",
       features: [
-        "Everything in Starter",
+        "Full Artist OS dashboard",
         "Unlimited release rollouts",
-        "Real-time performance data",
+        "Real-time streaming analytics",
         "uP iMessage (unlimited)",
         "Priority AI processing",
         "Playlist pitch submissions",
         "Content scheduling tools",
       ],
-      buttonText: "Start Pro Trial", isPopular: true,
+      buttonText: "Start Free Trial", isPopular: true,
     },
     {
-      planName: "Agency", description: "For labels & teams",
-      price: "Custom", priceDescription: "pricing",
-      icon: <Building2 size={18} />, accentColor: "#a78bfa",
+      planName: "Growth", description: "For established artists",
+      price: "$55", priceDescription: "/ month",
+      trialBadge: undefined,
+      icon: <Zap size={18} />, accentColor: "#a78bfa",
       features: [
         "Everything in Pro",
-        "Multi-artist management",
-        "Team collaboration seats",
-        "Dedicated account manager",
-        "Custom integrations",
-        "White-label options",
+        "Multi-project management",
+        "Team collaboration (3 seats)",
+        "Advanced release reporting",
+        "Influencer network access",
+        "Blog & press outreach tools",
+        "Priority support",
       ],
-      buttonText: "Contact Sales", isPopular: false,
+      buttonText: "Get Growth", isPopular: false,
+    },
+    {
+      planName: "Plant", description: "For artists & managers scaling",
+      price: "Custom", priceDescription: "pricing",
+      trialBadge: undefined,
+      icon: <Building2 size={18} />, accentColor: "#22c55e",
+      features: [
+        "Everything in Growth",
+        "Unlimited team seats",
+        "Multi-artist roster management",
+        "Dedicated account manager",
+        "Custom API integrations",
+        "White-label options",
+        "SLA & priority infrastructure",
+      ],
+      buttonText: "Talk to Us", isPopular: false,
     },
   ]
 
@@ -147,7 +159,7 @@ export function PricingPage({ onSelect }: PricingPageProps) {
           Find the plan that's right for you
         </h2>
         <p className="text-white/40 text-lg font-medium max-w-md mx-auto">
-          Start free and scale up as you grow. No credit card required.
+          Start with a 7-day free trial. No credit card required to begin.
         </p>
       </div>
 
@@ -155,10 +167,10 @@ export function PricingPage({ onSelect }: PricingPageProps) {
         {plans.map((plan) =>
           plan.isPopular ? (
             <GlowingShadow key={plan.planName} radius="1rem" intensity={0.6} duration={4}>
-              <PricingCard {...plan} onSelect={() => onSelect?.(plan.planName)} />
+              <PricingCard {...plan} trialBadge={plan.trialBadge} onSelect={() => onSelect?.(plan.planName)} />
             </GlowingShadow>
           ) : (
-            <PricingCard key={plan.planName} {...plan} onSelect={() => onSelect?.(plan.planName)} />
+            <PricingCard key={plan.planName} {...plan} trialBadge={plan.trialBadge} onSelect={() => onSelect?.(plan.planName)} />
           )
         )}
       </div>

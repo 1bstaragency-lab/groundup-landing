@@ -1,8 +1,7 @@
 "use client"
-import React from "react"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Calendar, CheckCircle2, Circle, ChevronRight, Flame, Clock } from "lucide-react"
+import { CheckCircle2, MoreHorizontal, Plus } from "lucide-react"
 
 type TaskCategory = "Creative" | "Admin" | "Marketing" | "Social" | "Distribution"
 
@@ -11,120 +10,147 @@ interface Task {
   title: string
   description: string
   category: TaskCategory
-  dueDate: string
-  progress: number
-  priority: "high" | "medium" | "low"
+  date: string
+  countdown: string
+  progressPercent: number
   done: boolean
+  initials?: string[]
 }
 
-const CATEGORY_STYLES: Record<TaskCategory, { bg: string; border: string; text: string; bar: string }> = {
-  Creative:     { bg: "rgba(168,85,247,0.08)",  border: "rgba(168,85,247,0.2)", text: "#a855f7", bar: "#a855f7" },
-  Admin:        { bg: "rgba(59,130,246,0.08)",  border: "rgba(59,130,246,0.2)", text: "#3b82f6", bar: "#3b82f6" },
-  Marketing:    { bg: "rgba(245,158,11,0.08)",  border: "rgba(245,158,11,0.2)", text: "#f59e0b", bar: "#f59e0b" },
-  Social:       { bg: "rgba(244,63,94,0.08)",   border: "rgba(244,63,94,0.2)",  text: "#f43f5e", bar: "#f43f5e" },
-  Distribution: { bg: "rgba(34,197,94,0.08)",   border: "rgba(34,197,94,0.2)",  text: "#22c55e", bar: "#22c55e" },
-}
-
-const PRIORITY_ICON: Record<Task["priority"], React.ReactElement> = {
-  high:   <Flame size={9} className="text-rose-400" />,
-  medium: <Clock size={9} className="text-amber-400/70" />,
-  low:    <Clock size={9} className="text-white/20" />,
+// Color accent per category (matches the clr-blue/green/orange/red pattern from the original)
+const CATEGORY_COLOR: Record<TaskCategory, { bar: string; badge: string; text: string; bg: string }> = {
+  Creative:     { bar: "#a855f7", badge: "rgba(168,85,247,0.18)",  text: "#a855f7", bg: "rgba(168,85,247,0.06)" },
+  Admin:        { bar: "#1890ff", badge: "rgba(24,144,255,0.18)",  text: "#60a5fa", bg: "rgba(24,144,255,0.06)" },
+  Marketing:    { bar: "#ffb741", badge: "rgba(255,183,65,0.18)",  text: "#fbbf24", bg: "rgba(255,183,65,0.06)" },
+  Social:       { bar: "#f43f5e", badge: "rgba(244,63,94,0.18)",   text: "#f43f5e", bg: "rgba(244,63,94,0.06)" },
+  Distribution: { bar: "#01c3a8", badge: "rgba(1,195,168,0.18)",   text: "#2dd4bf", bg: "rgba(1,195,168,0.06)" },
 }
 
 const INITIAL_TASKS: Task[] = [
   {
-    id: "1", title: "Finalize Artwork", category: "Creative", dueDate: "Oct 8",
-    description: "Submit hi-res cover art for 'Midnight City' release to distributor.",
-    progress: 65, priority: "high", done: false,
+    id: "1", title: "Finalize Artwork", category: "Creative",
+    date: "Oct 8", countdown: "2 days left",
+    description: "Submit hi-res cover art for 'Midnight City' to distributor.",
+    progressPercent: 65, done: false, initials: ["AK", "JB"],
   },
   {
-    id: "2", title: "Pre-Save Link Setup", category: "Distribution", dueDate: "Oct 9",
+    id: "2", title: "Pre-Save Link Setup", category: "Distribution",
+    date: "Oct 9", countdown: "3 days left",
     description: "Create and publish Spotify pre-save via Hypeddit before campaign goes live.",
-    progress: 30, priority: "high", done: false,
+    progressPercent: 30, done: false, initials: ["AK"],
   },
   {
-    id: "3", title: "Social Strategy Review", category: "Social", dueDate: "Oct 10",
+    id: "3", title: "Social Strategy Review", category: "Social",
+    date: "Oct 10", countdown: "4 days left",
     description: "Approve monthly content calendar and brief social team on launch week.",
-    progress: 50, priority: "medium", done: false,
+    progressPercent: 50, done: false, initials: ["JB", "MR"],
   },
   {
-    id: "4", title: "Tour Date Contracts", category: "Admin", dueDate: "Oct 12",
+    id: "4", title: "Tour Date Contracts", category: "Admin",
+    date: "Oct 12", countdown: "6 days left",
     description: "Lock in signed venue contracts for all November tour dates.",
-    progress: 80, priority: "high", done: false,
+    progressPercent: 80, done: false, initials: ["AK"],
   },
   {
-    id: "5", title: "TikTok Campaign Brief", category: "Marketing", dueDate: "Oct 14",
+    id: "5", title: "TikTok Campaign Brief", category: "Marketing",
+    date: "Oct 14", countdown: "8 days left",
     description: "Brief creative team on hooks, posting schedule, and UGC strategy.",
-    progress: 10, priority: "medium", done: false,
+    progressPercent: 10, done: false, initials: ["MR", "JB"],
   },
   {
-    id: "6", title: "Spotify Editorial Pitch", category: "Distribution", dueDate: "Oct 7",
-    description: "Submit 'Midnight City' via Spotify for Artists editorial pitching tool.",
-    progress: 100, priority: "high", done: true,
+    id: "6", title: "Spotify Editorial Pitch", category: "Distribution",
+    date: "Oct 7", countdown: "Done",
+    description: "Submitted 'Midnight City' via Spotify for Artists editorial pitching.",
+    progressPercent: 100, done: true, initials: ["AK"],
   },
 ]
 
+function Avatar({ initials }: { initials: string }) {
+  return (
+    <div className="w-6 h-6 rounded-full bg-zinc-700 border border-white/10 flex items-center justify-center">
+      <span className="text-[8px] font-black text-white/60">{initials}</span>
+    </div>
+  )
+}
+
 function TaskCard({ task, onToggle }: { task: Task; onToggle: (id: string) => void }) {
-  const style = CATEGORY_STYLES[task.category]
+  const c = CATEGORY_COLOR[task.category]
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: task.done ? 0.45 : 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
-      className="relative rounded-2xl p-4 transition-all group"
-      style={{ background: style.bg, border: `1px solid ${style.border}` }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: task.done ? 0.5 : 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.15 } }}
+      className="rounded-2xl overflow-hidden border border-white/[0.07] flex flex-col"
+      style={{ background: "#18181b" }}
     >
-      {/* Top meta row */}
-      <div className="flex items-center justify-between mb-2.5">
-        <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: style.text }}>
-          {task.category}
+      {/* Colored top accent bar */}
+      <div className="h-[3px] w-full" style={{ background: c.bar }} />
+
+      {/* Header: date + menu */}
+      <div className="flex items-center justify-between px-4 pt-3 pb-0">
+        <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: c.text }}>
+          {task.date}
         </span>
-        <div className="flex items-center gap-2">
-          {PRIORITY_ICON[task.priority]}
-          <div className="flex items-center gap-1 text-white/25 text-[9px] font-bold">
-            <Calendar size={8} /> {task.dueDate}
-          </div>
-        </div>
+        <button className="text-white/20 hover:text-white/50 transition-colors">
+          <MoreHorizontal size={14} />
+        </button>
       </div>
 
-      {/* Title */}
-      <h4 className={`text-white font-black text-[13px] uppercase tracking-tight leading-snug mb-1 transition-colors ${task.done ? "line-through text-white/30" : "group-hover:text-white"}`}>
-        {task.title}
-      </h4>
-      <p className="text-white/30 text-[10px] leading-relaxed mb-3">{task.description}</p>
+      {/* Body */}
+      <div className="px-4 py-3 flex-1">
+        <h4 className={`text-white font-black text-[13px] uppercase tracking-tight leading-snug mb-1 ${task.done ? "line-through text-white/30" : ""}`}>
+          {task.title}
+        </h4>
+        <p className="text-white/35 text-[10px] leading-relaxed mb-4">{task.description}</p>
 
-      {/* Progress */}
-      <div className="mb-3">
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-white/20 text-[9px] font-bold uppercase tracking-widest">Progress</span>
-          <span className="text-[9px] font-black" style={{ color: style.text }}>{task.progress}%</span>
+        {/* Progress */}
+        <div className="mb-1 flex items-center justify-between">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-white/25">Progress</span>
+          <span className="text-[9px] font-black" style={{ color: c.text }}>{task.progressPercent}%</span>
         </div>
-        <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+        <div className="h-1.5 w-full rounded-full overflow-hidden bg-white/5">
           <motion.div
             className="h-full rounded-full"
-            style={{ background: style.bar }}
+            style={{ background: c.bar }}
             initial={{ width: 0 }}
-            animate={{ width: `${task.progress}%` }}
+            animate={{ width: `${task.progressPercent}%` }}
             transition={{ duration: 0.9, ease: "easeOut", delay: 0.1 }}
           />
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-2.5 border-t border-white/5">
-        <button
-          onClick={() => onToggle(task.id)}
-          className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-white/25 hover:text-white transition-colors"
+      {/* Footer: avatars + countdown */}
+      <div className="px-4 pb-3 pt-1 flex items-center justify-between border-t border-white/5 mt-1">
+        {/* Avatars + add */}
+        <div className="flex items-center gap-1">
+          {(task.initials ?? []).map((init, i) => (
+            <div key={i} className="-ml-1 first:ml-0">
+              <Avatar initials={init} />
+            </div>
+          ))}
+          <button
+            onClick={() => onToggle(task.id)}
+            className="w-6 h-6 rounded-full border border-white/10 flex items-center justify-center hover:border-[#FFD700]/40 transition-colors ml-1"
+          >
+            {task.done
+              ? <CheckCircle2 size={11} style={{ color: c.bar }} />
+              : <Plus size={10} className="text-white/30" />
+            }
+          </button>
+        </div>
+
+        {/* Countdown pill */}
+        <span
+          className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
+          style={{
+            background: task.done ? "rgba(255,255,255,0.05)" : c.badge,
+            color: task.done ? "rgba(255,255,255,0.2)" : c.text,
+          }}
         >
-          {task.done
-            ? <CheckCircle2 size={11} style={{ color: style.text }} />
-            : <Circle size={11} />
-          }
-          {task.done ? "Completed" : "Mark done"}
-        </button>
-        <ChevronRight size={12} className="text-white/15 group-hover:text-white/40 transition-colors" />
+          {task.countdown}
+        </span>
       </div>
     </motion.div>
   )
@@ -165,7 +191,7 @@ export function TaskCards({ title = "Quick Tasks" }: TaskCardsProps) {
         )}
       </div>
 
-      {/* Grid */}
+      {/* Card grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <AnimatePresence mode="popLayout">
           {active.map(task => (
@@ -183,8 +209,8 @@ export function TaskCards({ title = "Quick Tasks" }: TaskCardsProps) {
           animate={{ opacity: 1 }}
           className="text-center py-8 border border-dashed border-white/8 rounded-2xl"
         >
-          <CheckCircle2 size={24} className="text-[#FFD700]/40 mx-auto mb-2" />
-          <p className="text-white/30 text-[11px] font-black uppercase tracking-widest">All tasks complete</p>
+          <CheckCircle2 size={22} className="text-[#FFD700]/40 mx-auto mb-2" />
+          <p className="text-white/25 text-[11px] font-black uppercase tracking-widest">All tasks complete</p>
         </motion.div>
       )}
     </div>

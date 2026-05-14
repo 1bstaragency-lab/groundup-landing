@@ -191,12 +191,12 @@ const orbKeyframes = `
 
 export function UpOrbMascot() {
   return (
-    <div className="relative flex items-center justify-center" style={{ width: 160, height: 160 }}>
+    <div className="relative flex items-center justify-center" style={{ width: 80, height: 80 }}>
       <style>{orbKeyframes}</style>
 
       {/* Ambient gold bloom */}
       <div style={{
-        position: 'absolute', inset: -30,
+        position: 'absolute', inset: -15,
         background: 'radial-gradient(circle, rgba(255,215,0,1) 0%, transparent 65%)',
         animation: 'bloomPulse 3s ease-in-out infinite',
         pointerEvents: 'none',
@@ -210,53 +210,40 @@ export function UpOrbMascot() {
           speed={1.4} roundness={1} thickness={0.06} softness={0.15}
           intensity={8} pulse={0.18} smoke={0.3} smokeSize={3}
           scale={0.82} rotation={0} frame={9161408}
-          style={{ width: 160, height: 160, borderRadius: '50%', position: 'absolute', inset: 0 }}
+          style={{ width: 80, height: 80, borderRadius: '50%', position: 'absolute', inset: 0 }}
         />
       ) : (
         <span className="absolute inset-0 rounded-full border border-[#FFD700]/40 animate-pulse"
-          style={{ boxShadow: "0 0 24px rgba(255,215,0,0.3), inset 0 0 12px rgba(255,215,0,0.1)" }} />
+          style={{ boxShadow: "0 0 12px rgba(255,215,0,0.3), inset 0 0 6px rgba(255,215,0,0.1)" }} />
       )}
 
-      {/* Gold 3D sphere — CSS radial gradient sphere */}
+      {/* Gold 3D sphere */}
       <div style={{
         position: 'relative', zIndex: 10,
-        width: 108, height: 108,
+        width: 54, height: 54,
         animation: 'orbWiggle 3.6s ease-in-out infinite',
       }}>
         <div style={{
           width: '100%', height: '100%',
           borderRadius: '50%',
-          background: [
-            'radial-gradient(circle at 35% 32%, rgba(255,255,200,0.95) 0%, rgba(255,230,80,0.9) 10%, #FFD700 28%, #B8860B 55%, #7a5500 78%, #3a2800 100%)',
-          ].join(', '),
+          background: 'radial-gradient(circle at 35% 32%, rgba(255,255,200,0.95) 0%, rgba(255,230,80,0.9) 10%, #FFD700 28%, #B8860B 55%, #7a5500 78%, #3a2800 100%)',
           boxShadow: [
-            '0 0 0 2px rgba(255,215,0,0.2)',
-            'inset -8px -8px 24px rgba(0,0,0,0.5)',
-            'inset 4px 4px 12px rgba(255,255,200,0.3)',
-            '0 20px 40px rgba(255,180,0,0.25)',
-            '0 8px 16px rgba(0,0,0,0.6)',
+            '0 0 0 1px rgba(255,215,0,0.2)',
+            'inset -4px -4px 12px rgba(0,0,0,0.5)',
+            'inset 2px 2px 6px rgba(255,255,200,0.3)',
+            '0 10px 20px rgba(255,180,0,0.25)',
+            '0 4px 8px rgba(0,0,0,0.6)',
           ].join(', '),
         }}>
-          {/* Specular highlight */}
           <div style={{
-            position: 'absolute',
-            top: '14%', left: '22%',
-            width: '36%', height: '26%',
-            borderRadius: '50%',
+            position: 'absolute', top: '14%', left: '22%',
+            width: '36%', height: '26%', borderRadius: '50%',
             background: 'radial-gradient(ellipse, rgba(255,255,230,0.75) 0%, rgba(255,240,150,0.3) 50%, transparent 100%)',
-            filter: 'blur(2px)',
-            pointerEvents: 'none',
+            filter: 'blur(1px)', pointerEvents: 'none',
           }} />
-          {/* Shimmer sweep */}
-          <div style={{
-            position: 'absolute', inset: 0,
-            borderRadius: '50%',
-            overflow: 'hidden',
-            pointerEvents: 'none',
-          }}>
+          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', overflow: 'hidden', pointerEvents: 'none' }}>
             <div style={{
-              position: 'absolute', top: 0, bottom: 0,
-              width: '40%',
+              position: 'absolute', top: 0, bottom: 0, width: '40%',
               background: 'linear-gradient(to bottom, rgba(255,255,200,0.4), rgba(255,215,0,0.15))',
               animation: 'goldShimmer 2.6s ease-in-out infinite',
               mixBlendMode: 'screen',
