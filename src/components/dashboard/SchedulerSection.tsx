@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, ChevronRight, Plus, Clock, X, Smartphone, Check } from "lucide-react"
 import { CircularProgressCard } from "../ui/circular-progress-card"
@@ -195,6 +195,13 @@ function PhoneModal({ onClose, userId }: { onClose: () => void; userId?: string 
   )
 }
 
+interface Release {
+  id: string
+  title: string
+  checklist: { label: string; done: boolean }[]
+  release_date: string
+}
+
 export function SchedulerSection() {
   const today = new Date()
   const { user } = useAuth()
@@ -203,6 +210,28 @@ export function SchedulerSection() {
   const [events, setEvents] = useState<CalEvent[]>([])
   const [showAddEvent, setShowAddEvent] = useState(false)
   const [showPhone, setShowPhone] = useState(false)
+  const [releases, setReleases] = useState<Release[]>([])
+
+  useEffect(() => {
+    if (!user?.id) return
+    supabase
+      .from('releases')
+      .select('id, title, checklist, release_date')
+      .eq('user_id', user.id)
+      .then(({ data }) => { if (data) setReleases(data as Release[]) })
+  }, [user?.id])
+
+  // Career Progress: total checklist items done / total across ALL releases
+  const totalItems    = releases.reduce((s, r) => s + (r.checklist?.length ?? 0), 0)
+  const completedItems = releases.reduce((s, r) => s + (r.checklist?.filter(c => c.done).length ?? 0), 0)
+
+  // Rollout Health: done / total on the most-recent upcoming release
+  const upcoming = releases
+    .filter(r => r.release_date)
+    .sort((a, b) => new Date(a.release_date).getTime() - new Date(b.release_date).getTime())
+    .find(r => new Date(r.release_date) >= new Date()) ?? releases[releases.length - 1]
+  const rolloutTotal   = upcoming?.checklist?.length ?? 0
+  const rolloutDone    = upcoming?.checklist?.filter(c => c.done).length ?? 0
 
   function prevMonth() {
     if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y - 1) }
@@ -337,22 +366,36 @@ export function SchedulerSection() {
           </div>
 
           <div className="space-y-4">
-            <CircularProgressCard
-              title="Career Progress"
-              description="Release milestones completed this quarter"
-              currentValue={7}
-              goalValue={10}
-              label="milestones"
-              progressColor="#FFD700"
-            />
-            <CircularProgressCard
-              title="Rollout Health"
-              description="Tasks completed across active releases"
-              currentValue={23}
-              goalValue={30}
-              label="tasks done"
-              progressColor="#4ade80"
-            />
+            {totalItems === 0 ? (
+              <div className="rounded-3xl border border-white/[0.07] bg-zinc-900/40 p-6 text-center">
+                <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/20 mb-2">Career Progress</p>
+                <p className="text-white/20 text-xs font-medium">Create a release to track milestones</p>
+              </div>
+            ) : (
+              <CircularProgressCard
+                title="Career Progress"
+                description="Checklist items completed across all releases"
+                currentValue={completedItems}
+                goalValue={totalItems}
+                label="completed"
+                progressColor="#FFD700"
+              />
+            )}
+            {rolloutTotal === 0 ? (
+              <div className="rounded-3xl border border-white/[0.07] bg-zinc-900/40 p-6 text-center">
+                <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/20 mb-2">Rollout Health</p>
+                <p className="text-white/20 text-xs font-medium">Add tasks to your active release</p>
+              </div>
+            ) : (
+              <CircularProgressCard
+                title="Rollout Health"
+                description={upcoming ? `${upcoming.title} rollout progress` : "Active release progress"}
+                currentValue={rolloutDone}
+                goalValue={rolloutTotal}
+                label="tasks done"
+                progressColor="#4ade80"
+              />
+            )}
           </div>
         </div>
       </div>

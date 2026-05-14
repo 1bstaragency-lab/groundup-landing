@@ -10,8 +10,10 @@ import {
 } from 'lucide-react'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
+import { usePoints } from '../../hooks/usePoints'
 import { TaskCards } from '../ui/task-cards'
 import { MusicStatsCard } from '../ui/music-stats-card'
+import { PointsWidget } from '../ui/points-widget'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -710,6 +712,8 @@ export function HomeDashboard() {
   const { user, profile } = useAuth()
   const [activeTab, setActiveTab] = useState<DashTab>('Overview')
 
+  const { available: points, totalEarned, earn: earnPoints, spend: spendPoints } = usePoints()
+
   const [events, setEvents] = useState<CalEvent[]>([])
   const [loadingEvents, setLoadingEvents] = useState(true)
 
@@ -832,7 +836,18 @@ export function HomeDashboard() {
                 </div>
                 <OverviewTab events={events} setEvents={setEvents} loadingEvents={loadingEvents} userId={user.id} onEventAdded={ev => setEvents(prev => [...prev, ev])} />
                 <div className="mt-6 pt-6 border-t border-white/5">
-                  <TaskCards title="Quick Tasks" releases={releases} />
+                  <TaskCards
+                    title="Quick Tasks"
+                    releases={releases}
+                    onTaskComplete={(pts, taskTitle) => earnPoints(pts, taskTitle)}
+                  />
+                </div>
+                <div className="mt-6">
+                  <PointsWidget
+                    available={points}
+                    totalEarned={totalEarned}
+                    onSpend={spendPoints}
+                  />
                 </div>
               </>
             )}

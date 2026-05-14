@@ -1,7 +1,9 @@
 "use client"
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { RefreshCw, X, Rocket } from "lucide-react"
+import { RefreshCw, X, Rocket, CheckCircle2 } from "lucide-react"
+
+const POINTS_PER_TASK = 100
 
 // ── CSS (kristen17/course-design-cards structure) ────────────────────────────
 const STYLES = `
@@ -300,13 +302,16 @@ function TaskCard({
   task,
   onDismiss,
   onResuggest,
+  onComplete,
 }: {
   task: ActiveTask
   onDismiss: (id: string) => void
   onResuggest: (id: string) => void
+  onComplete: (id: string) => void
 }) {
   const c = CAT_COLOR[task.category]
   const [open, setOpen] = useState(false)
+  const [celebrating, setCelebrating] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Close on outside click
@@ -324,9 +329,43 @@ function TaskCard({
       layout
       className="cdc-card"
       initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
+      animate={celebrating ? { scale: [1, 1.03, 1], transition: { duration: 0.4 } } : { opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+      style={{ position: "relative" }}
     >
+      {/* Celebrate flash */}
+      <AnimatePresence>
+        {celebrating && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "absolute", inset: 0, zIndex: 20,
+              borderRadius: 18, display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center",
+              background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)",
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            >
+              <CheckCircle2 size={32} color="#4ade80" />
+            </motion.div>
+            <motion.p
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              style={{ color: "#FFD700", fontWeight: 900, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 8 }}
+            >
+              +{POINTS_PER_TASK} pts
+            </motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="cdc-strip" style={{ background: c.hex }} />
 
       {/* Header */}
@@ -345,6 +384,16 @@ function TaskCard({
                 exit={{ opacity: 0, y: -4, scale: 0.96 }}
                 transition={{ duration: 0.12 }}
               >
+                <button
+                  className="cdc-dropdown-btn"
+                  onClick={() => {
+                    setOpen(false)
+                    setCelebrating(true)
+                    setTimeout(() => onComplete(task.id), 900)
+                  }}
+                >
+                  <CheckCircle2 size={11} /> Mark Done · +{POINTS_PER_TASK}pts
+                </button>
                 <button
                   className="cdc-dropdown-btn"
                   onClick={() => { setOpen(false); onResuggest(task.id) }}
@@ -404,9 +453,10 @@ function TaskCard({
 interface TaskCardsProps {
   title?: string
   releases?: Release[]
+  onTaskComplete?: (points: number, taskTitle: string) => void
 }
 
-export function TaskCards({ title = "Quick Tasks", releases = [] }: TaskCardsProps) {
+export function TaskCards({ title = "Quick Tasks", releases = [], onTaskComplete }: TaskCardsProps) {
   const [activeTasks, setActiveTasks] = useState<ActiveTask[]>([])
   const [usedPoolIds, setUsedPoolIds] = useState<Set<string>>(new Set())
 
@@ -423,6 +473,12 @@ export function TaskCards({ title = "Quick Tasks", releases = [] }: TaskCardsPro
     setUsedPoolIds(ids)
     setActiveTasks(tasks)
   }, [releases])
+
+  function handleComplete(id: string) {
+    const task = activeTasks.find(t => t.id === id)
+    if (task) onTaskComplete?.(POINTS_PER_TASK, task.title)
+    setActiveTasks(prev => prev.filter(t => t.id !== id))
+  }
 
   function handleDismiss(id: string) {
     setActiveTasks(prev => prev.filter(t => t.id !== id))
@@ -542,6 +598,7 @@ export function TaskCards({ title = "Quick Tasks", releases = [] }: TaskCardsPro
               task={task}
               onDismiss={handleDismiss}
               onResuggest={handleResuggest}
+              onComplete={handleComplete}
             />
           ))}
         </AnimatePresence>
