@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LogOut, TrendingUp, Zap, Globe, Music2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -43,7 +42,6 @@ const INDUSTRY_NEWS = [
 
 export function HomeSection() {
   const { user, profile, signOut } = useAuth();
-  const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
 
   const rawName = profile?.artist_name ?? user?.artistName ?? '';
