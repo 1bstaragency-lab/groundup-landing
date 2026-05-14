@@ -120,12 +120,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
       {/* ── Sidebar — desktop only ─────────────────────────── */}
       <aside className="hidden lg:flex w-60 bg-black border-r border-white/5 flex-col z-50 shrink-0">
         {/* Logo */}
-        <div className="p-8 flex items-center gap-4 mb-2">
-          <img src="/gu-logo.png" alt="GrounduP" className="h-10 w-auto" />
-          <div className="flex flex-col">
-            <span className="text-white font-black text-sm tracking-tighter">GROUNDUP</span>
-            <span className="text-white/20 text-[9px] font-black uppercase tracking-[0.2em]">Artist OS v4.0</span>
-          </div>
+        <div className="px-6 py-7 mb-2">
+          <img src="/gu-logo.png" alt="GrounduP" className="h-8 w-auto" />
         </div>
 
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto pb-4">
