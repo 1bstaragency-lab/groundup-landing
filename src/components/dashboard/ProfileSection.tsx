@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import {
   Camera, MapPin, Link as LinkIcon, Globe, Plus,
   CheckCircle, CheckCircle2, Clock, ChevronRight, ExternalLink,
-  Music as MusicIcon, Phone, Save, Loader2,
+  Music as MusicIcon, Phone, Save, Loader2, Lock, Pencil,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { supabase } from "../../lib/supabaseClient"
@@ -35,6 +35,7 @@ export function ProfileSection() {
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [phoneState, setPhoneState] = useState<'idle' | 'saving' | 'sent' | 'error' | 'msg_error'>('idle')
   const [countryCode, setCountryCode] = useState('+1')
+  const [editingPhone, setEditingPhone] = useState(false)
   const [loading, setLoading]   = useState(true)
 
   // ─── Load profile ──────────────────────────────────────────────────────────
@@ -92,6 +93,18 @@ export function ProfileSection() {
     setTimeout(() => setSaveState('idle'), 2500)
   }
 
+  // Pretty-format a stored E.164 phone like "+13236295415" → "+1 (323) 629-5415"
+  function formatStoredPhone(raw: string): string {
+    const digits = raw.replace(/\D/g, '')
+    if (digits.length === 11 && digits.startsWith('1')) {
+      return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`
+    }
+    if (digits.length === 10) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
+    }
+    return raw
+  }
+
   // ─── Save phone number + trigger welcome iMessage ─────────────────────────
   async function savePhone() {
     if (!user || !profile.phone_number.trim()) return
@@ -115,7 +128,13 @@ export function ProfileSection() {
       return
     }
 
-    setOriginal(prev => prev ? { ...prev, phone_number: fullPhone } : null)
+    setOriginal(prev => prev
+      ? { ...prev, phone_number: fullPhone }
+      : { artist_name: '', bio: '', location: '', phone_number: fullPhone, tone: 'Assistant Manager' }
+    )
+    // Sync the form field to the canonical stored value & exit edit mode
+    setProfile(prev => ({ ...prev, phone_number: fullPhone }))
+    setEditingPhone(false)
 
     // 2. Send welcome iMessage via LoopMessage
     let msgSent = false
@@ -251,68 +270,110 @@ export function ProfileSection() {
                 Add your number and uP will text you right now to introduce itself. After that, text uP anytime — it knows your releases, calendar, and goals.
               </p>
 
-              <div className="flex gap-3">
-                <div className="flex-1 flex items-center bg-zinc-950 border border-white/5 focus-within:border-[#FFD700]/25 rounded-xl transition-all overflow-hidden">
-                  <Phone size={13} className="text-white/20 flex-shrink-0 ml-4" />
-                  {/* Country code select */}
-                  <select
-                    value={countryCode}
-                    onChange={e => setCountryCode(e.target.value)}
-                    className="bg-transparent text-white text-sm font-medium outline-none cursor-pointer py-3 pl-2 pr-1 flex-shrink-0 focus:ring-0 appearance-none"
-                    style={{ width: 90 }}
+              {/* If a phone is saved AND user isn't editing → show locked state */}
+              {!!original?.phone_number && !editingPhone ? (
+                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                  <div className="flex-1 flex items-center bg-zinc-950 border border-green-500/15 rounded-xl px-4 py-3 gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-green-500/15 border border-green-500/25 flex items-center justify-center flex-shrink-0">
+                      <Lock size={13} className="text-green-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-bold text-sm tracking-tight truncate">{formatStoredPhone(original.phone_number)}</p>
+                      <p className="text-green-400/70 text-[9px] font-black uppercase tracking-widest mt-0.5">
+                        ✓ Connected & bound to your account
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setEditingPhone(true)
+                      // Reset to local digits for editing
+                      const local = original.phone_number.replace(/^\+1/, '').replace(/\D/g, '')
+                      setProfile(prev => ({ ...prev, phone_number: local }))
+                      setPhoneState('idle')
+                    }}
+                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest bg-white/5 border border-white/10 text-white/50 hover:text-white hover:border-white/20 transition-all flex-shrink-0"
                   >
-                    <option value="+1">🇺🇸 +1</option>
-                    <option value="+1CA">🇨🇦 +1 CA</option>
-                    <option value="+1JM">🇯🇲 +1 JM</option>
-                    <option value="+44">🇬🇧 +44</option>
-                    <option value="+61">🇦🇺 +61</option>
-                    <option value="+234">🇳🇬 +234</option>
-                    <option value="+81">🇯🇵 +81</option>
-                    <option value="+49">🇩🇪 +49</option>
-                    <option value="+33">🇫🇷 +33</option>
-                    <option value="+55">🇧🇷 +55</option>
-                    <option value="+52">🇲🇽 +52</option>
-                    <option value="+27">🇿🇦 +27</option>
-                    <option value="+82">🇰🇷 +82</option>
-                    <option value="+31">🇳🇱 +31</option>
-                    <option value="+34">🇪🇸 +34</option>
-                  </select>
-                  {/* Subtle divider */}
-                  <div className="w-px h-5 bg-white/10 flex-shrink-0" />
-                  {/* Local phone number */}
-                  <input
-                    type="tel"
-                    value={profile.phone_number}
-                    onChange={e => set('phone_number', e.target.value)}
-                    placeholder="(555) 000-0000"
-                    className="flex-1 bg-transparent text-white text-sm font-medium placeholder-white/15 outline-none px-3 py-3"
-                  />
+                    <Pencil size={11} />
+                    Change Number
+                  </button>
                 </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1 flex items-center bg-zinc-950 border border-white/5 focus-within:border-[#FFD700]/25 rounded-xl transition-all overflow-hidden">
+                    <Phone size={13} className="text-white/20 flex-shrink-0 ml-4" />
+                    <select
+                      value={countryCode}
+                      onChange={e => setCountryCode(e.target.value)}
+                      className="bg-transparent text-white text-sm font-medium outline-none cursor-pointer py-3 pl-2 pr-1 flex-shrink-0 focus:ring-0 appearance-none"
+                      style={{ width: 90 }}
+                    >
+                      <option value="+1">🇺🇸 +1</option>
+                      <option value="+1CA">🇨🇦 +1 CA</option>
+                      <option value="+1JM">🇯🇲 +1 JM</option>
+                      <option value="+44">🇬🇧 +44</option>
+                      <option value="+61">🇦🇺 +61</option>
+                      <option value="+234">🇳🇬 +234</option>
+                      <option value="+81">🇯🇵 +81</option>
+                      <option value="+49">🇩🇪 +49</option>
+                      <option value="+33">🇫🇷 +33</option>
+                      <option value="+55">🇧🇷 +55</option>
+                      <option value="+52">🇲🇽 +52</option>
+                      <option value="+27">🇿🇦 +27</option>
+                      <option value="+82">🇰🇷 +82</option>
+                      <option value="+31">🇳🇱 +31</option>
+                      <option value="+34">🇪🇸 +34</option>
+                    </select>
+                    <div className="w-px h-5 bg-white/10 flex-shrink-0" />
+                    <input
+                      type="tel"
+                      value={profile.phone_number}
+                      onChange={e => set('phone_number', e.target.value)}
+                      placeholder="(555) 000-0000"
+                      className="flex-1 bg-transparent text-white text-sm font-medium placeholder-white/15 outline-none px-3 py-3"
+                    />
+                  </div>
 
+                  <button
+                    onClick={savePhone}
+                    disabled={!profile.phone_number.trim() || phoneState === 'saving' || phoneState === 'sent'}
+                    className={`flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex-shrink-0 ${
+                      phoneState === 'sent'
+                        ? 'bg-green-500/15 border border-green-500/20 text-green-400'
+                        : phoneState === 'msg_error'
+                        ? 'bg-red-500/15 border border-red-500/20 text-red-400'
+                        : profile.phone_number.trim()
+                        ? 'bg-[#FFD700] text-black hover:scale-105 shadow-[0_0_16px_rgba(255,215,0,0.2)]'
+                        : 'bg-white/5 text-white/20 cursor-not-allowed'
+                    }`}
+                  >
+                    {phoneState === 'saving'    && <Loader2 size={11} className="animate-spin" />}
+                    {phoneState === 'sent'      && <CheckCircle size={11} />}
+                    {phoneState === 'msg_error' && <span>⚠</span>}
+                    {(phoneState === 'idle' || phoneState === 'error') && <CheckCircle2 size={11} />}
+                    {phoneState === 'saving'    ? 'Sending…' :
+                     phoneState === 'sent'      ? 'Check your texts!' :
+                     phoneState === 'msg_error' ? 'Text failed — check logs' :
+                     phoneState === 'error'     ? 'Error — retry' :
+                     original?.phone_number     ? 'Save New Number' :
+                     'Connect & text me'}
+                  </button>
+                </div>
+              )}
+
+              {/* Cancel button — only shown when actively editing an existing number */}
+              {!!original?.phone_number && editingPhone && phoneState !== 'sent' && phoneState !== 'saving' && (
                 <button
-                  onClick={savePhone}
-                  disabled={!profile.phone_number.trim() || phoneState === 'saving' || phoneState === 'sent'}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex-shrink-0 ${
-                    phoneState === 'sent'
-                      ? 'bg-green-500/15 border border-green-500/20 text-green-400'
-                      : phoneState === 'msg_error'
-                      ? 'bg-red-500/15 border border-red-500/20 text-red-400'
-                      : profile.phone_number.trim()
-                      ? 'bg-[#FFD700] text-black hover:scale-105 shadow-[0_0_16px_rgba(255,215,0,0.2)]'
-                      : 'bg-white/5 text-white/20 cursor-not-allowed'
-                  }`}
+                  onClick={() => {
+                    setEditingPhone(false)
+                    setProfile(prev => ({ ...prev, phone_number: original?.phone_number ?? '' }))
+                    setPhoneState('idle')
+                  }}
+                  className="text-white/30 hover:text-white/60 text-[10px] font-black uppercase tracking-widest mt-3 transition-colors"
                 >
-                  {phoneState === 'saving'    && <Loader2 size={11} className="animate-spin" />}
-                  {phoneState === 'sent'      && <CheckCircle size={11} />}
-                  {phoneState === 'msg_error' && <span>⚠</span>}
-                  {(phoneState === 'idle' || phoneState === 'error') && <CheckCircle2 size={11} />}
-                  {phoneState === 'saving'    ? 'Sending…' :
-                   phoneState === 'sent'      ? 'Check your texts!' :
-                   phoneState === 'msg_error' ? 'Text failed — check logs' :
-                   phoneState === 'error'     ? 'Error — retry' :
-                   'Connect & text me'}
+                  ← Cancel
                 </button>
-              </div>
+              )}
 
               <AnimatePresence>
                 {phoneState === 'sent' && (
