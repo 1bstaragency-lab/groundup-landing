@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { HomeSection } from './pages/dashboard/HomeSection';
+import { LearnSection } from './components/dashboard/LearnSection';
+import { SchedulerSection } from './components/dashboard/SchedulerSection';
+import { StudioSection } from './components/dashboard/StudioSection';
+import { ProfileSection } from './components/dashboard/ProfileSection';
+import { RolloutsSection } from './components/dashboard/RolloutsSection';
+import { AnalyticsSection } from './components/dashboard/AnalyticsSection';
+import { TeamSection } from './components/dashboard/TeamSection';
+import { CuratorSection } from './components/dashboard/CuratorSection';
+import { InfluencerSection } from './components/dashboard/InfluencerSection';
 import { TeamDashboardMockup } from './components/ui/TeamDashboardMockup';
 import ShaderShowcase from './components/ui/hero';
 import { LiquidButton } from './components/ui/liquid-glass-button';
@@ -376,7 +386,19 @@ function App() {
             <Dashboard />
           </RequireAuth>
         }
-      />
+      >
+        <Route index element={<Navigate to="home" replace />} />
+        <Route path="home" element={<HomeSection />} />
+        <Route path="rollouts" element={<RolloutsSection />} />
+        <Route path="analytics" element={<AnalyticsSection />} />
+        <Route path="learn" element={<LearnSection />} />
+        <Route path="scheduler" element={<SchedulerSection />} />
+        <Route path="studio" element={<StudioSection />} />
+        <Route path="influencers" element={<InfluencerSection />} />
+        <Route path="team" element={<TeamSection />} />
+        <Route path="curator" element={<CuratorSection />} />
+        <Route path="profile" element={<ProfileSection />} />
+      </Route>
       {/* Team invite accept — public, no auth required */}
       <Route path="/join/:token" element={<JoinPage />} />
       {/* Catch-all */}

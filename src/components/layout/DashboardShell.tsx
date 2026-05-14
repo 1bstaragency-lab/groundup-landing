@@ -2,6 +2,7 @@
 
 import { useState, useRef, type ReactNode } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useNavigate, useLocation } from "react-router-dom"
 import {
   Home, BookOpen, Calendar, Layout, User,
   Bell, TrendingUp, Users, Network,
@@ -13,8 +14,6 @@ import { CdRocketIcon } from "../ui/CdRocketIcon"
 
 interface DashboardShellProps {
   children: ReactNode
-  activeTab: string
-  setActiveTab: (tab: string) => void
 }
 
 // isMain = highlighted top-4 with gold treatment in sidebar
@@ -36,8 +35,11 @@ const MORE_ITEMS       = MENU_ITEMS.filter(m => !m.mobileShow)
 const MAIN_ITEMS       = MENU_ITEMS.filter(m => m.isMain)
 const OTHER_ITEMS      = MENU_ITEMS.filter(m => !m.isMain)
 
-export function DashboardShell({ children, activeTab, setActiveTab }: DashboardShellProps) {
+export function DashboardShell({ children }: DashboardShellProps) {
   const { user, profile, signOut } = useAuth()
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const activeTab = pathname.split('/')[2] || 'home'
   const [moreOpen, setMoreOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 })
@@ -54,7 +56,7 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
   const displayName = profile?.artist_name ?? user?.artistName ?? user?.email?.split('@')[0] ?? 'Artist'
 
   function selectTab(id: string) {
-    setActiveTab(id)
+    navigate('/dashboard/' + id)
     setMoreOpen(false)
   }
 
@@ -68,7 +70,7 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
       return (
         <motion.button
           key={item.id}
-          onClick={() => setActiveTab(item.id)}
+          onClick={() => navigate('/dashboard/' + item.id)}
           className={`relative w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-300 group overflow-hidden ${
             active ? "bg-[#FFD700] text-black" : "text-white/50 hover:text-white"
           }`}
@@ -101,7 +103,7 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
 
     return (
       <button
-        onClick={() => setActiveTab(item.id)}
+        onClick={() => navigate('/dashboard/' + item.id)}
         className={`w-full flex items-center gap-4 px-5 py-3 rounded-2xl transition-all duration-300 ${
           active ? "bg-white/10 text-white" : "text-white/25 hover:bg-white/5 hover:text-white/60"
         }`}
@@ -141,7 +143,7 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
 
         <div className="p-6 border-t border-white/5 space-y-4">
           <button
-            onClick={() => setActiveTab('profile')}
+            onClick={() => navigate('/dashboard/profile')}
             className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-colors ${
               activeTab === 'profile' ? 'text-white bg-white/5' : 'text-white/20 hover:text-white'
             }`}
@@ -230,7 +232,7 @@ export function DashboardShell({ children, activeTab, setActiveTab }: DashboardS
 
                     {/* Settings */}
                     <button
-                      onClick={() => { setUserMenuOpen(false); setActiveTab('profile') }}
+                      onClick={() => { setUserMenuOpen(false); navigate('/dashboard/profile') }}
                       className="w-full flex items-center gap-3 px-4 py-3 text-white/60 hover:text-white hover:bg-white/5 transition-all text-[11px] font-black uppercase tracking-widest"
                     >
                       <Settings size={13} className="text-white/30" />
