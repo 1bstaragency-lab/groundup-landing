@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, ChevronRight, ChevronLeft, TrendingUp, Calendar, BookOpen,
-  Users, Network, Music2, BarChart2, Zap, Check, Play, Disc3,
+  Users, Network, BarChart2, Zap, Check, Play, Disc3,
   MessageCircle, Sparkles } from "lucide-react"
 
 // ─── Slide definitions ────────────────────────────────────────────────────────
@@ -559,13 +559,6 @@ const SLIDES: Slide[] = [
 // ─── Callout bubble ───────────────────────────────────────────────────────────
 
 function CalloutBubble({ callout, slideKey }: { callout: Callout; slideKey: string }) {
-  const arrowClass: Record<string, string> = {
-    left: "right-full top-1/2 -translate-y-1/2 border-t-8 border-b-8 border-r-8 border-transparent border-r-[#FFD700]/90 mr-0",
-    right: "left-full top-1/2 -translate-y-1/2 border-t-8 border-b-8 border-l-8 border-transparent border-l-[#FFD700]/90",
-    top: "bottom-full left-1/2 -translate-x-1/2 border-l-8 border-r-8 border-b-8 border-transparent border-b-[#FFD700]/90",
-    bottom: "top-full left-1/2 -translate-x-1/2 border-l-8 border-r-8 border-t-8 border-transparent border-t-[#FFD700]/90",
-  }
-
   return (
     <motion.div
       key={`${slideKey}-${callout.text}`}
