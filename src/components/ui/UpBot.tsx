@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-
+import { PulsingBorder } from "@paper-design/shaders-react"
 import { X, ArrowRight } from "lucide-react"
+import { useIsMobile } from "../../hooks/useIsMobile"
 
 const QUICK_LINKS = [
   { label: "How does GrounduP work?", href: "#features" },
@@ -19,6 +20,7 @@ const MESSAGES = [
 export function UpBot({ onViewDemo }: { onViewDemo?: () => void }) {
   const [open, setOpen] = useState(false)
   const [msgIdx] = useState(() => Math.floor(Math.random() * MESSAGES.length))
+  const isMobile = useIsMobile()
 
   return (
     <div className="fixed bottom-6 right-6 z-[300] flex flex-col items-end gap-3">
@@ -36,9 +38,22 @@ export function UpBot({ onViewDemo }: { onViewDemo?: () => void }) {
             {/* Header */}
             <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/5">
               <div className="flex items-center gap-3">
-                <div className="relative w-8 h-8 flex-shrink-0 rounded-full border border-[#FFD700]/60 bg-zinc-900 flex items-center justify-center"
-                  style={{ boxShadow: "0 0 10px rgba(255,215,0,0.35)" }}>
-                  <span className="text-[#FFD700] font-black text-[9px] uppercase">uP</span>
+                <div className="relative w-8 h-8 flex-shrink-0">
+                  {isMobile ? (
+                    <div className="w-8 h-8 rounded-full border border-[#FFD700]/60 bg-zinc-900 flex items-center justify-center"
+                      style={{ boxShadow: "0 0 10px rgba(255,215,0,0.35)" }}>
+                      <span className="text-[#FFD700] font-black text-[9px] uppercase">uP</span>
+                    </div>
+                  ) : (
+                    <PulsingBorder
+                      colors={["#FFD700", "#B8860B", "#ffffff", "#000000", "#FFD700"]}
+                      colorBack="#00000000"
+                      speed={1.5} roundness={1} thickness={0.15} softness={0.2}
+                      intensity={6} pulse={0.15} smoke={0.4} smokeSize={3}
+                      scale={0.7} rotation={0} frame={9161408}
+                      style={{ width: 32, height: 32, borderRadius: "50%" }}
+                    />
+                  )}
                 </div>
                 <div>
                   <p className="text-white font-black text-sm uppercase tracking-tight leading-none">uP</p>
@@ -103,9 +118,20 @@ export function UpBot({ onViewDemo }: { onViewDemo?: () => void }) {
         className="relative w-16 h-16 flex items-center justify-center focus:outline-none"
         title="Chat with uP"
       >
-        {/* Glow ring — CSS only, no WebGL */}
-        <span className="absolute inset-0 rounded-full border border-[#FFD700]/50 animate-pulse"
-          style={{ boxShadow: "0 0 16px rgba(255,215,0,0.4), inset 0 0 8px rgba(255,215,0,0.1)" }} />
+        {/* Glow ring */}
+        {isMobile ? (
+          <span className="absolute inset-0 rounded-full border border-[#FFD700]/50 animate-pulse"
+            style={{ boxShadow: "0 0 16px rgba(255,215,0,0.4), inset 0 0 8px rgba(255,215,0,0.1)" }} />
+        ) : (
+          <PulsingBorder
+            colors={["#FFD700", "#B8860B", "#ffffff", "#000000", "#FFD700"]}
+            colorBack="#00000000"
+            speed={1.5} roundness={1} thickness={0.1} softness={0.2}
+            intensity={5} pulse={0.1} smoke={0.5} smokeSize={4}
+            scale={0.65} rotation={0} frame={9161408.251009725}
+            style={{ width: 64, height: 64, borderRadius: "50%", position: "absolute", inset: 0 }}
+          />
+        )}
 
         {/* Rotating text ring */}
         <motion.svg
