@@ -99,6 +99,20 @@ export const handler: Handler = async (event) => {
         body: JSON.stringify({ data, error: error?.message }, null, 2),
       }
     }
+    if (params.hits === '1') {
+      // Show raw webhook events — proves whether Blooio is calling us at all
+      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+      const { data, error } = await supabase
+        .from('webhook_events')
+        .select('source, headers, payload, created_at')
+        .order('created_at', { ascending: false })
+        .limit(20)
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ count: data?.length ?? 0, data, error: error?.message }, null, 2),
+      }
+    }
     return { statusCode: 405, body: 'Use POST for inbound webhooks. GET ?ping=1 or ?recent=1 for diagnostics.' }
   }
 
@@ -109,6 +123,20 @@ export const handler: Handler = async (event) => {
     Object.entries(event.headers).filter(([k]) => !k.toLowerCase().includes('cookie'))
   )
   console.log('[blooio-webhook] Headers:', JSON.stringify(safeHeaders))
+
+  // ─── Unconditional hit log to webhook_events (proves Blooio is calling us) ──
+  const sourceIp = event.headers['x-forwarded-for'] ?? event.headers['x-nf-client-connection-ip'] ?? ''
+  let rawPayload: unknown = null
+  try { rawPayload = JSON.parse(event.body ?? 'null') } catch { rawPayload = event.body }
+  if (SUPABASE_URL && SUPABASE_KEY) {
+    const supabaseHit = createClient(SUPABASE_URL, SUPABASE_KEY)
+    await supabaseHit.from('webhook_events').insert({
+      source:  'blooio',
+      headers: safeHeaders,
+      payload: rawPayload as object,
+      ip:      sourceIp,
+    })
+  }
 
   if (BLOOIO_WEBHOOK_SECRET) {
     const sigHeader =
