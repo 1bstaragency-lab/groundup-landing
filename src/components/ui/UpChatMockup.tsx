@@ -171,53 +171,100 @@ export function UpChatMockup() {
   )
 }
 
+const liquidKeyframes = `
+@keyframes liquidMorph {
+  0%   { border-radius: 58% 42% 35% 65% / 55% 38% 62% 45%; }
+  16%  { border-radius: 42% 58% 62% 38% / 48% 62% 38% 52%; }
+  33%  { border-radius: 65% 35% 48% 52% / 35% 55% 45% 65%; }
+  50%  { border-radius: 38% 62% 55% 45% / 62% 42% 58% 38%; }
+  66%  { border-radius: 55% 45% 38% 62% / 45% 58% 42% 55%; }
+  83%  { border-radius: 45% 55% 65% 35% / 58% 35% 65% 42%; }
+  100% { border-radius: 58% 42% 35% 65% / 55% 38% 62% 45%; }
+}
+@keyframes shimmerSweep {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 300% 0; }
+}
+@keyframes goldGlow {
+  0%, 100% { box-shadow: 0 0 18px 4px rgba(255,215,0,0.18), inset 0 0 20px 4px rgba(255,215,0,0.08); }
+  50%       { box-shadow: 0 0 32px 8px rgba(255,215,0,0.30), inset 0 0 28px 8px rgba(255,215,0,0.15); }
+}
+`
+
 export function UpOrbMascot() {
   return (
-    <div className="relative w-40 h-40 flex items-center justify-center">
-      {/* Outer ambient glow */}
-      <div className="absolute inset-0 bg-[#FFD700]/10 blur-[60px] rounded-full" />
+    <div className="relative flex items-center justify-center" style={{ width: 160, height: 160 }}>
+      <style>{liquidKeyframes}</style>
 
+      {/* Ambient gold bloom */}
+      <div style={{
+        position: 'absolute', inset: -20,
+        background: 'radial-gradient(circle, rgba(255,215,0,0.12) 0%, transparent 70%)',
+        filter: 'blur(20px)',
+        borderRadius: '50%',
+        pointerEvents: 'none',
+      }} />
+
+      {/* Gold pulsing ring — tight */}
       <PulsingBorder
         colors={["#FFD700", "#B8860B", "#ffffff", "#000000", "#FFD700"]}
         colorBack="#00000000"
-        speed={1.2}
+        speed={1.4}
         roundness={1}
-        thickness={0.08}
-        softness={0.2}
-        intensity={7}
-        pulse={0.12}
-        smoke={0.5}
-        smokeSize={5}
-        scale={0.65}
+        thickness={0.06}
+        softness={0.15}
+        intensity={8}
+        pulse={0.18}
+        smoke={0.3}
+        smokeSize={3}
+        scale={0.82}
         rotation={0}
         frame={9161408}
-        style={{ width: 160, height: 160, borderRadius: "50%", position: "absolute", inset: 0 }}
+        style={{ width: 160, height: 160, borderRadius: '50%', position: 'absolute', inset: 0 }}
       />
 
-      {/* Rotating text ring */}
-      <motion.svg
-        className="absolute inset-0 w-full h-full pointer-events-none"
-        viewBox="0 0 100 100"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
+      {/* Liquid metallic silver sphere */}
+      <motion.div
+        animate={{ rotateY: [0, 360] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+        style={{ perspective: 400, position: 'relative', zIndex: 10 }}
       >
-        <defs>
-          <path id="mascot-circle" d="M 50,50 m -38,0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0" />
-        </defs>
-        <text style={{ fontSize: 6.5, fill: "rgba(255,255,255,0.35)", fontWeight: 900, letterSpacing: "0.2em" }}>
-          <textPath href="#mascot-circle" startOffset="0%">
-            GrounduP OS • Artist First • uP •&nbsp;
-          </textPath>
-        </text>
-      </motion.svg>
-
-      {/* Center "uP" label */}
-      <span className="relative z-10 text-white font-black text-xl uppercase tracking-widest select-none">
-        uP
-      </span>
-
-      {/* Live dot */}
-      <span className="absolute top-3 right-3 w-3.5 h-3.5 bg-[#FFD700] rounded-full border-2 border-black animate-pulse" />
+        <div style={{
+          width: 104,
+          height: 104,
+          animation: 'liquidMorph 6s ease-in-out infinite, goldGlow 3s ease-in-out infinite',
+          background: `
+            radial-gradient(ellipse at 32% 28%, rgba(255,255,255,0.95) 0%, transparent 38%),
+            radial-gradient(ellipse at 68% 72%, rgba(180,180,200,0.6) 0%, transparent 40%),
+            radial-gradient(ellipse at 50% 50%, #c8ccd8 0%, #9098a8 35%, #5a6070 65%, #2a2e38 100%)
+          `,
+          position: 'relative',
+          overflow: 'hidden',
+        }}>
+          {/* Gold shimmer sweep */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(105deg, transparent 20%, rgba(255,215,0,0.22) 45%, rgba(255,200,50,0.35) 50%, rgba(255,215,0,0.22) 55%, transparent 80%)',
+            backgroundSize: '200% 100%',
+            animation: 'shimmerSweep 2.8s ease-in-out infinite',
+            mixBlendMode: 'screen',
+          }} />
+          {/* Dark crevice shadow (top-right) */}
+          <div style={{
+            position: 'absolute', top: '8%', right: '12%',
+            width: '40%', height: '35%',
+            background: 'radial-gradient(ellipse, rgba(10,12,18,0.55) 0%, transparent 80%)',
+            borderRadius: '50%',
+          }} />
+          {/* Secondary highlight */}
+          <div style={{
+            position: 'absolute', bottom: '18%', left: '20%',
+            width: '28%', height: '20%',
+            background: 'radial-gradient(ellipse, rgba(255,255,255,0.45) 0%, transparent 80%)',
+            borderRadius: '50%',
+          }} />
+        </div>
+      </motion.div>
     </div>
   )
 }
