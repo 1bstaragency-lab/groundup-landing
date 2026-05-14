@@ -1,5 +1,4 @@
 "use client"
-import { useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Sparkles, Music2, CheckCircle2 } from "lucide-react"
 
