@@ -68,7 +68,12 @@ ${upcomingEvents}
 - You can help with: rollout strategy, playlist pitching, social content ideas, PR timing, budget allocation, team coordination, touring, sync licensing, songwriting, production, publishing
 - Never say "as an AI" or break character. You ARE uP. This is your purpose.
 - If you don't know something specific (like real streaming numbers), say so and ask what they have
-- End responses with a natural follow-up hook when appropriate, but don't force it every time`
+- End responses with a natural follow-up hook when appropriate, but don't force it every time
+
+# TASK EXTRACTION
+If your response implies the artist should take any action (create content, reach out to someone, set a deadline, prepare assets, pitch something, schedule anything, etc.), extract those as specific tasks. Append them at the VERY END of your response in this exact format — the artist will NOT see this block, it is stripped automatically:
+<up_tasks>["Action item 1 (5-10 words)", "Action item 2"]</up_tasks>
+Rules: Only include genuinely actionable tasks. Keep each task specific and short. Never fabricate tasks not implied by the conversation. Omit the block entirely if no tasks apply.`
 }
 
 interface ArtistContext {
@@ -162,10 +167,13 @@ export const handler: Handler = async (event) => {
     }
   }
 
+  // ─── Extract tasks from reply ─────────────────────────────────────────────
+  const { cleaned: cleanReply, tasks } = extractTasks(assistantReply)
+  assistantReply = cleanReply
+
   // ─── Persist conversation to Supabase ─────────────────────────────────────
   let convId = conversationId
   if (!convId) {
-    // Create new conversation
     const { data: conv } = await supabase.from('up_conversations').insert({
       user_id: userId,
       role:    'user',
@@ -175,17 +183,41 @@ export const handler: Handler = async (event) => {
   }
 
   if (convId) {
-    // Save user message (if it was a new conversation, already done above via the insert)
     if (conversationId) {
       await supabase.from('up_conversations').insert({ user_id: userId, conversation_id: convId, role: 'user', content: message })
     }
-    // Save assistant reply
     await supabase.from('up_conversations').insert({ user_id: userId, conversation_id: convId, role: 'assistant', content: assistantReply })
+  }
+
+  // ─── Save extracted tasks ─────────────────────────────────────────────────
+  if (tasks.length > 0) {
+    await supabase.from('up_tasks').insert(
+      tasks.map(content => ({
+        user_id: userId,
+        content,
+        source: 'app',
+        conversation_id: convId ?? undefined,
+      }))
+    )
   }
 
   return {
     statusCode: 200,
     headers: { ...CORS, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ok: true, reply: assistantReply, conversationId: convId }),
+    body: JSON.stringify({ ok: true, reply: assistantReply, conversationId: convId, tasks }),
   }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function extractTasks(text: string): { cleaned: string; tasks: string[] } {
+  const match = text.match(/<up_tasks>([\s\S]*?)<\/up_tasks>/)
+  if (!match) return { cleaned: text.trim(), tasks: [] }
+
+  let tasks: string[] = []
+  try { tasks = JSON.parse(match[1].trim()) } catch { tasks = [] }
+  if (!Array.isArray(tasks)) tasks = []
+
+  const cleaned = text.replace(/<up_tasks>[\s\S]*?<\/up_tasks>/, '').trim()
+  return { cleaned, tasks }
 }

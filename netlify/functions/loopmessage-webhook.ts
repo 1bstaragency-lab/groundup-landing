@@ -139,7 +139,11 @@ Artist context:
 - Releases: ${releaseSummary}
 - Events: ${eventSummary}
 
-IMPORTANT: You're replying via iMessage so keep every response to 1-3 short sentences max. Plain text only — no markdown, no bullet points with dashes (use commas or newlines instead). Be direct and actionable. Sign off with "— uP" only if it feels natural.`
+IMPORTANT: You're replying via iMessage so keep every response to 1-3 short sentences max. Plain text only — no markdown, no bullet points with dashes (use commas or newlines instead). Be direct and actionable. Sign off with "— uP" only if it feels natural.
+
+TASK EXTRACTION: If you identify any action items for the artist, append them at the VERY END of your reply (invisible to artist, auto-stripped):
+<up_tasks>["Task 1 (5-10 words)", "Task 2"]</up_tasks>
+Only include if genuinely actionable. Omit entirely if no tasks.`
 
   // ─── Pull recent conversation history for context ──────────────────────────
   const { data: history } = await supabase
@@ -170,19 +174,39 @@ IMPORTANT: You're replying via iMessage so keep every response to 1-3 short sent
     reply = "Ran into something on my end — open the GrounduP app for now."
   }
 
+  // ─── Extract tasks + clean reply ─────────────────────────────────────────
+  const { cleaned: cleanReply, tasks } = extractTasks(reply)
+
   // ─── Send reply via LoopMessage ───────────────────────────────────────────
-  await sendLoopMessage(fromPhone, reply)
+  await sendLoopMessage(fromPhone, cleanReply)
 
   // ─── Log both sides to Supabase ───────────────────────────────────────────
   await supabase.from('up_conversations').insert([
     { user_id: userId, role: 'user',      content: inboundText, channel: 'imessage' },
-    { user_id: userId, role: 'assistant', content: reply,       channel: 'imessage' },
+    { user_id: userId, role: 'assistant', content: cleanReply,  channel: 'imessage' },
   ])
+
+  // ─── Save extracted tasks ─────────────────────────────────────────────────
+  if (tasks.length > 0) {
+    await supabase.from('up_tasks').insert(
+      tasks.map(content => ({ user_id: userId, content, source: 'imessage' }))
+    )
+  }
 
   return { statusCode: 200, body: 'OK' }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function extractTasks(text: string): { cleaned: string; tasks: string[] } {
+  const match = text.match(/<up_tasks>([\s\S]*?)<\/up_tasks>/)
+  if (!match) return { cleaned: text.trim(), tasks: [] }
+  let tasks: string[] = []
+  try { tasks = JSON.parse(match[1].trim()) } catch { tasks = [] }
+  if (!Array.isArray(tasks)) tasks = []
+  const cleaned = text.replace(/<up_tasks>[\s\S]*?<\/up_tasks>/, '').trim()
+  return { cleaned, tasks }
+}
 
 function normalizePhone(phone: string): string {
   const digits = phone.replace(/\D/g, '')

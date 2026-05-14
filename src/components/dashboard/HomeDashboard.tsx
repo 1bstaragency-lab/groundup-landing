@@ -15,6 +15,7 @@ import { TaskCards } from '../ui/task-cards'
 import { MusicStatsCard } from '../ui/music-stats-card'
 import { PointsWidget } from '../ui/points-widget'
 import { UpSection } from './UpSection'
+import { UpTasksFeed } from './UpTasksFeed'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -473,6 +474,9 @@ function OverviewTab({ events, setEvents, loadingEvents, userId, onEventAdded }:
           <EventFormModal userId={userId} existing={editing} onClose={() => setEditing(null)} onSaved={handleEdited} />
         )}
       </AnimatePresence>
+
+      {/* uP task feed — tasks from any conversation */}
+      <UpTasksFeed userId={userId} />
     </div>
   )
 }
