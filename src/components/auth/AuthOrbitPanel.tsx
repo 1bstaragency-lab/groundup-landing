@@ -122,7 +122,7 @@ export const AuthOrbitPanel = memo(function AuthOrbitPanel() {
             src="/gu-icon.png"
             alt="GrounduP"
             style={{
-              height: 100,
+              height: 72,
               width: "auto",
               filter: "drop-shadow(0 0 28px rgba(255,215,0,0.5))",
               animation: "gold-pulse 3s ease-in-out infinite",
