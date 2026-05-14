@@ -128,7 +128,7 @@ const CATEGORY_META: Record<string, { icon: React.ReactNode; color: string; bord
 }
 
 // ─── Video playlists ──────────────────────────────────────────────────────────
-interface PlaylistVideo { id: string; title: string }
+interface PlaylistVideo { id: string; title: string; duration?: string; description?: string }
 interface Playlist {
   title: string
   playlistId: string
@@ -151,23 +151,23 @@ const VIDEO_PLAYLISTS: Playlist[] = [
     playlistId: "PLtPKxx4Gpa5T8GV8ywmfBoSC8QZ_BQqTu",
     coverImage: `https://img.youtube.com/vi/qekbbQ4Zt1M/hqdefault.jpg`,
     videos: [
-      { id: "qekbbQ4Zt1M", title: "'Conversations' with BNYX, Riot & Zaytoven" },
-      { id: "v5Ct8rvTGNA", title: 'The Cheat Code | "The Blame Game" | Ep. 99' },
-      { id: "DJjUOOiEg1Y", title: 'The Cheat Code | "Before You Go To Radio" | Ep. 98' },
-      { id: "YbAM9TIKEyc", title: 'The Cheat Code | "Owning Your Image" | Ep. 89' },
-      { id: "l2zTuMo-bfk", title: 'The Cheat Code | "Let\'s Go On Tour" | Ep. 85' },
-      { id: "9jaMhuEWJQU", title: 'The Cheat Code | "What Are You Willing To Do" | Ep. 86' },
-      { id: "Vyu7lqInGac", title: 'The Cheat Code | "Growth and Gratitude" | Ep. 83' },
-      { id: "bmFfqZZ-akg", title: 'The Cheat Code | "Money Money Money" | Ep. 81' },
-      { id: "r_bzWGby0lY", title: 'The Cheat Code | "Work Hard, Win Big" | Ep. 76' },
-      { id: "6F1v2m1QqWk", title: 'The Cheat Code | "Flawless Execution" | Ep. 79' },
-      { id: "0-2lm7tLlog", title: 'The Cheat Code | "Inside The Machine" | Ep. 57' },
-      { id: "zPjOG71nRdg", title: 'The Cheat Code | "Post Release Day, What\'s Next?" | Ep. 58' },
-      { id: "TpcaH3vFKOg", title: 'The Cheat Code | "Can You Really Be Blackballed?" | Ep. 59' },
-      { id: "Fb7nbwbwzSc", title: 'The Cheat Code | "Choosing A Distributor" | Ep. 54' },
-      { id: "taw7RMwETfE", title: 'The Cheat Code | "Marketing Explained" | Ep. 55' },
-      { id: "zWepMQnG4do", title: 'The Cheat Code | "Fake It Til You Make It" | Ep. 48' },
-      { id: "ACvzJWN2nYY", title: 'The Cheat Code | "How Did I Get Shadow Banned?" | Ep. 50' },
+      { id: "qekbbQ4Zt1M", title: "'Conversations' with BNYX, Riot & Zaytoven", duration: "63:45", description: "A landmark roundtable hosted by Julius of Lucid Monday featuring three of hip-hop's most prolific producers — BNYX, Riot, and Zaytoven. The conversation digs into how each producer found their sound, the behind-the-scenes reality of working with top-tier artists, and what it takes to build a lasting legacy. From learning beats out of necessity to sitting at the table with icons, this episode is a masterclass in the producer's journey." },
+      { id: "v5Ct8rvTGNA", title: 'The Cheat Code | "The Blame Game" | Ep. 99', duration: "20:43", description: "Stash Guapo and the crew break down why artists keep falling victim to industry scams and bad business decisions. The episode argues that excuses don't protect you — due diligence does. If you paid someone $20,000 without vetting them, that's on you. Knowing what good business looks like is the only defense against bad business." },
+      { id: "DJjUOOiEg1Y", title: 'The Cheat Code | "Before You Go To Radio" | Ep. 98', duration: "18:21", description: "The hosts lay out what artists need locked in before chasing radio placement. Creating content is a sales tool, not a vanity exercise — every post should have a clear call-to-action directing fans to stream, request, or buy. If your socials don't convert attention into action, radio won't save you." },
+      { id: "YbAM9TIKEyc", title: 'The Cheat Code | "Owning Your Image" | Ep. 89', duration: "16:45", description: "A conversation about how public image shapes — and can derail — a music career. Using pop culture examples, the hosts explore how a single moment can permanently define a persona. Artists who don't intentionally own their image leave that narrative in someone else's hands." },
+      { id: "l2zTuMo-bfk", title: 'The Cheat Code | "Let\'s Go On Tour" | Ep. 85', duration: "15:10", description: "The team breaks down independent touring fundamentals with a focus on college radio as a launchpad. College audiences are the core demographic for urban music — open to new artists, willing to spend, and plugged into cultural moments like homecomings and campus events. Activating this market before routing a tour can be a serious game-changer." },
+      { id: "9jaMhuEWJQU", title: 'The Cheat Code | "What Are You Willing To Do" | Ep. 86', duration: "12:44", description: "The hosts push artists to get real about the sacrifices required to build a career. They spotlight FanBase, a Black-owned social platform with monetization features, as an example of thinking beyond mainstream channels. The episode challenges artists to question which platforms and strategies actually deserve their energy and time." },
+      { id: "Vyu7lqInGac", title: 'The Cheat Code | "Growth and Gratitude" | Ep. 83', duration: "16:55", description: "A reflective look at the mentors and early collaborators who shaped the hosts' careers. Stash Guapo shares how a key connection gave him his first real foothold in the industry. The episode makes a case for gratitude as a business strategy — the relationships you invest in early become the foundation for long-term growth." },
+      { id: "bmFfqZZ-akg", title: 'The Cheat Code | "Money Money Money" | Ep. 81', duration: "17:25", description: "The crew gets into the money side of branding — from logos and fonts to merchandise strategy and limited editions. A story about receiving a cease and desist from Ferrari for unauthorized font use leads into a deeper conversation about why brand decisions carry real legal and financial weight for independent artists." },
+      { id: "r_bzWGby0lY", title: 'The Cheat Code | "Work Hard, Win Big" | Ep. 76', duration: "28:47", description: "A wide-ranging conversation about hustle, Black-owned businesses, and what it actually means to build equity in an industry that wasn't designed for you. The hosts celebrate community-driven success while challenging artists to think beyond short-term wins and focus on ownership, legacy, and long-game thinking." },
+      { id: "6F1v2m1QqWk", title: 'The Cheat Code | "Flawless Execution" | Ep. 79', duration: "22:36", description: "The team discusses delivering a polished, professional product in an era where AI-generated artists are landing major label deals. Warner Music Group's signing of an AI artist becomes a jumping-off point for discussing what flawless execution means when the bar keeps rising and the competition is literally infinite." },
+      { id: "0-2lm7tLlog", title: 'The Cheat Code | "Inside The Machine" | Ep. 57', duration: "22:02", description: "A behind-the-scenes breakdown of how the music industry actually operates — from seasonal marketing cycles to platform algorithms. The hosts encourage artists to study business mechanics the same way they study their craft. Understanding the machine is the only way to make it work in your favor." },
+      { id: "zPjOG71nRdg", title: 'The Cheat Code | "Post Release Day, What\'s Next?" | Ep. 58', duration: "22:29", description: "Release day is just the beginning. The crew maps out the strategic moves artists need to make in the days and weeks after a drop — from playlist pitching to fan activation and performance analysis. Artists who think the work is done when the song goes live are the ones who wonder why nothing moved." },
+      { id: "TpcaH3vFKOg", title: 'The Cheat Code | "Can You Really Be Blackballed?" | Ep. 59', duration: "24:17", description: "The hosts tackle the myth of being blackballed in the music industry, defining what it actually means vs. what artists often assume it means. The conversation is a reality check — most closed doors aren't conspiracies, they're the result of not having built enough relationships and value to be worth the industry's investment." },
+      { id: "Fb7nbwbwzSc", title: 'The Cheat Code | "Choosing A Distributor" | Ep. 54', duration: "21:17", description: "A practical breakdown of evaluating distribution deals and what to look for before committing as an independent artist. The episode uses a story about limited-edition merchandise to explain how scarcity and storytelling create perceived value — a principle that applies directly to how you position your music catalog." },
+      { id: "taw7RMwETfE", title: 'The Cheat Code | "Marketing Explained" | Ep. 55', duration: "21:46", description: "Stash Guapo announces the launch of Articentric, a new affordable marketing company built for independent artists. The episode breaks down why professional marketing isn't optional in today's climate and how thinking strategically about promotion — not just creating content — separates artists who grow from those who plateau." },
+      { id: "zWepMQnG4do", title: 'The Cheat Code | "Fake It Til You Make It" | Ep. 48', duration: "23:39", description: "The crew debates whether projecting a bigger image than your current reality is a legitimate career strategy or a trap. Using personal style and merchandise as a lens, the episode explores how presentation shapes perception — and whether that perception can be manufactured before the substance catches up." },
+      { id: "ACvzJWN2nYY", title: 'The Cheat Code | "How Did I Get Shadow Banned?" | Ep. 50', duration: "22:37", description: "A deep dive into social media shadow banning — what it is, how to know if it's happening to you, and what artist behavior triggers it. The hosts connect fake followers and inauthentic engagement to reduced algorithmic reach, giving concrete steps to diagnose and fix your profile's visibility before your next release." },
     ],
   },
   {
@@ -447,7 +447,7 @@ function PlaylistModal({ playlist, onClose }: { playlist: Playlist; onClose: () 
           <div className="min-w-0">
             <p className="text-white font-black text-sm uppercase tracking-tighter truncate">{playlist.title}</p>
             <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mt-0.5">
-              {activeIdx + 1} / {playlist.videos.length} · Stash Guapo
+              {activeIdx + 1} / {playlist.videos.length} · GrounduP Knowledge Bank
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0 ml-4">
@@ -479,9 +479,12 @@ function PlaylistModal({ playlist, onClose }: { playlist: Playlist; onClose: () 
                 allowFullScreen
               />
             </div>
-            {/* Now playing label */}
+            {/* Now playing label + description */}
             <div className="px-5 py-3 border-t border-white/5 shrink-0">
               <p className="text-white font-black text-sm leading-snug line-clamp-2">{activeVideo.title}</p>
+              {activeVideo.description && (
+                <p className="text-white/40 text-[11px] font-medium leading-relaxed mt-2 line-clamp-4">{activeVideo.description}</p>
+              )}
               <div className="flex items-center gap-3 mt-2">
                 <button
                   onClick={() => setActiveIdx(i => Math.max(0, i - 1))}
@@ -548,7 +551,9 @@ function PlaylistModal({ playlist, onClose }: { playlist: Playlist; onClose: () 
                       }`}>
                         {video.title}
                       </p>
-                      <p className="text-white/20 text-[9px] font-black uppercase tracking-widest mt-1">{i + 1}</p>
+                      <p className="text-white/20 text-[9px] font-black uppercase tracking-widest mt-1">
+                        {video.duration ?? `${i + 1}`}
+                      </p>
                     </div>
                   </button>
                 )
