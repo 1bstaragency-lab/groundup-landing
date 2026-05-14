@@ -398,7 +398,7 @@ function LandingPage() {
               </div>
             </div>
           </div>
-          <div className="relative">
+          <div className="relative hidden md:block">
             <div className="absolute inset-0 bg-[#FFD700]/5 blur-[120px] rounded-full" />
             <GlobeLive className="w-full max-w-2xl mx-auto relative z-10" />
           </div>
@@ -412,15 +412,15 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Waitlist */}
+      {/* Signup */}
       <section id="signup" className="py-40 px-6 relative bg-black border-t border-white/5">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.05)_0%,transparent_70%)]" />
         <div className="container mx-auto max-w-xl relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-4">
-              Claim your <br/><span className="text-[#FFD700]">Early Spot.</span>
+              Build your career<br/><span className="text-[#FFD700]">your way.</span>
             </h2>
-            <p className="text-white/40 text-lg font-medium">Join the next generation of industry management.</p>
+            <p className="text-white/40 text-lg font-medium">The Artist OS built for the next generation.</p>
           </div>
 
           {!submitted ? (
@@ -438,14 +438,14 @@ function LandingPage() {
                 </div>
                 <input type="text" placeholder="Social Handle (@...)" value={formData.socialHandle} onChange={(e) => setFormData({...formData, socialHandle: e.target.value})} className="wait-input" />
                 <div className="pt-6">
-                  <LiquidButton type="submit" className="w-full">GET EARLY ACCESS</LiquidButton>
+                  <LiquidButton type="submit" className="w-full">GET STARTED</LiquidButton>
                 </div>
               </div>
             </form>
           ) : (
             <div className="text-center p-12 bg-zinc-900/40 rounded-3xl border border-[#FFD700]/30 backdrop-blur-xl animate-in zoom-in-95 duration-500">
-              <h3 className="text-3xl font-black text-white mb-6 uppercase tracking-tighter leading-none">You're on the list!</h3>
-              <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.3em] mb-3">Your Referral Code</p>
+              <h3 className="text-3xl font-black text-white mb-6 uppercase tracking-tighter leading-none">You're in. Let's go.</h3>
+              <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.3em] mb-3">Your Access Code</p>
               <div className="bg-black/50 p-4 rounded-xl border border-white/10 mb-8 select-all">
                 <code className="text-white text-sm font-mono tracking-wider">{referralCode}</code>
               </div>

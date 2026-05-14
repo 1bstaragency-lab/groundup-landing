@@ -149,7 +149,7 @@ export function CinematicFooter({ onViewDemo }: { onViewDemo?: () => void }) {
             <div className="flex flex-col items-center gap-6 w-full">
               <div className="flex flex-wrap justify-center gap-4 w-full">
                 <MagneticButton as="a" href="#signup" className="footer-glass-pill px-12 py-6 rounded-full text-[#FFD700] font-black text-sm uppercase tracking-widest flex items-center gap-3">
-                  Get Early Access
+                  Get Started
                 </MagneticButton>
                 <MagneticButton as="button" onClick={onViewDemo} className="footer-glass-pill px-12 py-6 rounded-full text-white/60 font-black text-sm uppercase tracking-widest hover:text-white transition-colors">
                   View Demo
