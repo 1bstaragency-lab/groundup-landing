@@ -96,7 +96,9 @@ export function ProfileSection() {
   async function savePhone() {
     if (!user || !profile.phone_number.trim()) return
     setPhoneState('saving')
-    const fullPhone = countryCode + profile.phone_number.trim()
+    // Strip all non-digits and rebuild as E.164 — guarantees lookup will work
+    const rawDigits = (countryCode + profile.phone_number).replace(/\D/g, '')
+    const fullPhone = '+' + rawDigits
 
     // 1. Persist to Supabase
     const { error } = await supabase

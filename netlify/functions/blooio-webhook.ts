@@ -46,15 +46,56 @@ interface BlooioInbound {
 }
 
 export const handler: Handler = async (event) => {
+  // ─── Diagnostic: GET /?ping=1 returns env var status & DB sanity check ────
+  if (event.httpMethod === 'GET') {
+    const params = event.queryStringParameters ?? {}
+    if (params.ping === '1') {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+      let phoneSample: Array<{ phone_number: string | null }> = []
+      let phoneError: string | null = null
+      try {
+        const { data, error } = await supabase
+          .from('artist_profiles')
+          .select('phone_number')
+          .not('phone_number', 'is', null)
+          .limit(20)
+        phoneSample = data ?? []
+        phoneError  = error?.message ?? null
+      } catch (e) {
+        phoneError = String(e)
+      }
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          env: {
+            BLOOIO_API_KEY:           !!BLOOIO_API_KEY,
+            BLOOIO_WEBHOOK_SECRET:    !!BLOOIO_WEBHOOK_SECRET,
+            ANTHROPIC_API_KEY:        !!ANTHROPIC_KEY,
+            VITE_SUPABASE_URL:        !!SUPABASE_URL,
+            SUPABASE_KEY:             !!SUPABASE_KEY,
+            keyType: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'service_role' : process.env.VITE_SUPABASE_ANON_KEY ? 'anon' : 'MISSING',
+          },
+          supabase: {
+            url: SUPABASE_URL ? SUPABASE_URL.replace(/^https?:\/\//, '').slice(0, 30) + '...' : null,
+            phonesInDb: phoneSample.length,
+            samplePhones: phoneSample.map(p => p.phone_number),
+            queryError: phoneError,
+          },
+        }, null, 2),
+      }
+    }
+    return { statusCode: 405, body: 'Use POST for inbound webhooks. GET ?ping=1 for diagnostics.' }
+  }
+
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method not allowed' }
 
-  // ─── Log all headers so we can identify Blooio's signing header ──────────
+  // ─── Log headers (still no strict auth until we identify Blooio's header) ──
   const safeHeaders = Object.fromEntries(
     Object.entries(event.headers).filter(([k]) => !k.toLowerCase().includes('cookie'))
   )
   console.log('[blooio-webhook] Headers:', JSON.stringify(safeHeaders))
 
-  // ─── Verify signing secret (warn only — don't block while we confirm header name) ──
   if (BLOOIO_WEBHOOK_SECRET) {
     const sigHeader =
       event.headers['x-blooio-signature'] ??
@@ -63,12 +104,9 @@ export const handler: Handler = async (event) => {
       event.headers['x-signing-secret']   ??
       event.headers['x-secret']           ??
       event.headers['authorization']       ?? ''
-
     const provided = sigHeader.replace(/^Bearer\s+/i, '')
-
     if (provided !== BLOOIO_WEBHOOK_SECRET) {
-      console.warn('[blooio-webhook] Signature mismatch — continuing anyway to diagnose. Header checked:', sigHeader || '(none matched)')
-      // NOTE: switch back to 401 once we confirm the correct header name
+      console.warn('[blooio-webhook] Signature mismatch — continuing anyway. Header value:', sigHeader || '(none)')
     }
   }
 
@@ -81,7 +119,6 @@ export const handler: Handler = async (event) => {
 
   console.log('[blooio-webhook] Inbound payload:', JSON.stringify(payload))
 
-  // Handle nested payload shapes Blooio might send
   const anyPayload = payload as Record<string, unknown>
   const fromPhone   = (payload.from ?? (anyPayload.sender as string) ?? '') as string
   const inboundText = (payload.text ?? payload.message ?? payload.body ?? (anyPayload.content as string) ?? '') as string
@@ -92,34 +129,60 @@ export const handler: Handler = async (event) => {
   }
 
   if (!BLOOIO_API_KEY || !ANTHROPIC_KEY) {
-    console.log('[blooio-webhook] Missing API keys')
+    console.log('[blooio-webhook] Missing required API keys')
     return { statusCode: 200, body: 'Not configured' }
   }
 
-  console.log('[blooio-webhook] Supabase config — URL set:', !!SUPABASE_URL, '| Key set:', !!SUPABASE_KEY, '| Key type:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'service_role' : process.env.VITE_SUPABASE_ANON_KEY ? 'anon' : 'MISSING')
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    console.error('[blooio-webhook] Supabase not configured — set VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or VITE_SUPABASE_ANON_KEY)')
+    await sendBlooio(fromPhone, "uP is misconfigured — Supabase credentials missing on the server. Reach out to support.")
+    return { statusCode: 200, body: 'Supabase not configured' }
+  }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-  // ─── Look up artist by phone ───────────────────────────────────────────────
-  const normalizedPhone = normalizePhone(fromPhone)
-  console.log('[blooio-webhook] Looking up phone:', normalizedPhone)
+  // ─── Bulletproof phone lookup: try multiple formats ───────────────────────
+  const digits = fromPhone.replace(/\D/g, '')
+  const last10 = digits.slice(-10)
+  const candidates = Array.from(new Set([
+    fromPhone,                  // raw as Blooio sent it
+    `+${digits}`,               // +<all digits>
+    `+1${last10}`,              // +1<last10>
+    last10,                     // last 10 digits only
+    digits,                     // all digits
+  ].filter(Boolean)))
 
-  const { data: profile, error: profileError } = await supabase
+  console.log('[blooio-webhook] Looking up phone — candidates:', JSON.stringify(candidates), 'last10:', last10)
+
+  // Try exact match first (any candidate)
+  let { data: profile } = await supabase
     .from('artist_profiles')
     .select('user_id, artist_name, tone, phone_number')
-    .eq('phone_number', normalizedPhone)
-    .single()
+    .in('phone_number', candidates)
+    .limit(1)
+    .maybeSingle()
 
-  console.log('[blooio-webhook] Profile lookup result:', JSON.stringify({ profile, error: profileError?.message }))
+  // Fallback: fuzzy match on last 10 digits using ilike
+  if (!profile && last10.length === 10) {
+    const fuzzy = await supabase
+      .from('artist_profiles')
+      .select('user_id, artist_name, tone, phone_number')
+      .ilike('phone_number', `%${last10}%`)
+      .limit(1)
+      .maybeSingle()
+    profile = fuzzy.data
+    console.log('[blooio-webhook] Fuzzy match result:', JSON.stringify({ found: !!profile, stored: profile?.phone_number }))
+  } else {
+    console.log('[blooio-webhook] Exact match result:', JSON.stringify({ found: !!profile, stored: profile?.phone_number }))
+  }
 
   if (!profile) {
-    // Try a broader search to diagnose format issues
     const { data: allPhones } = await supabase
       .from('artist_profiles')
       .select('phone_number')
       .not('phone_number', 'is', null)
-      .limit(10)
-    console.log('[blooio-webhook] All stored phones for comparison:', JSON.stringify(allPhones))
+      .limit(20)
+    console.log('[blooio-webhook] No match. All stored phones:', JSON.stringify(allPhones))
 
     await sendBlooio(fromPhone, "Hey! I don't recognize this number. Log into your GrounduP account and connect your phone under Profile to chat with uP 🎵")
     return { statusCode: 200, body: 'Unknown number' }
