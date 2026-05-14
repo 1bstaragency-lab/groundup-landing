@@ -55,7 +55,7 @@ export function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormProps) {
       {/* Header */}
       <div className="mb-10">
         <img
-          src="/gu-logo.png"
+          src="/gu-icon.png"
           alt="GrounduP"
           className="h-12 w-auto mb-8 lg:hidden"
           onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
