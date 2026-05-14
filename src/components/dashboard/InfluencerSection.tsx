@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, TrendingUp, Users, Music2, Globe, ExternalLink, Zap, Play, Radio, Lock, Crown, X } from 'lucide-react';
+import { Search, TrendingUp, Users, Music2, Globe, ExternalLink, Zap, Play, Radio, Lock, Crown, X, Mail, Check } from 'lucide-react';
 import { INFLUENCERS, NETWORK_STATS, type Platform, type TikTokTier } from '../../data/influencers';
 import { useAuth } from '../../hooks/useAuth';
 import { GlassCheckoutCard } from '../ui/glass-checkout-card';
-import { EmailButton } from '../ui/GmailCompose';
+import { OutreachPanel, GmailConnectButton, type OutreachTarget } from '../ui/GmailCompose';
 
 const FREE_ROW_LIMIT = 6; // 2 rows × 3 cols on desktop
 
@@ -83,7 +83,10 @@ export function InfluencerSection() {
   const [activePlatform, setActivePlatform] = useState<Platform | 'All'>('All');
   const [activeTier, setActiveTier]         = useState<TikTokTier | 'All'>('All');
   const [search, setSearch]                 = useState('');
-  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showUpgrade, setShowUpgrade]       = useState(false);
+  const [outreachTarget, setOutreachTarget] = useState<OutreachTarget | null>(null);
+
+  const isGmailConnected = !!(profile as any)?.gmail_refresh_token;
 
   const isPro = profile?.plan_tier === 'pro' || profile?.plan_tier === 'growth';
 
@@ -108,10 +111,11 @@ export function InfluencerSection() {
   return (
     <>
       <AnimatePresence>
-        {showUpgrade && (
-          <UpgradeModal onClose={() => setShowUpgrade(false)} />
-        )}
+        {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
       </AnimatePresence>
+
+      {/* Outreach slide-in panel */}
+      <OutreachPanel target={outreachTarget} onClose={() => setOutreachTarget(null)} />
 
       <div className="space-y-8">
         {/* Header */}
@@ -128,6 +132,34 @@ export function InfluencerSection() {
               <Crown size={12} /> Upgrade
             </button>
           )}
+        </div>
+
+        {/* Gmail connection banner */}
+        <div className={`flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border ${
+          isGmailConnected
+            ? 'bg-green-500/5 border-green-500/15'
+            : 'bg-white/[0.03] border-white/8'
+        }`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
+              isGmailConnected ? 'bg-green-500/15' : 'bg-white/5'
+            }`}>
+              {isGmailConnected
+                ? <Check size={14} className="text-green-400" />
+                : <Mail size={14} className="text-white/30" />}
+            </div>
+            <div>
+              <p className="text-white font-black text-[11px] uppercase tracking-widest leading-none">
+                {isGmailConnected ? 'Gmail connected' : 'Connect Gmail to pitch directly'}
+              </p>
+              <p className="text-white/25 text-[10px] font-medium mt-0.5">
+                {isGmailConnected
+                  ? 'Click any influencer card to open an auto-filled outreach draft.'
+                  : 'Link your email and send pitches to any influencer without leaving GrounduP.'}
+              </p>
+            </div>
+          </div>
+          {!isGmailConnected && <GmailConnectButton className="flex-shrink-0" />}
         </div>
 
         {/* Stats bar */}
@@ -271,12 +303,17 @@ export function InfluencerSection() {
                 )}
               </div>
               <div className="mt-3">
-                <EmailButton
-                  subject={`Music Submission — [Your Name] × ${inf.name}`}
-                  body={`Hi ${inf.name},\n\nI came across your ${inf.platform} page and would love to collaborate on my upcoming release.\n\n[Your pitch here]\n\nBest,\n[Your Name]`}
-                  label="Email"
-                  className="w-full justify-center"
-                />
+                <button
+                  onClick={() => setOutreachTarget({
+                    name: inf.name,
+                    handle: inf.handle,
+                    platform: inf.platform,
+                    niche: inf.niche,
+                  })}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:border-[#FFD700]/30 hover:bg-[#FFD700]/8 transition-all font-black text-[10px] uppercase tracking-widest"
+                >
+                  <Mail size={12} /> Email
+                </button>
               </div>
             </motion.div>
           ))}
