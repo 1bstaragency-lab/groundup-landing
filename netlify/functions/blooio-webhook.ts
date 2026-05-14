@@ -6,6 +6,7 @@
  *
  * Netlify env vars needed:
  *   BLOOIO_API_KEY         — from app.blooio.com
+ *   BLOOIO_WEBHOOK_SECRET  — signing secret Blooio provides when you create the webhook
  *   ANTHROPIC_API_KEY
  *   SUPABASE_SERVICE_ROLE_KEY
  *   VITE_SUPABASE_URL
@@ -17,10 +18,11 @@ import type { Handler } from '@netlify/functions'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 
-const BLOOIO_API_KEY = process.env.BLOOIO_API_KEY          ?? ''
-const ANTHROPIC_KEY  = process.env.ANTHROPIC_API_KEY        ?? ''
-const SUPABASE_URL   = process.env.VITE_SUPABASE_URL        ?? ''
-const SUPABASE_KEY   = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
+const BLOOIO_API_KEY      = process.env.BLOOIO_API_KEY          ?? ''
+const BLOOIO_WEBHOOK_SECRET = process.env.BLOOIO_WEBHOOK_SECRET  ?? ''
+const ANTHROPIC_KEY       = process.env.ANTHROPIC_API_KEY        ?? ''
+const SUPABASE_URL        = process.env.VITE_SUPABASE_URL        ?? ''
+const SUPABASE_KEY        = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 
 const BLOOIO_URL = 'https://backend.blooio.com/v1/api/messages'
 
@@ -43,6 +45,22 @@ interface BlooioInbound {
 
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method not allowed' }
+
+  // ─── Verify signing secret ─────────────────────────────────────────────────
+  if (BLOOIO_WEBHOOK_SECRET) {
+    const sigHeader =
+      event.headers['x-blooio-signature'] ??
+      event.headers['x-webhook-secret']   ??
+      event.headers['x-signing-secret']   ??
+      event.headers['authorization']       ?? ''
+
+    const provided = sigHeader.replace(/^Bearer\s+/i, '')
+
+    if (provided !== BLOOIO_WEBHOOK_SECRET) {
+      console.warn('[blooio-webhook] Signature mismatch — rejecting. Header received:', sigHeader)
+      return { statusCode: 401, body: 'Unauthorized' }
+    }
+  }
 
   let payload: BlooioInbound
   try {
