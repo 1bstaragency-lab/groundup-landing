@@ -1,15 +1,16 @@
 /**
- * Sends a welcome iMessage via LoopMessage when an artist connects their phone.
+ * Sends a welcome iMessage via Blooio when an artist connects their phone.
  * Called from the front-end after saving phone_number to artist_profiles.
  *
  * POST body: { phone: string, artistName: string, tone?: string }
+ *
+ * Netlify env vars:
+ *   BLOOIO_API_KEY — from app.blooio.com dashboard
  */
 import type { Handler } from '@netlify/functions'
 
-const LOOP_API_KEY    = process.env.LOOPMESSAGE_API_KEY    ?? ''
-const LOOP_SECRET_KEY = process.env.LOOPMESSAGE_SECRET_KEY ?? ''
-const LOOP_SENDER     = process.env.LOOPMESSAGE_SENDER_ID  ?? ''
-const LOOP_SEND_URL   = 'https://server.loopmessage.com/api/v1/message/send/'
+const BLOOIO_API_KEY = process.env.BLOOIO_API_KEY ?? ''
+const BLOOIO_URL     = 'https://backend.blooio.com/v1/api/messages'
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -46,53 +47,40 @@ export const handler: Handler = async (event) => {
   const { phone, artistName = 'Artist', tone = 'Assistant Manager' } = body
   if (!phone) return { statusCode: 400, headers: CORS, body: 'phone required' }
 
-  if (!LOOP_API_KEY) {
+  if (!BLOOIO_API_KEY) {
     return {
       statusCode: 200,
       headers: { ...CORS, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ok: false, error: 'LOOPMESSAGE_API_KEY not configured' }),
+      body: JSON.stringify({ ok: false, error: 'BLOOIO_API_KEY not configured' }),
     }
   }
 
   const opener  = TONE_OPENERS[tone] ?? TONE_OPENERS['Assistant Manager']
-  const name    = artistName.split('@')[0] // strip email if that's what came through
+  const name    = artistName.split('@')[0]
   const to      = normalizePhone(phone)
 
-  const message =
+  const text =
     `Hey ${name} 👋 It's uP — your GrounduP AI.\n\n` +
     `${opener}\n\n` +
     `You can text me here anytime — I know your releases, your schedule, and your goals. Let's get to work.`
 
   try {
-    const headers: Record<string, string> = {
-      'Content-Type':  'application/json',
-      'Authorization': LOOP_API_KEY,
-    }
-    if (LOOP_SECRET_KEY) headers['Secret-Key'] = LOOP_SECRET_KEY
+    console.log('[up-welcome] Sending via Blooio to:', to)
 
-    const sendBody: Record<string, string> = { recipient: to, text: message }
-    if (LOOP_SENDER) sendBody.sender = LOOP_SENDER
-
-    console.log('[up-welcome] Sending to LoopMessage:', {
-      url:    LOOP_SEND_URL,
-      to,
-      hasSender:    !!LOOP_SENDER,
-      senderValue:  LOOP_SENDER || '(not set)',
-      hasApiKey:    !!LOOP_API_KEY,
-      hasSecretKey: !!LOOP_SECRET_KEY,
-    })
-
-    const res = await fetch(LOOP_SEND_URL, {
+    const res = await fetch(BLOOIO_URL, {
       method:  'POST',
-      headers,
-      body:    JSON.stringify(sendBody),
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${BLOOIO_API_KEY}`,
+      },
+      body: JSON.stringify({ to, text }),
     })
 
     const rawText = await res.text()
     let data: unknown
     try { data = JSON.parse(rawText) } catch { data = rawText }
 
-    console.log('[up-welcome] LoopMessage response:', res.status, rawText)
+    console.log('[up-welcome] Blooio response:', res.status, rawText)
 
     return {
       statusCode: 200,
