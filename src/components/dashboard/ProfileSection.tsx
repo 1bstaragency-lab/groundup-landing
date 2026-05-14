@@ -33,7 +33,7 @@ export function ProfileSection() {
   })
   const [original, setOriginal] = useState<Profile | null>(null)
   const [saveState, setSaveState] = useState<SaveState>('idle')
-  const [phoneState, setPhoneState] = useState<'idle' | 'saving' | 'sent' | 'error'>('idle')
+  const [phoneState, setPhoneState] = useState<'idle' | 'saving' | 'sent' | 'error' | 'msg_error'>('idle')
   const [countryCode, setCountryCode] = useState('+1')
   const [loading, setLoading]   = useState(true)
 
@@ -116,6 +116,7 @@ export function ProfileSection() {
     setOriginal(prev => prev ? { ...prev, phone_number: fullPhone } : null)
 
     // 2. Send welcome iMessage via LoopMessage
+    let msgSent = false
     try {
       const welcomeRes = await fetch('/.netlify/functions/up-welcome', {
         method:  'POST',
@@ -127,16 +128,20 @@ export function ProfileSection() {
         }),
       })
       const welcomeData = await welcomeRes.json().catch(() => ({}))
-      console.log('[ProfileSection] up-welcome result:', welcomeData)
-      if (!welcomeData.ok) {
-        console.warn('[ProfileSection] LoopMessage did not confirm send:', welcomeData)
-      }
+      console.log('[up-welcome] result:', welcomeData)
+      msgSent = welcomeData.ok === true
+      if (!msgSent) console.warn('[up-welcome] LoopMessage error:', welcomeData)
     } catch (err) {
-      console.error('[ProfileSection] up-welcome fetch failed:', err)
+      console.error('[up-welcome] fetch failed:', err)
     }
 
-    setPhoneState('sent')
-    setTimeout(() => setPhoneState('idle'), 4000)
+    if (msgSent) {
+      setPhoneState('sent')
+      setTimeout(() => setPhoneState('idle'), 5000)
+    } else {
+      setPhoneState('msg_error')
+      setTimeout(() => setPhoneState('idle'), 6000)
+    }
   }
 
   function set(key: keyof Profile, val: string) {
@@ -288,17 +293,21 @@ export function ProfileSection() {
                   className={`flex items-center gap-2 px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex-shrink-0 ${
                     phoneState === 'sent'
                       ? 'bg-green-500/15 border border-green-500/20 text-green-400'
+                      : phoneState === 'msg_error'
+                      ? 'bg-red-500/15 border border-red-500/20 text-red-400'
                       : profile.phone_number.trim()
                       ? 'bg-[#FFD700] text-black hover:scale-105 shadow-[0_0_16px_rgba(255,215,0,0.2)]'
                       : 'bg-white/5 text-white/20 cursor-not-allowed'
                   }`}
                 >
-                  {phoneState === 'saving' && <Loader2 size={11} className="animate-spin" />}
-                  {phoneState === 'sent'   && <CheckCircle size={11} />}
+                  {phoneState === 'saving'    && <Loader2 size={11} className="animate-spin" />}
+                  {phoneState === 'sent'      && <CheckCircle size={11} />}
+                  {phoneState === 'msg_error' && <span>⚠</span>}
                   {(phoneState === 'idle' || phoneState === 'error') && <CheckCircle2 size={11} />}
-                  {phoneState === 'saving' ? 'Sending…' :
-                   phoneState === 'sent'   ? 'Check your texts!' :
-                   phoneState === 'error'  ? 'Error — retry' :
+                  {phoneState === 'saving'    ? 'Sending…' :
+                   phoneState === 'sent'      ? 'Check your texts!' :
+                   phoneState === 'msg_error' ? 'Text failed — check logs' :
+                   phoneState === 'error'     ? 'Error — retry' :
                    'Connect & text me'}
                 </button>
               </div>
@@ -312,6 +321,16 @@ export function ProfileSection() {
                     className="text-green-400/70 text-[10px] font-bold mt-3"
                   >
                     ✓ uP just texted you — reply to that thread anytime to chat with your AI from your phone.
+                  </motion.p>
+                )}
+                {phoneState === 'msg_error' && (
+                  <motion.p
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="text-red-400/70 text-[10px] font-bold mt-3"
+                  >
+                    ✗ Number saved, but the text didn't send. Check that LOOPMESSAGE_API_KEY and LOOPMESSAGE_SENDER_ID are set in Netlify env vars, then retry.
                   </motion.p>
                 )}
               </AnimatePresence>
