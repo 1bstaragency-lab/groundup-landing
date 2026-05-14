@@ -330,7 +330,7 @@ export function ProfileSection() {
                     exit={{ opacity: 0 }}
                     className="text-red-400/70 text-[10px] font-bold mt-3"
                   >
-                    ✗ Number saved, but the text didn't send. Check that LOOPMESSAGE_API_KEY and LOOPMESSAGE_SENDER_ID are set in Netlify env vars, then retry.
+                    ✗ Number saved, but the text didn't send. Check that BLOOIO_API_KEY is set in Netlify env vars, then retry.
                   </motion.p>
                 )}
               </AnimatePresence>
