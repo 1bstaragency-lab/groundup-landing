@@ -505,36 +505,49 @@ function PlaylistModal({ playlist, onClose }: { playlist: Playlist; onClose: () 
         initial={{ scale: 0.96, y: 24 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 24 }}
         transition={{ type: 'spring', damping: 28, stiffness: 320 }}
         onClick={e => e.stopPropagation()}
-        className="bg-zinc-950 border border-white/10 rounded-3xl overflow-hidden w-full shadow-2xl flex flex-col"
-        style={{ maxWidth: 960, maxHeight: '92vh' }}
+        className="bg-zinc-950 border border-white/10 rounded-3xl overflow-hidden w-full shadow-2xl flex flex-col h-[100dvh] lg:h-auto"
+        style={{ maxWidth: 960, maxHeight: '100dvh' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0">
-          <div className="min-w-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-white/5 shrink-0 bg-zinc-950">
+          {/* Back button — clearly visible on mobile */}
+          <button
+            onClick={onClose}
+            className="flex items-center gap-2 px-3 py-2 -ml-2 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all"
+            aria-label="Back"
+          >
+            <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
+              <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="text-[11px] font-black uppercase tracking-widest">Back</span>
+          </button>
+
+          <div className="min-w-0 flex-1 text-center px-2">
             <p className="text-white font-black text-sm uppercase tracking-tighter truncate">{playlist.title}</p>
             <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mt-0.5">
-              {activeIdx + 1} / {playlist.videos.length} · GrounduP Knowledge Bank
+              {activeIdx + 1} / {playlist.videos.length}
             </p>
           </div>
-          <div className="flex items-center gap-3 shrink-0 ml-4">
+
+          <div className="flex items-center gap-3 shrink-0">
             <a
               href={`https://www.youtube.com/playlist?list=${playlist.playlistId}`}
               target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-white/30 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors"
+              className="hidden sm:flex items-center gap-1.5 text-white/30 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors"
             >
               <ExternalLink size={12} /> YouTube
             </a>
-            <button onClick={onClose} className="text-white/30 hover:text-white transition-colors p-1">
+            <button onClick={onClose} className="text-white/30 hover:text-white transition-colors p-1" aria-label="Close">
               <X size={20} />
             </button>
           </div>
         </div>
 
-        {/* Body: player + sidebar */}
-        <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
+        {/* Body: player + sidebar — scrollable on mobile, side-by-side on desktop */}
+        <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-y-auto lg:overflow-hidden">
 
           {/* Player */}
-          <div className="flex-1 bg-black flex flex-col min-h-0">
+          <div className="flex-1 bg-black flex flex-col lg:min-h-0 shrink-0 lg:shrink">
             <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
               <iframe
                 key={activeVideo.id}
@@ -570,11 +583,11 @@ function PlaylistModal({ playlist, onClose }: { playlist: Playlist; onClose: () 
             </div>
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar — flows in mobile (parent scrolls), scrolls itself on desktop */}
           <div
             ref={sidebarRef}
-            className="w-full lg:w-72 xl:w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-white/5 overflow-y-auto"
-            style={{ maxHeight: '100%' }}
+            className="w-full lg:w-72 xl:w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-white/5 lg:overflow-y-auto"
+            style={{ maxHeight: 'unset' }}
           >
             <div className="p-3 space-y-1">
               {playlist.videos.map((video, i) => {

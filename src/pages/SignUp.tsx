@@ -4,10 +4,8 @@ import { SignUpForm } from '../components/auth/SignUpForm'
 import { ArtistProfileForm } from '../components/onboarding/ArtistProfileForm'
 import { ToneSelectionOnboarding } from '../components/onboarding/ToneSelectionOnboarding'
 import { AuthOrbitPanel } from '../components/auth/AuthOrbitPanel'
-import { OnboardingForm } from '../components/ui/onboarding-form'
 import { EarlyAccessPopup } from '../components/ui/early-access-popup'
 import { useAuth } from '../hooks/useAuth'
-import { useIsMobile } from '../hooks/useIsMobile'
 import type { ArtistTone } from '../types/auth.types'
 
 type Step = 'signup' | 'profile' | 'tone'
@@ -19,7 +17,6 @@ interface SignUpPageProps {
 
 export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
   const { user, saveProfile } = useAuth()
-  const isMobile = useIsMobile()
   const [step, setStep] = useState<Step>('signup')
   const [profileData, setProfileData] = useState<{ artistName: string; genre: string; bio: string } | null>(null)
   const [saving, setSaving] = useState(false)
@@ -105,21 +102,10 @@ export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
       <div className="flex-1 flex flex-col items-center justify-center p-8 overflow-y-auto">
         <div className="absolute inset-0 lg:hidden bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.05)_0%,transparent_70%)] pointer-events-none" />
         <div className="relative z-10 w-full max-w-md">
-          {isMobile ? (
-            <OnboardingForm
-              avatarFallback="A"
-              title="Create Your Artist Account"
-              description="Join 2,000+ artists on the GrounduP platform."
-              inputPlaceholder="your artist name"
-              buttonText="Create Account"
-              onSubmit={() => setStep('profile')}
-            />
-          ) : (
-            <SignUpForm
-              onSuccess={() => setShowEarlyAccess(true)}
-              onSwitchToLogin={onSwitchToLogin ?? (() => {})}
-            />
-          )}
+          <SignUpForm
+            onSuccess={() => setShowEarlyAccess(true)}
+            onSwitchToLogin={onSwitchToLogin ?? (() => {})}
+          />
         </div>
       </div>
       <EarlyAccessPopup
