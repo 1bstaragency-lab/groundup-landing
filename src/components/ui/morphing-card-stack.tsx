@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react"
 import { motion, AnimatePresence, LayoutGroup, type PanInfo } from "framer-motion"
 import { cn } from "@/lib/utils"
-import { Grid3X3, Layers, LayoutList, Music2, Share2, Bookmark, Radio, Users, Rocket, BarChart2, MapPin, Star } from "lucide-react"
+import { Grid3X3, Layers, LayoutList, Music2, Share2, Bookmark, Radio, Users, Rocket, BarChart2, MapPin } from "lucide-react"
 
 export type LayoutMode = "stack" | "grid" | "list"
 
