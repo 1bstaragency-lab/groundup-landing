@@ -158,7 +158,7 @@ export function CinematicFooter() {
             </div>
           </div>
 
-          <div className="relative z-20 w-full pb-12 px-12 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="relative z-20 w-full pb-12 px-12 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
             <div className="text-white/20 text-[10px] font-black tracking-widest uppercase">
               © 2026 GROUNDUP. ALL RIGHTS RESERVED.
             </div>
