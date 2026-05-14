@@ -41,6 +41,20 @@ export function GmailConnectButton({ className }: { className?: string }) {
   )
 }
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function buildBody(target: OutreachTarget, artistName: string, genre: string): string {
+  const ig = target.instagram ? `\n\nYou can also find me on Instagram: @${artistName.toLowerCase().replace(/\s+/g, '')}` : ''
+  return (
+    `Hi ${target.name},\n\n` +
+    `I'm ${artistName}, an independent ${genre} artist. I've been following your ${target.platform} page for a while — your taste in ${target.niche} is exactly the lane I move in.\n\n` +
+    `I have a new release I think would resonate with your audience. I'd love for you to give it a listen and consider a feature or placement.\n\n` +
+    `🎵 [Paste your music link here]\n\n` +
+    `No pressure at all — I appreciate everything you do for the scene.${ig}\n\n` +
+    `Best,\n${artistName}`
+  )
+}
+
 // ─── Outreach slide-in panel ──────────────────────────────────────────────────
 // Used by InfluencerSection — shows as a right-side drawer, auto-fills from influencer + profile
 
@@ -50,6 +64,7 @@ export interface OutreachTarget {
   platform: string
   niche: string
   email?: string
+  instagram?: string
 }
 
 interface OutreachPanelProps {
@@ -67,13 +82,12 @@ export function OutreachPanel({ target, onClose }: OutreachPanelProps) {
     ? `Music Submission — ${artistName} × ${target.name}`
     : ''
 
-  const defaultBody = target
-    ? `Hi ${target.name},\n\nI'm ${artistName}, an independent ${genre} artist and I came across your ${target.platform} page — the content you put out around ${target.niche} is exactly the kind of community I want to be part of.\n\nI have a new release I think would resonate with your audience. I'd love for you to give it a listen and consider featuring it.\n\n[Paste your music link here]\n\nNo pressure at all — I appreciate everything you do for the scene.\n\nBest,\n${artistName}`
-    : ''
+  const defaultBody = target ? buildBody(target, artistName, genre) : ''
 
   const [to, setTo] = useState(target?.email ?? '')
   const [subject, setSubject] = useState(defaultSubject)
   const [body, setBody] = useState(defaultBody)
+  const instagramDM = target?.instagram ? `instagram.com/${target.instagram}` : null
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [errMsg, setErrMsg] = useState('')
 
@@ -84,7 +98,7 @@ export function OutreachPanel({ target, onClose }: OutreachPanelProps) {
     setTo(target?.email ?? '')
     setSubject(target ? `Music Submission — ${artistName} × ${target.name}` : '')
     setBody(target
-      ? `Hi ${target.name},\n\nI'm ${artistName}, an independent ${genre} artist and I came across your ${target.platform} page — the content you put out around ${target.niche} is exactly the kind of community I want to be part of.\n\nI have a new release I think would resonate with your audience. I'd love for you to give it a listen and consider featuring it.\n\n[Paste your music link here]\n\nNo pressure at all — I appreciate everything you do for the scene.\n\nBest,\n${artistName}`
+      ? buildBody(target, artistName, genre)
       : '')
     setStatus('idle')
   }
@@ -149,24 +163,8 @@ export function OutreachPanel({ target, onClose }: OutreachPanelProps) {
               </button>
             </div>
 
-            {/* Gmail not connected */}
-            {!isConnected ? (
-              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-                  <Mail size={22} className="text-white/20" />
-                </div>
-                <div>
-                  <p className="text-white font-black text-sm uppercase tracking-tight mb-1">Connect Gmail first</p>
-                  <p className="text-white/30 text-[11px] font-medium leading-relaxed max-w-xs">
-                    Link your Gmail account to send pitches directly from GrounduP. Your credentials stay private.
-                  </p>
-                </div>
-                <GmailConnectButton />
-                <p className="text-white/15 text-[9px] font-medium">
-                  You can also connect via Settings → Profile
-                </p>
-              </div>
-            ) : status === 'sent' ? (
+            {/* Sent state */}
+            {status === 'sent' ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
                 <div className="w-16 h-16 rounded-3xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
                   <Check size={28} className="text-green-400" />
@@ -185,6 +183,17 @@ export function OutreachPanel({ target, onClose }: OutreachPanelProps) {
             ) : (
               /* Compose form */
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {/* Gmail not connected — inline banner, form still visible */}
+                {!isConnected && (
+                  <div className="flex items-start gap-3 px-4 py-3 rounded-2xl bg-[#FFD700]/8 border border-[#FFD700]/20">
+                    <Mail size={14} className="text-[#FFD700] mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[#FFD700] font-black text-[10px] uppercase tracking-widest mb-1">Gmail not connected</p>
+                      <p className="text-white/40 text-[10px] font-medium leading-relaxed">Connect to send directly — or copy the draft below to send manually.</p>
+                    </div>
+                    <GmailConnectButton className="flex-shrink-0 !text-[9px]" />
+                  </div>
+                )}
                 {/* To */}
                 <div>
                   <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1.5">To</p>
@@ -197,7 +206,9 @@ export function OutreachPanel({ target, onClose }: OutreachPanelProps) {
                   />
                   {!target.email && (
                     <p className="text-white/20 text-[9px] font-medium mt-1 leading-relaxed">
-                      Find their contact email in their bio or submission page, then paste it here.
+                      {instagramDM
+                        ? <>No email on file — you can also DM via <a href={`https://${instagramDM}`} target="_blank" rel="noreferrer" className="text-[#FFD700]/60 underline">{instagramDM}</a></>
+                        : 'Find their contact email in their bio, then paste it here.'}
                     </p>
                   )}
                 </div>
@@ -234,17 +245,24 @@ export function OutreachPanel({ target, onClose }: OutreachPanelProps) {
             )}
 
             {/* Footer send button */}
-            {isConnected && status !== 'sent' && (
-              <div className="p-6 border-t border-white/5 flex-shrink-0">
+            {status !== 'sent' && (
+              <div className="p-6 border-t border-white/5 flex-shrink-0 space-y-2">
                 <button
                   onClick={send}
-                  disabled={!to || !subject || !body || status === 'sending'}
-                  className="w-full py-3.5 bg-[#FFD700] text-black font-black text-[11px] uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center gap-2"
+                  disabled={!isConnected || !to || !subject || !body || status === 'sending'}
+                  className="w-full py-3.5 bg-[#FFD700] text-black font-black text-[11px] uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-2"
                 >
                   {status === 'sending'
                     ? <><Loader2 size={14} className="animate-spin" /> Sending...</>
-                    : <><Send size={14} /> Send to {target.name} <ChevronRight size={13} /></>}
+                    : !isConnected
+                      ? <><Mail size={14} /> Connect Gmail to Send</>
+                      : <><Send size={14} /> Send to {target.name} <ChevronRight size={13} /></>}
                 </button>
+                {!isConnected && (
+                  <p className="text-white/20 text-[9px] text-center font-medium">
+                    Draft is ready — connect Gmail above to send it
+                  </p>
+                )}
               </div>
             )}
           </motion.div>

@@ -309,6 +309,8 @@ export function InfluencerSection() {
                     handle: inf.handle,
                     platform: inf.platform,
                     niche: inf.niche,
+                    email: inf.email,
+                    instagram: inf.instagram,
                   })}
                   className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:border-[#FFD700]/30 hover:bg-[#FFD700]/8 transition-all font-black text-[10px] uppercase tracking-widest"
                 >
