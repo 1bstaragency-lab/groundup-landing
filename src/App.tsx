@@ -30,6 +30,9 @@ import { SignUpPage } from './pages/SignUp';
 import { LoginPage } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { JoinPage } from './pages/JoinPage';
+import { ForgotPasswordPage } from './pages/ForgotPassword';
+import { ResetPasswordPage } from './pages/ResetPassword';
+import { MarkerHighlight } from './components/ui/marker-highlight';
 import { useAuth } from './hooks/useAuth';
 import { supabase } from './supabaseClient';
 import './App.css';
@@ -351,7 +354,7 @@ function LandingPage() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
           <div>
             <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-8 leading-none">
-              Scaling<br/><span className="text-[#FFD700]">Everywhere.</span>
+              Scaling<br/><MarkerHighlight delay={0.2}>Everywhere.</MarkerHighlight>
             </h2>
             <p className="text-white/40 text-xl font-medium mb-10 leading-relaxed max-w-md">
               Our active artists are dominating global charts. Real-time career management across 60+ territories.
@@ -500,6 +503,8 @@ function App() {
         <Route path="curator" element={<CuratorSection />} />
         <Route path="profile" element={<ProfileSection />} />
       </Route>
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       {/* Team invite accept — public, no auth required */}
       <Route path="/join/:token" element={<JoinPage />} />
       {/* Catch-all */}

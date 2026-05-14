@@ -111,6 +111,13 @@ export function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProps) {
           </button>
         </div>
 
+        {/* Forgot password */}
+        <div className="flex justify-end -mt-2">
+          <a href="/forgot-password" className="text-[10px] font-black uppercase tracking-widest text-white/25 hover:text-[#FFD700] transition-colors">
+            Forgot password?
+          </a>
+        </div>
+
         {/* Error */}
         {error && (
           <motion.div

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { TrendingUp, Music2, Share2, Play, ExternalLink, BarChart2, Headphones, Mic2, MessageCircle, Radio } from 'lucide-react';
+import { PlatformStreamOverview } from '../ui/platform-stream-overview';
 
 interface StatCardProps {
   label: string;
@@ -118,6 +119,11 @@ export function AnalyticsSection() {
           <BarChart2 size={14} className="text-[#FFD700]" />
           <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Live when connected</span>
         </div>
+      </div>
+
+      {/* Platform Stream Overview */}
+      <div className="bg-zinc-900/40 border border-white/5 rounded-3xl p-6 backdrop-blur-xl">
+        <PlatformStreamOverview />
       </div>
 
       {/* Stat Cards — top 4 */}

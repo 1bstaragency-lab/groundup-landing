@@ -5,6 +5,7 @@ import { ArtistProfileForm } from '../components/onboarding/ArtistProfileForm'
 import { ToneSelectionOnboarding } from '../components/onboarding/ToneSelectionOnboarding'
 import { AuthOrbitPanel } from '../components/auth/AuthOrbitPanel'
 import { OnboardingForm } from '../components/ui/onboarding-form'
+import { EarlyAccessPopup } from '../components/ui/early-access-popup'
 import { useAuth } from '../hooks/useAuth'
 import { useIsMobile } from '../hooks/useIsMobile'
 import type { ArtistTone } from '../types/auth.types'
@@ -22,6 +23,7 @@ export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
   const [step, setStep] = useState<Step>('signup')
   const [profileData, setProfileData] = useState<{ artistName: string; genre: string; bio: string } | null>(null)
   const [saving, setSaving] = useState(false)
+  const [showEarlyAccess, setShowEarlyAccess] = useState(false)
 
   const STEP_NUM: Record<Step, number> = { signup: 1, profile: 2, tone: 3 }
 
@@ -114,12 +116,17 @@ export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
             />
           ) : (
             <SignUpForm
-              onSuccess={() => setStep('profile')}
+              onSuccess={() => setShowEarlyAccess(true)}
               onSwitchToLogin={onSwitchToLogin ?? (() => {})}
             />
           )}
         </div>
       </div>
+      <EarlyAccessPopup
+        open={showEarlyAccess}
+        artistName={user?.artistName}
+        onClose={() => { setShowEarlyAccess(false); setStep('profile') }}
+      />
     </div>
   )
 }

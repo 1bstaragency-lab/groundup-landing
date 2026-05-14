@@ -11,6 +11,7 @@ import {
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
 import { MorphingCardStack } from '../ui/morphing-card-stack'
+import { MusicStatsCard } from '../ui/music-stats-card'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -826,6 +827,9 @@ export function HomeDashboard() {
           >
             {activeTab === 'Overview'  && (
               <>
+                <div className="mb-6">
+                  <MusicStatsCard />
+                </div>
                 <OverviewTab events={events} setEvents={setEvents} loadingEvents={loadingEvents} userId={user.id} onEventAdded={ev => setEvents(prev => [...prev, ev])} />
                 <div className="mt-6 pt-6 border-t border-white/5">
                   <MorphingCardStack title="Quick Tasks" />
