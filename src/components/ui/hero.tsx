@@ -1,6 +1,6 @@
 "use client"
 import { useRef } from "react"
-import { MeshGradient, PulsingBorder } from "@paper-design/shaders-react"
+import { MeshGradient } from "@paper-design/shaders-react"
 import { motion } from "framer-motion"
 import { LiquidButton } from "./liquid-glass-button"
 import { AwardBadge } from "./award-badge"
