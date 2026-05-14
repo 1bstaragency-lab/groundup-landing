@@ -60,7 +60,7 @@ export function GlowingShadow({
       />
 
       {/* Card content */}
-      <div className="relative z-10" style={{ borderRadius: radius, overflow: "hidden" }}>
+      <div className="relative z-10" style={{ borderRadius: radius }}>
         {children}
       </div>
     </div>

@@ -137,7 +137,7 @@ export function PricingPage({ onSelect }: PricingPageProps) {
       planName: "Plant", description: "For artists & managers scaling",
       price: "Custom", priceDescription: "pricing",
       trialBadge: undefined,
-      icon: <Building2 size={18} />, accentColor: "#22c55e",
+      icon: <Building2 size={18} />, accentColor: "#9ca3af",
       features: [
         "Everything in Growth",
         "Unlimited team seats",
@@ -163,14 +163,10 @@ export function PricingPage({ onSelect }: PricingPageProps) {
         </p>
       </div>
 
-      <div className="flex flex-col lg:flex-row items-center justify-center gap-6">
+      <div className="flex flex-col lg:flex-row items-center justify-center gap-6 pt-6">
         {plans.map((plan) =>
           plan.planName === "Pro" ? (
-            <GlowingShadow key={plan.planName} radius="1rem" intensity={0.6} duration={4}>
-              <PricingCard {...plan} trialBadge={plan.trialBadge} onSelect={() => onSelect?.(plan.planName)} />
-            </GlowingShadow>
-          ) : plan.planName === "Plant" ? (
-            <GlowingShadow key={plan.planName} radius="1rem" intensity={0.5} duration={5} glowColor="#22c55e">
+            <GlowingShadow key={plan.planName} radius="1rem" intensity={0.6} duration={4} className="overflow-visible">
               <PricingCard {...plan} trialBadge={plan.trialBadge} onSelect={() => onSelect?.(plan.planName)} />
             </GlowingShadow>
           ) : (
