@@ -2,10 +2,12 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Bell, Shield, CreditCard, Zap, ChevronDown, ChevronRight, Check } from "lucide-react"
+import { Bell, Shield, CreditCard, Zap, ChevronDown, ChevronRight, Check, ExternalLink, Loader2 } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { useAuth } from "../../hooks/useAuth"
+import { usePlan } from "../../hooks/usePlan"
 
 interface PlanTier {
   id: string
@@ -54,7 +56,35 @@ interface NotificationSetting {
 type SectionId = "subscription" | "notifications" | "security"
 
 export function GlassAccountSettingsCard({ className }: { className?: string }) {
+  const { user } = useAuth()
+  const plan = usePlan()
   const [openSection, setOpenSection] = useState<SectionId | null>("subscription")
+  const [portalLoading, setPortalLoading] = useState(false)
+  const [portalMsg, setPortalMsg] = useState<string | null>(null)
+
+  async function openPortal() {
+    if (!user) return
+    setPortalLoading(true)
+    setPortalMsg(null)
+    try {
+      const res = await fetch('/.netlify/functions/create-portal-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, returnUrl: window.location.href }),
+      })
+      const data = await res.json()
+      if (data.ok && data.url) {
+        window.location.href = data.url
+      } else {
+        setPortalMsg(data.message ?? 'Unable to open billing portal.')
+      }
+    } catch {
+      setPortalMsg('Network error — try again in a moment.')
+    } finally {
+      setPortalLoading(false)
+    }
+  }
+
   const [notifications, setNotifications] = useState<NotificationSetting[]>([
     { id: "releases", label: "Release alerts", description: "Notify me when a release milestone is due", enabled: true },
     { id: "analytics", label: "Weekly analytics", description: "Summary of streams, listeners, and growth", enabled: true },
@@ -130,6 +160,28 @@ export function GlassAccountSettingsCard({ className }: { className?: string }) 
                     <div className="px-6 pb-6">
                       {section.id === "subscription" && (
                         <div className="space-y-3">
+                          {/* Current plan + manage subscription */}
+                          <div className="relative p-5 rounded-2xl border border-[#FFD700]/20 bg-gradient-to-br from-[#FFD700]/[0.06] to-transparent flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+                            <div className="min-w-0">
+                              <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.3em] mb-1">Current Plan</p>
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-white font-black text-xl uppercase tracking-tight">{plan.label}</span>
+                                <span className="text-white/40 text-xs font-bold">{plan.priceLabel}</span>
+                              </div>
+                              {portalMsg && (
+                                <p className="text-white/40 text-[10px] font-medium mt-2">{portalMsg}</p>
+                              )}
+                            </div>
+                            <button
+                              onClick={openPortal}
+                              disabled={portalLoading}
+                              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:text-white hover:border-white/20 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 shrink-0"
+                            >
+                              {portalLoading ? <Loader2 size={11} className="animate-spin" /> : <ExternalLink size={11} />}
+                              {portalLoading ? 'Opening…' : 'Manage Subscription'}
+                            </button>
+                          </div>
+
                           {PLANS.map(plan => (
                             <motion.div
                               key={plan.id}

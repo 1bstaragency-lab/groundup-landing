@@ -121,7 +121,11 @@ function LandingPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref');
-    if (ref) setReferredBy(ref);
+    if (ref) {
+      setReferredBy(ref);
+      // Persist for signup completion (may happen on a later page load)
+      try { localStorage.setItem('gup_ref_code', ref) } catch { /* noop */ }
+    }
   }, []);
 
   // Fade nav out once hero scrolls off screen

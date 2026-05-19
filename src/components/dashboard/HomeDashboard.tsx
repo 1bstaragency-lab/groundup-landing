@@ -16,6 +16,8 @@ import { MusicStatsCard } from '../ui/music-stats-card'
 import { PointsWidget } from '../ui/points-widget'
 import { UpSection } from './UpSection'
 import { UpTasksFeed } from './UpTasksFeed'
+import { ReferralWidget } from './ReferralWidget'
+import { CompletionWidget } from './CompletionWidget'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -422,6 +424,9 @@ function OverviewTab({ events, setEvents, loadingEvents, userId, onEventAdded }:
 
   return (
     <div className="space-y-4">
+      {/* Onboarding completion — auto-hides at 100% */}
+      <CompletionWidget userId={userId} />
+
       <div className="flex items-center justify-between">
         <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em]">
           {upcoming.length > 0 ? `${upcoming.length} upcoming` : 'Upcoming Events'}
@@ -477,6 +482,9 @@ function OverviewTab({ events, setEvents, loadingEvents, userId, onEventAdded }:
 
       {/* uP task feed — tasks from any conversation */}
       <UpTasksFeed userId={userId} />
+
+      {/* Refer & earn */}
+      <ReferralWidget userId={userId} />
     </div>
   )
 }

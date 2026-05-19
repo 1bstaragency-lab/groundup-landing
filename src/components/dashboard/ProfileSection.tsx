@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { supabase } from "../../lib/supabaseClient"
 import { useAuth } from "../../hooks/useAuth"
 import { GlassAccountSettingsCard } from "../ui/glass-account-settings-card"
+import { PlanGate } from "../ui/PlanGate"
 
 interface Profile {
   artist_name: string
@@ -250,7 +251,8 @@ export function ProfileSection() {
             </div>
           </div>
 
-          {/* uP iMessage Connection */}
+          {/* uP iMessage Connection — Pro+ feature */}
+          <PlanGate required="pro" feature="uP iMessage" mode="block">
           <div className="bg-zinc-900/20 border border-[#FFD700]/10 p-8 rounded-[2.5rem] relative overflow-hidden">
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-1">
@@ -399,6 +401,7 @@ export function ProfileSection() {
               </AnimatePresence>
             </div>
           </div>
+          </PlanGate>
 
           {/* Credentials */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

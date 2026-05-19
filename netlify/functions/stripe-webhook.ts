@@ -35,7 +35,15 @@ export const handler: Handler = async (event) => {
     case 'checkout.session.completed': {
       const session = stripeEvent.data.object as Stripe.Checkout.Session;
       const userId  = session.client_reference_id;
-      if (userId) await setPlanTier(userId, 'pro');
+      const customerId = typeof session.customer === 'string' ? session.customer : session.customer?.id;
+      if (userId) {
+        await setPlanTier(userId, 'pro');
+        if (customerId) {
+          await supabase.from('artist_preferences')
+            .update({ stripe_customer_id: customerId })
+            .eq('user_id', userId);
+        }
+      }
       break;
     }
     case 'customer.subscription.updated': {

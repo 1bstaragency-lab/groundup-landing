@@ -10,11 +10,22 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProps) {
-  const { signIn } = useAuth()
+  const { signIn, resendVerificationEmail } = useAuth()
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [needsVerify, setNeedsVerify] = useState(false)
+  const [resending, setResending] = useState(false)
+  const [resent, setResent] = useState(false)
+
+  async function handleResend() {
+    if (!formData.email || resending) return
+    setResending(true)
+    const { error: err } = await resendVerificationEmail(formData.email)
+    setResending(false)
+    if (!err) setResent(true)
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -32,6 +43,7 @@ export function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProps) {
       const msg = signInError.toLowerCase()
       if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
         setError('Please confirm your email before signing in. Check your inbox.')
+        setNeedsVerify(true)
       } else if (msg.includes('invalid') || msg.includes('credentials') || msg.includes('password')) {
         setError('Invalid email or password.')
       } else if (msg.includes('fetch') || msg.includes('network') || msg.includes('load')) {
@@ -123,9 +135,24 @@ export function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProps) {
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-red-500/10 border border-red-500/20"
+            className="flex flex-col gap-2 px-4 py-3 rounded-2xl bg-red-500/10 border border-red-500/20"
           >
             <p className="text-red-400 text-xs font-bold">{error}</p>
+            {needsVerify && !resent && (
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resending}
+                className="text-left text-[10px] font-black uppercase tracking-widest text-[#FFD700] hover:text-[#FFD700]/80 transition-colors disabled:opacity-40"
+              >
+                {resending ? 'Sending…' : '→ Resend verification email'}
+              </button>
+            )}
+            {resent && (
+              <p className="text-green-400 text-[10px] font-black uppercase tracking-widest">
+                ✓ Verification email sent — check your inbox
+              </p>
+            )}
           </motion.div>
         )}
 

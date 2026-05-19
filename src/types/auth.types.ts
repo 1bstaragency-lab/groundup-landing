@@ -51,4 +51,7 @@ export interface AuthContextValue {
   signOut: () => Promise<void>;
   saveProfile: (profile: Omit<ArtistProfile, 'user_id' | 'created_at' | 'updated_at'>) => Promise<{ error: string | null }>;
   refreshProfile: () => Promise<void>;
+  resetPasswordForEmail: (email: string) => Promise<{ error: string | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: string | null }>;
+  resendVerificationEmail: (email: string) => Promise<{ error: string | null }>;
 }

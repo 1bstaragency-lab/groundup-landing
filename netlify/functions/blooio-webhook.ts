@@ -244,13 +244,39 @@ export const handler: Handler = async (event) => {
   const userId = profile.user_id
   const voice  = TONE_VOICE[profile.tone ?? ''] ?? TONE_VOICE['Assistant Manager']
 
-  // ─── Parallel: fetch releases, events, conversation history all at once ────
+  // ─── Parallel: releases, events, history, plan tier, today's message count ──
   const today = new Date().toISOString().split('T')[0]
-  const [releasesRes, eventsRes, historyRes] = await Promise.all([
+  const startOfDay = `${today}T00:00:00.000Z`
+  const [releasesRes, eventsRes, historyRes, prefsRes, countRes] = await Promise.all([
     supabase.from('releases').select('title, type, release_date, checklist').eq('user_id', userId).order('release_date', { ascending: true }).limit(5),
     supabase.from('calendar_events').select('title, event_type, event_date').eq('user_id', userId).gte('event_date', today).order('event_date', { ascending: true }).limit(5),
     supabase.from('up_conversations').select('role, content').eq('user_id', userId).eq('channel', 'imessage').order('created_at', { ascending: false }).limit(6),
+    supabase.from('artist_preferences').select('plan_tier').eq('user_id', userId).maybeSingle(),
+    supabase.from('up_conversations').select('id', { count: 'exact', head: true })
+      .eq('user_id', userId).eq('channel', 'imessage').eq('role', 'user')
+      .gte('created_at', startOfDay),
   ])
+
+  // ─── Enforce plan-based daily iMessage limit ───────────────────────────────
+  const planTier = (prefsRes.data?.plan_tier ?? 'free') as 'free' | 'pro' | 'growth'
+  const dailyMax: Record<typeof planTier, number> = { free: 5, pro: 100, growth: 500 }
+  const usedToday = countRes.count ?? 0
+  console.log('[blooio-webhook] Plan check —', JSON.stringify({ planTier, usedToday, max: dailyMax[planTier] }))
+
+  if (usedToday >= dailyMax[planTier]) {
+    const upgradeLine = planTier === 'free'
+      ? 'You hit your daily uP message limit on the Starter plan. Upgrade to Pro at groundupapp.com/pricing for 100/day. Resets at midnight.'
+      : planTier === 'pro'
+      ? 'You hit today\'s 100-message Pro limit. Upgrade to Growth at groundupapp.com/pricing for 500/day. Resets at midnight.'
+      : 'You hit today\'s 500-message limit. Wild. Reach out to support if you need more. Resets at midnight.'
+    await sendBlooio(fromPhone, upgradeLine)
+    // Still log the inbound so we have a record of throttle hits
+    await supabase.from('up_conversations').insert([
+      { user_id: userId, role: 'user',      content: inboundText, channel: 'imessage' },
+      { user_id: userId, role: 'assistant', content: upgradeLine, channel: 'imessage' },
+    ])
+    return { statusCode: 200, body: 'Rate limited' }
+  }
 
   const releases = releasesRes.data ?? []
   const events   = eventsRes.data ?? []

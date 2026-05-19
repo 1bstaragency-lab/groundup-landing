@@ -102,6 +102,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         artist_name: artistName,
         platform: 'groundupapp',
       }]).maybeSingle();
+
+      // Track referral if user landed via ?ref=
+      try {
+        const refCode = localStorage.getItem('gup_ref_code');
+        if (refCode) {
+          await fetch('/.netlify/functions/track-referral', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ referredUserId: data.user.id, referralCode: refCode }),
+          }).catch(() => {});
+          localStorage.removeItem('gup_ref_code');
+        }
+      } catch { /* noop */ }
     }
 
     return { error: null };
@@ -114,6 +127,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signOut() {
     await supabase.auth.signOut();
+  }
+
+  async function resetPasswordForEmail(email: string) {
+    const redirectTo = `${window.location.origin}/reset-password`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    return { error: error ? error.message : null };
+  }
+
+  async function updatePassword(newPassword: string) {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    return { error: error ? error.message : null };
+  }
+
+  async function resendVerificationEmail(email: string) {
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    return { error: error ? error.message : null };
   }
 
   async function saveProfile(
@@ -147,6 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user, profile, loading,
       emailJustConfirmed, clearEmailConfirmed,
       signUp, signIn, signOut, saveProfile, refreshProfile,
+      resetPasswordForEmail, updatePassword, resendVerificationEmail,
     }}>
       {children}
     </AuthContext.Provider>

@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "../../hooks/useAuth"
 import { CdRocketIcon } from "../ui/CdRocketIcon"
+import { PlanBadge } from "../ui/PlanGate"
 
 interface DashboardShellProps {
   children: ReactNode
@@ -182,6 +183,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
           </div>
 
           <div className="flex items-center gap-3 lg:gap-6">
+            <PlanBadge onClick={() => navigate('/dashboard/profile')} />
             <button className="relative text-white/40 hover:text-white transition-colors">
               <Bell size={18} />
               <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-[#FFD700] rounded-full border border-black" />
