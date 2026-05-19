@@ -852,7 +852,7 @@ export function HomeDashboard() {
             {activeTab === 'Overview'  && (
               <>
                 <div className="mb-6">
-                  <MusicStatsCard />
+                  <MusicStatsCard userId={user.id} />
                 </div>
                 <OverviewTab events={events} setEvents={setEvents} loadingEvents={loadingEvents} userId={user.id} onEventAdded={ev => setEvents(prev => [...prev, ev])} />
                 <div className="mt-6 pt-6 border-t border-white/5">

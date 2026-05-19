@@ -247,7 +247,7 @@ export const handler: Handler = async (event) => {
   // ─── Parallel: releases, events, history, plan tier, today's message count ──
   const today = new Date().toISOString().split('T')[0]
   const startOfDay = `${today}T00:00:00.000Z`
-  const [releasesRes, eventsRes, historyRes, prefsRes, countRes] = await Promise.all([
+  const [releasesRes, eventsRes, historyRes, prefsRes, countRes, snapsRes] = await Promise.all([
     supabase.from('releases').select('title, type, release_date, checklist').eq('user_id', userId).order('release_date', { ascending: true }).limit(5),
     supabase.from('calendar_events').select('title, event_type, event_date').eq('user_id', userId).gte('event_date', today).order('event_date', { ascending: true }).limit(5),
     supabase.from('up_conversations').select('role, content').eq('user_id', userId).eq('channel', 'imessage').order('created_at', { ascending: false }).limit(6),
@@ -255,6 +255,7 @@ export const handler: Handler = async (event) => {
     supabase.from('up_conversations').select('id', { count: 'exact', head: true })
       .eq('user_id', userId).eq('channel', 'imessage').eq('role', 'user')
       .gte('created_at', startOfDay),
+    supabase.from('platform_snapshots').select('platform, stats, fetched_at').eq('user_id', userId).order('fetched_at', { ascending: false }).limit(15),
   ])
 
   // ─── Enforce plan-based daily iMessage limit ───────────────────────────────
@@ -296,9 +297,25 @@ export const handler: Handler = async (event) => {
     ? events.map(e => `${e.title} on ${e.event_date}`).join('; ')
     : 'No upcoming events'
 
+  // Latest platform snapshot per platform
+  const snaps = (snapsRes.data ?? []) as Array<{ platform: string; stats: Record<string, unknown> }>
+  const latestByPlatform: Record<string, Record<string, unknown>> = {}
+  for (const s of snaps) if (!latestByPlatform[s.platform]) latestByPlatform[s.platform] = s.stats
+
+  const fmt = (n: unknown) => typeof n === 'number' ? n.toLocaleString() : '—'
+  const sp = latestByPlatform['spotify']
+  const sc = latestByPlatform['soundcloud']
+  const yt = latestByPlatform['youtube']
+  const statLines: string[] = []
+  if (sp?.monthlyListeners) statLines.push(`Spotify ${fmt(sp.monthlyListeners)} monthly listeners`)
+  if (sc?.followers)        statLines.push(`SoundCloud ${fmt(sc.followers)} followers`)
+  if (yt?.subscribers)      statLines.push(`YouTube ${fmt(yt.subscribers)} subs`)
+  const statSummary = statLines.length > 0 ? statLines.join(', ') : 'No platforms linked'
+
   const systemPrompt = `You are uP, the AI music career assistant for ${profile.artist_name} on GrounduP. ${voice}
 
 Artist context:
+- Live stats: ${statSummary}
 - Releases: ${releaseSummary}
 - Events: ${eventSummary}
 
