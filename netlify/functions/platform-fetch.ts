@@ -370,13 +370,25 @@ export const handler: Handler = async (event) => {
       detected.platform === 'tiktok'      ? 'tiktok_url'      :
                                             'spotify_url'
 
-    // Upsert so a missing artist_preferences row still gets created
-    const { error: prefsErr } = await supabase
+    // Update existing row. If the user has no artist_preferences row yet
+    // (rare — happens if onboarding was skipped), upsert with a sentinel
+    // artist_name to satisfy the NOT NULL constraint.
+    const { error: prefsErr, count } = await supabase
       .from('artist_preferences')
-      .upsert({ user_id: userId, [urlColumn]: url }, { onConflict: 'user_id' })
+      .update({ [urlColumn]: url }, { count: 'exact' })
+      .eq('user_id', userId)
     if (prefsErr) {
-      console.error(`[platform-fetch] artist_preferences upsert error:`, prefsErr)
+      console.error(`[platform-fetch] artist_preferences update error:`, prefsErr)
       saveWarnings.push(`URL not bound: ${prefsErr.message}`)
+    } else if ((count ?? 0) === 0) {
+      // No row existed — create one with placeholder artist_name
+      const { error: insErr } = await supabase
+        .from('artist_preferences')
+        .insert({ user_id: userId, artist_name: 'Artist', [urlColumn]: url })
+      if (insErr) {
+        console.error(`[platform-fetch] artist_preferences insert error:`, insErr)
+        saveWarnings.push(`URL not bound: ${insErr.message}`)
+      }
     }
 
     const { error: snapErr } = await supabase.from('platform_snapshots').insert({
