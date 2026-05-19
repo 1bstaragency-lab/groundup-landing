@@ -114,19 +114,45 @@ function parseHumanNumber(text: string): number | null {
 // ─── Spotify ──────────────────────────────────────────────────────────────────
 
 /**
- * Get an anonymous Spotify web access token — same flow used by the public
- * embed iframes. Lasts ~1 hour. No user OAuth needed.
+ * Spotify Client Credentials flow — server-to-server.
+ * NOT user OAuth. Requires SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET env vars
+ * (created once in a Spotify developer app at developer.spotify.com).
+ * Token cached in-memory across warm invocations.
  */
-async function getSpotifyAnonToken(): Promise<string | null> {
+let cachedSpotifyToken: { value: string; expiresAt: number } | null = null
+
+async function getSpotifyToken(): Promise<string | null> {
+  const clientId     = process.env.SPOTIFY_CLIENT_ID     ?? ''
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET ?? ''
+  if (!clientId || !clientSecret) return null
+
+  // Reuse cached token while valid (subtract 60s safety margin)
+  if (cachedSpotifyToken && Date.now() < cachedSpotifyToken.expiresAt - 60_000) {
+    return cachedSpotifyToken.value
+  }
+
   try {
-    const res = await fetch(
-      'https://open.spotify.com/get_access_token?reason=transport&productType=embed',
-      { headers: { 'User-Agent': UA, 'Accept': 'application/json' } },
-    )
-    if (!res.ok) return null
-    const data = await res.json() as { accessToken?: string }
-    return data.accessToken ?? null
-  } catch {
+    const basic = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+    const res = await fetch('https://accounts.spotify.com/api/token', {
+      method:  'POST',
+      headers: {
+        'Authorization': `Basic ${basic}`,
+        'Content-Type':  'application/x-www-form-urlencoded',
+      },
+      body: 'grant_type=client_credentials',
+    })
+    if (!res.ok) {
+      console.warn('[spotify-token] non-OK:', res.status, await res.text())
+      return null
+    }
+    const data = await res.json() as { access_token: string; expires_in: number }
+    cachedSpotifyToken = {
+      value:     data.access_token,
+      expiresAt: Date.now() + (data.expires_in * 1000),
+    }
+    return data.access_token
+  } catch (err) {
+    console.warn('[spotify-token] fetch error:', err)
     return null
   }
 }
@@ -140,9 +166,13 @@ async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
   let monthlyListeners: number | null = null
   let topItems: ScrapeResult['topItems'] = []
   let rawMeta: Record<string, string> = {}
+  let setupNote: string | null = null
 
-  // ─── Primary: use anonymous web access token + official API ────────────
-  const token = await getSpotifyAnonToken()
+  // ─── Primary: Client Credentials → official Spotify API ────────────────
+  const token = await getSpotifyToken()
+  if (!token) {
+    setupNote = 'Add SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET in Netlify env vars to pull metrics (5-min setup at developer.spotify.com — no user OAuth needed).'
+  }
   if (token) {
     try {
       const [artistRes, tracksRes] = await Promise.all([
@@ -233,6 +263,7 @@ async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
       followers,
       popularity,
       genres: genres.length > 0 ? genres.slice(0, 3).join(', ') : null,
+      setupNote,
     },
     topItems,
     imageUrl,
@@ -274,38 +305,87 @@ async function scrapeAppleMusic(profileId: string, originalUrl: string): Promise
 // ─── SoundCloud ───────────────────────────────────────────────────────────────
 
 async function scrapeSoundCloud(profileId: string): Promise<ScrapeResult> {
-  const html = await htmlOf(`https://soundcloud.com/${profileId}`)
-  const meta = parseMeta(html)
-  const ld = parseJsonLd(html)
-
-  const musicGroup = ld.find(j => {
-    const t = j['@type']
-    return t === 'MusicGroup' || t === 'Person'
-  }) as Record<string, unknown> | undefined
-
-  // SoundCloud exposes followers via "interactionStatistic" in JSON-LD
   const stats: Record<string, number | null> = { followers: null, plays: null, tracks: null }
-  const interactions = (musicGroup?.interactionStatistic as Array<Record<string, unknown>> | undefined) ?? []
-  for (const i of interactions) {
-    const kind = String(((i.interactionType as Record<string, unknown>)?.['@type'] ?? '')).toLowerCase()
-    const count = parseHumanNumber(String(i.userInteractionCount ?? ''))
-    if (kind.includes('follow'))   stats.followers = count
-    if (kind.includes('listen'))   stats.plays     = count
-    if (kind.includes('comment'))  stats.comments  = count
+  let displayName: string | null = null
+  let imageUrl:    string | null = null
+  let rawMeta:     Record<string, string> = {}
+
+  // ─── Path 1: oEmbed (always responds, gives basic info) ───────────────
+  try {
+    const oembedRes = await fetch(
+      `https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(`https://soundcloud.com/${profileId}`)}`,
+      { headers: { 'User-Agent': UA, 'Accept': 'application/json' } },
+    )
+    if (oembedRes.ok) {
+      const o = await oembedRes.json() as { title?: string; author_name?: string; thumbnail_url?: string }
+      displayName = o.author_name ?? o.title ?? null
+      imageUrl    = o.thumbnail_url ?? null
+    }
+  } catch (err) {
+    console.warn('[scrapeSoundCloud] oEmbed failed:', err)
   }
 
-  // Track count fallback from description
-  const trackCountMatch = (meta['og:description'] ?? '').match(/(\d[\d,]*)\s+tracks?/i)
-  if (trackCountMatch) stats.tracks = parseInt(trackCountMatch[1].replace(/,/g, ''), 10)
+  // ─── Path 2: scrape the public HTML page for follower / play counts ───
+  try {
+    const html = await htmlOf(`https://soundcloud.com/${profileId}`)
+    const meta = parseMeta(html)
+    rawMeta = meta
+    const ld = parseJsonLd(html)
+
+    if (!displayName) displayName = meta['og:title']?.split(/[—|·]/)[0]?.trim() ?? null
+    if (!imageUrl)    imageUrl    = meta['og:image'] ?? null
+
+    const musicGroup = ld.find(j => {
+      const t = j['@type']
+      return t === 'MusicGroup' || t === 'Person' || t === 'ProfilePage'
+    }) as Record<string, unknown> | undefined
+
+    const interactions = (musicGroup?.interactionStatistic as Array<Record<string, unknown>> | undefined) ?? []
+    for (const i of interactions) {
+      const kind = String(((i.interactionType as Record<string, unknown>)?.['@type'] ?? '')).toLowerCase()
+      const count = parseHumanNumber(String(i.userInteractionCount ?? ''))
+      if (kind.includes('follow'))   stats.followers = count
+      if (kind.includes('listen'))   stats.plays     = count
+    }
+
+    // Free-text fallbacks from raw HTML
+    if (stats.followers === null) {
+      const m = html.match(/"followers_count"\s*:\s*(\d+)/)
+      if (m) stats.followers = parseInt(m[1], 10)
+    }
+    if (stats.plays === null) {
+      const m = html.match(/"playback_count"\s*:\s*(\d+)/)
+      if (m) stats.plays = parseInt(m[1], 10)
+    }
+    if (stats.tracks === null) {
+      const m = html.match(/"track_count"\s*:\s*(\d+)/)
+      if (m) stats.tracks = parseInt(m[1], 10)
+    }
+
+    // Last-ditch description parse: "X Followers · Y Tracks"
+    const desc = meta['og:description'] ?? ''
+    if (stats.followers === null) {
+      const f = desc.match(/([\d.,]+[KMB]?)\s+Followers/i)
+      if (f) stats.followers = parseHumanNumber(f[1])
+    }
+    if (stats.tracks === null) {
+      const t = desc.match(/(\d[\d,]*)\s+tracks?/i)
+      if (t) stats.tracks = parseInt(t[1].replace(/,/g, ''), 10)
+    }
+  } catch (err) {
+    console.warn('[scrapeSoundCloud] HTML scrape failed:', err)
+  }
+
+  console.log('[scrapeSoundCloud]', JSON.stringify({ profileId, displayName, ...stats }))
 
   return {
     platform:    'soundcloud',
     profileId,
-    displayName: (musicGroup?.name as string | undefined) ?? meta['og:title']?.split(/[—|]/)[0]?.trim() ?? null,
+    displayName,
     stats,
     topItems:    [],
-    imageUrl:    (musicGroup?.image as string | undefined) ?? meta['og:image'] ?? null,
-    rawMeta:     meta,
+    imageUrl,
+    rawMeta,
   }
 }
 
