@@ -19,29 +19,28 @@ interface PlanTier {
   current?: boolean
 }
 
-const PLANS: PlanTier[] = [
+const BASE_PLANS: Omit<PlanTier, 'current'>[] = [
   {
     id: "free",
     name: "Starter",
     price: "$0",
     period: "forever",
-    features: ["Basic dashboard", "1 release", "Community access"],
+    features: ["Basic dashboard", "1 release", "5 uP messages/day", "No iMessage"],
   },
   {
     id: "pro",
     name: "Pro",
     price: "$29",
     period: "month",
-    features: ["Unlimited releases", "AI rollout planner", "Analytics", "Team (3 seats)"],
+    features: ["Unlimited releases", "uP iMessage + 100/day", "Real-time analytics", "Playlist pitching"],
     badge: "Popular",
-    current: true,
   },
   {
     id: "agency",
-    name: "Agency",
-    price: "$99",
+    name: "Growth",
+    price: "$55",
     period: "month",
-    features: ["Everything in Pro", "Unlimited team", "Priority AI", "White-label"],
+    features: ["Everything in Pro", "uP 500 msgs/day", "Team (3 seats)", "Influencer network"],
     badge: "Best Value",
   },
 ]
@@ -82,6 +81,41 @@ export function GlassAccountSettingsCard({ className }: { className?: string }) 
       setPortalMsg('Network error — try again in a moment.')
     } finally {
       setPortalLoading(false)
+    }
+  }
+
+  const [upgradingTo, setUpgradingTo] = useState<string | null>(null)
+  async function upgradeTo(planId: string) {
+    if (!user) return
+    const tier = planId === 'agency' ? 'growth' : planId === 'pro' ? 'pro' : null
+    if (!tier) return
+    setUpgradingTo(planId)
+    setPortalMsg(null)
+    try {
+      const res = await fetch('/.netlify/functions/create-checkout-session', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId:    user.id,
+          tier,
+          returnUrl: window.location.href + '?upgraded=1',
+          cancelUrl: window.location.href,
+        }),
+      })
+      const data = await res.json()
+      if (data.ok && data.url) {
+        window.location.href = data.url
+        return
+      }
+      setPortalMsg(
+        data.error === 'not_configured'
+          ? "Checkout isn't connected yet — Stripe keys need to be added on the server."
+          : data.message ?? 'Could not start checkout.'
+      )
+    } catch {
+      setPortalMsg('Network error — try again.')
+    } finally {
+      setUpgradingTo(null)
     }
   }
 
@@ -182,41 +216,48 @@ export function GlassAccountSettingsCard({ className }: { className?: string }) 
                             </button>
                           </div>
 
-                          {PLANS.map(plan => (
+                          {BASE_PLANS.map(basePlan => {
+                            const rowTier =
+                              basePlan.id === 'agency' ? 'growth' :
+                              basePlan.id === 'pro'    ? 'pro'    :
+                                                          'free'
+                            const planRow = { ...basePlan, current: plan.tier === rowTier } as PlanTier
+                            const isCurrent = planRow.current
+                            return (
                             <motion.div
-                              key={plan.id}
+                              key={planRow.id}
                               initial={{ opacity: 0, y: 6 }}
                               animate={{ opacity: 1, y: 0 }}
                               className={cn(
                                 "relative p-5 rounded-2xl border transition-all",
-                                plan.current
+                                isCurrent
                                   ? "border-[#FFD700]/30 bg-[#FFD700]/5"
                                   : "border-white/5 bg-zinc-900/30 hover:border-white/10"
                               )}
                             >
-                              {plan.badge && (
+                              {planRow.badge && (
                                 <div className="absolute top-3 right-3">
                                   <Badge className="text-[9px] font-black uppercase tracking-wide bg-[#FFD700] text-black border-0">
-                                    {plan.badge}
+                                    {planRow.badge}
                                   </Badge>
                                 </div>
                               )}
                               <div className="flex items-start justify-between gap-4">
                                 <div>
                                   <div className="flex items-center gap-2 mb-1">
-                                    <p className="text-white font-black text-sm uppercase tracking-wide">{plan.name}</p>
-                                    {plan.current && (
+                                    <p className="text-white font-black text-sm uppercase tracking-wide">{planRow.name}</p>
+                                    {isCurrent && (
                                       <span className="flex items-center gap-1 text-[9px] font-black uppercase text-[#FFD700]">
                                         <Check size={9} /> Current
                                       </span>
                                     )}
                                   </div>
                                   <div className="flex items-baseline gap-1 mb-3">
-                                    <span className="text-2xl font-black text-white">{plan.price}</span>
-                                    <span className="text-white/30 text-xs font-medium">/{plan.period}</span>
+                                    <span className="text-2xl font-black text-white">{planRow.price}</span>
+                                    <span className="text-white/30 text-xs font-medium">/{planRow.period}</span>
                                   </div>
                                   <ul className="space-y-1">
-                                    {plan.features.map((f, i) => (
+                                    {planRow.features.map((f, i) => (
                                       <li key={i} className="flex items-center gap-2 text-white/40 text-[11px] font-medium">
                                         <div className="w-1 h-1 rounded-full bg-[#FFD700]/50 shrink-0" />
                                         {f}
@@ -225,13 +266,22 @@ export function GlassAccountSettingsCard({ className }: { className?: string }) 
                                   </ul>
                                 </div>
                               </div>
-                              {!plan.current && (
-                                <button className="mt-4 w-full py-2.5 rounded-xl border border-[#FFD700]/20 text-[#FFD700] text-[10px] font-black uppercase tracking-widest hover:bg-[#FFD700]/10 transition-colors flex items-center justify-center gap-2">
-                                  Upgrade <ChevronRight size={12} />
+                              {!isCurrent && planRow.id !== 'free' && (
+                                <button
+                                  onClick={() => upgradeTo(planRow.id)}
+                                  disabled={upgradingTo === planRow.id}
+                                  className="mt-4 w-full py-2.5 rounded-xl border border-[#FFD700]/20 text-[#FFD700] text-[10px] font-black uppercase tracking-widest hover:bg-[#FFD700]/10 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                  {upgradingTo === planRow.id ? (
+                                    <><Loader2 size={11} className="animate-spin" /> Redirecting…</>
+                                  ) : (
+                                    <>Upgrade to {planRow.name} <ChevronRight size={12} /></>
+                                  )}
                                 </button>
                               )}
                             </motion.div>
-                          ))}
+                            )
+                          })}
                         </div>
                       )}
 

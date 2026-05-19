@@ -93,10 +93,10 @@ export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
                   <ToneSelectionOnboarding onComplete={handleToneComplete} loading={saving} />
                 </motion.div>
               )}
-              {step === 'plan' && user?.id && (
+              {step === 'plan' && (
                 <motion.div key="plan" className="w-full flex justify-center">
                   <PlanSelectionOnboarding
-                    userId={user.id}
+                    userId={user?.id ?? ''}
                     artistName={profileData?.artistName}
                     onComplete={handlePlanComplete}
                   />
