@@ -309,12 +309,17 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
             <ul className="space-y-1 mt-3">
               {latest.top_items.slice(0, 5).map((t, i) => (
                 <li key={i} className="flex items-center gap-2.5 p-2 rounded-lg bg-zinc-950/40 border border-white/5">
-                  <div className="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+                  <div className="w-7 h-7 rounded bg-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
                     {t.image
                       ? <img src={t.image} alt="" className="w-full h-full object-cover" />
                       : <span className="text-white/30 text-[9px] font-black">{i + 1}</span>}
                   </div>
-                  <span className="text-white text-xs font-medium flex-1 truncate">{t.name}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-xs font-medium truncate">{t.name}</p>
+                    {t.subtitle && (
+                      <p className={`text-[10px] font-bold mt-0.5 ${meta.accent}`}>{t.subtitle}</p>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>

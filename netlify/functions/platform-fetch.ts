@@ -200,9 +200,15 @@ async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
   let topItems: ScrapeResult['topItems'] = []
   let rawMeta: Record<string, string> = {}
 
-  // ─── PRIMARY: Jina-rendered HTML (works without any API keys) ──────────
+  // ─── PRIMARY: Jina-rendered HTML + markdown (no API keys needed) ────────
+  let trackPlays: number[] = []
+  let trackNames: string[] = []
+  let trackImages: Array<string | null> = []
   try {
-    const html = await htmlOf(`https://open.spotify.com/artist/${profileId}`)
+    const [html, md] = await Promise.all([
+      htmlOf(`https://open.spotify.com/artist/${profileId}`),
+      markdownOf(`https://open.spotify.com/artist/${profileId}`),
+    ])
     const meta = parseMeta(html)
     rawMeta = meta
 
@@ -210,16 +216,35 @@ async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
     const ml = html.match(/([\d,]+)\s+monthly\s+listeners/i)
     if (ml) monthlyListeners = parseInt(ml[1].replace(/,/g, ''), 10)
 
-    // Artist name
+    // Artist name from <title>
     const titleMatch = html.match(/<title>([^|<]+)\s*\|\s*Spotify<\/title>/i)
     if (titleMatch) displayName = titleMatch[1].trim()
 
     // og:image
     if (meta['og:image']) imageUrl = meta['og:image']
 
-    // Genres show up as `genre` chips — parse from anchor labels
+    // Genres
     const genreMatches = [...html.matchAll(/<a[^>]+href="\/genre\/[^"]+"[^>]*>([^<]+)<\/a>/gi)]
     if (genreMatches.length) genres = genreMatches.map(g => g[1].trim()).slice(0, 3)
+
+    // Track names via aria-label="Play X by Y" — first 5 = popular tracks
+    const ariaMatches = [...html.matchAll(/aria-label="Play ([^"]+?)(?: by [^"]+)?"/gi)]
+    trackNames = ariaMatches
+      .map(m => m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').trim())
+      .slice(0, 5)
+
+    // Play counts — markdown lists them right after the "## Popular" section
+    // as standalone numeric lines (1,090,459 / 204,231 / etc.)
+    const popularBlock = md.split(/## Popular/i)[1]?.split(/##/)[0] ?? ''
+    const numberLines = popularBlock.match(/(?:^|\n)\s*([\d,]{3,})\s*(?:\n|$)/g) ?? []
+    trackPlays = numberLines
+      .map(s => parseInt(s.replace(/[^\d]/g, ''), 10))
+      .filter(n => Number.isFinite(n) && n > 100)
+      .slice(0, 5)
+
+    // Track cover images from the Popular block
+    const imgMatches = [...popularBlock.matchAll(/!\[Image \d+\]\((https?:\/\/i\.scdn\.co\/image\/[^)]+)\)/g)]
+    trackImages = imgMatches.map(m => m[1]).slice(0, 5)
   } catch (err) {
     console.warn('[scrapeSpotify] Jina fetch failed:', err)
   }
@@ -269,6 +294,21 @@ async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
     } catch (err) {
       console.warn('[scrapeSpotify] Spotify API call failed:', err)
     }
+  }
+
+  // If the API path didn't fill topItems, build them from Jina-scraped data
+  if (topItems.length === 0 && trackNames.length > 0) {
+    topItems = trackNames.map((name, i) => ({
+      name,
+      image:    trackImages[i] ?? null,
+      subtitle: trackPlays[i] ? `${trackPlays[i].toLocaleString()} plays` : null,
+    }))
+  } else if (topItems.length > 0 && trackPlays.length > 0) {
+    // API gave us names+images; enrich with the play counts we scraped
+    topItems = topItems.map((t, i) => ({
+      ...t,
+      subtitle: trackPlays[i] ? `${trackPlays[i].toLocaleString()} plays` : t.subtitle,
+    }))
   }
 
   console.log('[scrapeSpotify]', JSON.stringify({
@@ -363,6 +403,26 @@ async function scrapeSoundCloud(profileId: string): Promise<ScrapeResult> {
     if (tHuman) stats.tracks = parseHumanNumber(tHuman[1])
   }
 
+  // Top tracks with play counts — pattern in markdown:
+  //   [TRACK_NAME](url) PLAYS Like Repost ...
+  const trackPattern = /\[([^\]]+?)\]\((https?:\/\/soundcloud\.com\/[^)]+?)\)\s+([\d.,]+[KMB]?)\s+Like/g
+  const topTracks: Array<{ name: string; subtitle?: string | null }> = []
+  let m: RegExpExecArray | null
+  while ((m = trackPattern.exec(md)) !== null && topTracks.length < 5) {
+    const plays = parseHumanNumber(m[3])
+    topTracks.push({
+      name:     m[1].trim(),
+      subtitle: plays ? `${plays.toLocaleString()} plays` : null,
+    })
+  }
+
+  // Total plays — sum of top track plays as a proxy if not directly exposed
+  if (stats.plays === null && topTracks.length > 0) {
+    // Try matching it explicitly first from a "X plays" or "all-time plays" line
+    const allTime = md.match(/(\d[\d.,]*[KMB]?)\s*(?:all[-\s]?time\s+plays|total\s+plays)/i)
+    if (allTime) stats.plays = parseHumanNumber(allTime[1])
+  }
+
   // oEmbed for thumbnail
   try {
     const oembedRes = await fetch(
@@ -383,7 +443,7 @@ async function scrapeSoundCloud(profileId: string): Promise<ScrapeResult> {
     profileId,
     displayName,
     stats,
-    topItems:    [],
+    topItems:    topTracks,
     imageUrl,
     rawMeta:     {},
   }
