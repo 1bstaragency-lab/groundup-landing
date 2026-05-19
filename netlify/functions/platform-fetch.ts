@@ -144,6 +144,97 @@ function parseHumanNumber(text: string): number | null {
        : raw
 }
 
+// ─── Chartmetric ──────────────────────────────────────────────────────────────
+
+/**
+ * Chartmetric REST API access token.
+ * Requires CHARTMETRIC_REFRESH_TOKEN env var (generated once at app.chartmetric.com
+ * → Settings → API). Access tokens last 1 hour and are cached in-memory.
+ */
+let cachedChartmetricToken: { value: string; expiresAt: number } | null = null
+
+async function getChartmetricToken(): Promise<string | null> {
+  const refreshToken = process.env.CHARTMETRIC_REFRESH_TOKEN ?? ''
+  if (!refreshToken) return null
+
+  if (cachedChartmetricToken && Date.now() < cachedChartmetricToken.expiresAt - 60_000) {
+    return cachedChartmetricToken.value
+  }
+
+  try {
+    const res = await fetch('https://api.chartmetric.com/api/token', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ refreshtoken: refreshToken }),
+    })
+    if (!res.ok) {
+      console.warn('[chartmetric-token] non-OK:', res.status, await res.text())
+      return null
+    }
+    const data = await res.json() as { token: string; expires_in?: number }
+    const ttl = (data.expires_in ?? 3600) * 1000
+    cachedChartmetricToken = { value: data.token, expiresAt: Date.now() + ttl }
+    return data.token
+  } catch (err) {
+    console.warn('[chartmetric-token] fetch error:', err)
+    return null
+  }
+}
+
+/**
+ * Look up a Chartmetric artist by their Spotify ID and return their consolidated
+ * stats across platforms (followers, monthly listeners, popularity, socials).
+ */
+interface ChartmetricArtist {
+  id?:                  number
+  name?:                string
+  image_url?:           string
+  sp_followers?:        number
+  sp_monthly_listeners?:number
+  sp_popularity?:       number
+  cm_artist_rank?:      number
+  code2?:               string
+  cm_statistics?: {
+    sp_monthly_listeners?: number
+    sp_followers?:         number
+    sp_popularity?:        number
+    ins_followers?:        number
+    tiktok_followers?:     number
+    tiktok_likes?:         number
+    soundcloud_followers?: number
+    youtube_subscribers?:  number
+  }
+}
+
+async function getChartmetricByPlatform(
+  platform: 'spotify' | 'soundcloud' | 'tiktok',
+  profileId: string,
+): Promise<ChartmetricArtist | null> {
+  const token = await getChartmetricToken()
+  if (!token) return null
+
+  const path =
+    platform === 'spotify'    ? `/api/artist/spotify/${profileId}` :
+    platform === 'soundcloud' ? `/api/artist/soundcloud/${encodeURIComponent(profileId)}` :
+                                 `/api/artist/tiktok/${encodeURIComponent(profileId)}`
+
+  try {
+    const res = await fetch(`https://api.chartmetric.com${path}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) {
+      console.warn(`[chartmetric:${platform}] non-OK:`, res.status)
+      return null
+    }
+    const data = await res.json() as { obj?: ChartmetricArtist | ChartmetricArtist[] }
+    const obj = Array.isArray(data.obj) ? data.obj[0] : data.obj
+    return obj ?? null
+  } catch (err) {
+    console.warn(`[chartmetric:${platform}] error:`, err)
+    return null
+  }
+}
+
 // ─── Spotify ──────────────────────────────────────────────────────────────────
 
 /**
@@ -296,6 +387,30 @@ async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
     }
   }
 
+  // ─── TERTIARY: Chartmetric API (rich aggregated stats) ─────────────────
+  // If CHARTMETRIC_REFRESH_TOKEN is configured, pull follower/popularity/
+  // monthly-listener counts from chartmetric — works without any Spotify API
+  // setup, useful when scraping + Spotify API both miss numbers.
+  try {
+    const cm = await getChartmetricByPlatform('spotify', profileId)
+    if (cm) {
+      const stats = cm.cm_statistics ?? {}
+      if (monthlyListeners === null) {
+        monthlyListeners = cm.sp_monthly_listeners ?? stats.sp_monthly_listeners ?? null
+      }
+      if (followers === null) {
+        followers = cm.sp_followers ?? stats.sp_followers ?? null
+      }
+      if (popularity === null) {
+        popularity = cm.sp_popularity ?? stats.sp_popularity ?? null
+      }
+      if (!displayName && cm.name) displayName = cm.name
+      if (!imageUrl    && cm.image_url) imageUrl = cm.image_url
+    }
+  } catch (err) {
+    console.warn('[scrapeSpotify] Chartmetric enrich failed:', err)
+  }
+
   // If the API path didn't fill topItems, build them from Jina-scraped data
   if (topItems.length === 0 && trackNames.length > 0) {
     topItems = trackNames.map((name, i) => ({
@@ -436,6 +551,21 @@ async function scrapeSoundCloud(profileId: string): Promise<ScrapeResult> {
     }
   } catch { /* ignore */ }
 
+  // Chartmetric enrichment for SoundCloud follower data
+  try {
+    const cm = await getChartmetricByPlatform('soundcloud', profileId)
+    if (cm) {
+      const cmStats = cm.cm_statistics ?? {}
+      if (stats.followers === null && cmStats.soundcloud_followers) {
+        stats.followers = cmStats.soundcloud_followers
+      }
+      if (!displayName && cm.name) displayName = cm.name
+      if (!imageUrl    && cm.image_url) imageUrl = cm.image_url
+    }
+  } catch (err) {
+    console.warn('[scrapeSoundCloud] Chartmetric enrich failed:', err)
+  }
+
   console.log('[scrapeSoundCloud]', JSON.stringify({ profileId, displayName, ...stats }))
 
   return {
@@ -486,13 +616,30 @@ async function scrapeTikTok(profileId: string): Promise<ScrapeResult> {
     if (l) stats.hearts = parseHumanNumber(l[1])
   }
 
+  let displayName: string | null = meta['og:title']?.replace(/ \(@.*\) on TikTok$/, '') ?? null
+  let imageUrl: string | null = meta['og:image'] ?? null
+
+  // Chartmetric enrichment for TikTok follower / like counts
+  try {
+    const cm = await getChartmetricByPlatform('tiktok', profileId)
+    if (cm) {
+      const cmStats = cm.cm_statistics ?? {}
+      if (stats.followers === null && cmStats.tiktok_followers) stats.followers = cmStats.tiktok_followers
+      if (stats.hearts    === null && cmStats.tiktok_likes)     stats.hearts    = cmStats.tiktok_likes
+      if (!displayName && cm.name) displayName = cm.name
+      if (!imageUrl    && cm.image_url) imageUrl = cm.image_url
+    }
+  } catch (err) {
+    console.warn('[scrapeTikTok] Chartmetric enrich failed:', err)
+  }
+
   return {
     platform:    'tiktok',
     profileId,
-    displayName: meta['og:title']?.replace(/ \(@.*\) on TikTok$/, '') ?? null,
+    displayName,
     stats,
     topItems:    [],
-    imageUrl:    meta['og:image'] ?? null,
+    imageUrl,
     rawMeta:     meta,
   }
 }
