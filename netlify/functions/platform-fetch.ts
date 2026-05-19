@@ -114,36 +114,92 @@ function parseHumanNumber(text: string): number | null {
 // ─── Spotify ──────────────────────────────────────────────────────────────────
 
 async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
-  const html = await htmlOf(`https://open.spotify.com/artist/${profileId}`)
-  const meta = parseMeta(html)
+  // Fetch main + embed in parallel — different sources expose different metrics
+  const [mainHtml, embedHtml] = await Promise.all([
+    htmlOf(`https://open.spotify.com/artist/${profileId}`),
+    htmlOf(`https://open.spotify.com/embed/artist/${profileId}`),
+  ])
+
+  const meta = parseMeta(mainHtml)
   const desc = meta['og:description'] ?? meta['description'] ?? ''
 
-  const ml = desc.match(/([\d,]+)\s+monthly\s+listeners/i)
-  const monthlyListeners = ml ? parseInt(ml[1].replace(/,/g, ''), 10) : null
-
-  // Top tracks via embed page __NEXT_DATA__
+  let monthlyListeners: number | null = null
+  let followers:        number | null = null
+  let displayName: string | null = null
   let topItems: ScrapeResult['topItems'] = []
+  let imageUrl: string | null = meta['og:image'] ?? null
+
+  // ─── Strategy 1: og:description regex ─────────────────
+  const ml1 = desc.match(/([\d,]+)\s+monthly\s+listeners/i)
+  if (ml1) monthlyListeners = parseInt(ml1[1].replace(/,/g, ''), 10)
+
+  // ─── Strategy 2: search anywhere in main HTML ─────────
+  if (monthlyListeners === null) {
+    const m2 = mainHtml.match(/"monthlyListeners"\s*:\s*"?(\d+)/)
+    if (m2) monthlyListeners = parseInt(m2[1], 10)
+  }
+  if (monthlyListeners === null) {
+    const m3 = mainHtml.match(/(\d[\d,]*)\s*monthly\s*listeners/i)
+    if (m3) monthlyListeners = parseInt(m3[1].replace(/,/g, ''), 10)
+  }
+
+  // followers in main HTML
+  const f1 = mainHtml.match(/"followers"\s*:\s*\{?\s*"total"\s*:\s*(\d+)/)
+  if (f1) followers = parseInt(f1[1], 10)
+  if (followers === null) {
+    const f2 = mainHtml.match(/"totalFollowing"\s*:\s*"?(\d+)/)
+    if (f2) followers = parseInt(f2[1], 10)
+  }
+
+  // ─── Strategy 3: parse embed __NEXT_DATA__ JSON ───────
   try {
-    const embed = await htmlOf(`https://open.spotify.com/embed/artist/${profileId}`)
-    const nd = embed.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)
+    const nd = embedHtml.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)
     if (nd) {
       const data = JSON.parse(nd[1])
       const entity = data?.props?.pageProps?.state?.data?.entity ?? {}
+
+      if (entity.name && !displayName) displayName = String(entity.name)
+      if (entity.visualIdentity?.image?.[0]?.url && !imageUrl) imageUrl = String(entity.visualIdentity.image[0].url)
+
+      if (monthlyListeners === null && entity.monthlyListeners) {
+        monthlyListeners = Number(entity.monthlyListeners) || null
+      }
+      if (followers === null && entity.totalFollowing) {
+        followers = Number(entity.totalFollowing) || null
+      }
+
       const tracks = (entity.trackList ?? entity.tracks ?? []) as Array<Record<string, unknown>>
       topItems = tracks.slice(0, 5).map(t => ({
         name:  String(t.title ?? t.name ?? ''),
         image: ((t.albumOfTrack as Record<string, unknown>)?.coverArt as { sources?: Array<{ url: string }> })?.sources?.[0]?.url ?? null,
       })).filter(t => t.name)
     }
-  } catch { /* ignore */ }
+  } catch (err) {
+    console.warn('[scrapeSpotify] embed parse failed:', err)
+  }
+
+  // ─── Strategy 4: scan embed HTML free-text for metrics ─
+  if (monthlyListeners === null) {
+    const m4 = embedHtml.match(/"monthlyListeners"\s*:\s*"?(\d+)/)
+    if (m4) monthlyListeners = parseInt(m4[1], 10)
+  }
+  if (followers === null) {
+    const f3 = embedHtml.match(/"totalFollowing"\s*:\s*"?(\d+)/)
+    if (f3) followers = parseInt(f3[1], 10)
+  }
+
+  // Name fallback
+  if (!displayName) displayName = meta['og:title']?.split(' | Spotify')[0]?.trim() ?? null
+
+  console.log('[scrapeSpotify]', JSON.stringify({ profileId, displayName, monthlyListeners, followers, topItemsCount: topItems.length }))
 
   return {
     platform:    'spotify',
     profileId,
-    displayName: meta['og:title']?.split(' | Spotify')[0] ?? null,
-    stats:       { monthlyListeners },
+    displayName,
+    stats:       { monthlyListeners, followers },
     topItems,
-    imageUrl:    meta['og:image'] ?? null,
+    imageUrl,
     rawMeta:     meta,
   }
 }
@@ -305,6 +361,7 @@ export const handler: Handler = async (event) => {
     }
   }
 
+  let saveWarnings: string[] = []
   if (SUPABASE_URL && SUPABASE_KEY) {
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
     const urlColumn =
@@ -313,11 +370,16 @@ export const handler: Handler = async (event) => {
       detected.platform === 'tiktok'      ? 'tiktok_url'      :
                                             'spotify_url'
 
-    await supabase.from('artist_preferences')
-      .update({ [urlColumn]: url })
-      .eq('user_id', userId)
+    // Upsert so a missing artist_preferences row still gets created
+    const { error: prefsErr } = await supabase
+      .from('artist_preferences')
+      .upsert({ user_id: userId, [urlColumn]: url }, { onConflict: 'user_id' })
+    if (prefsErr) {
+      console.error(`[platform-fetch] artist_preferences upsert error:`, prefsErr)
+      saveWarnings.push(`URL not bound: ${prefsErr.message}`)
+    }
 
-    await supabase.from('platform_snapshots').insert({
+    const { error: snapErr } = await supabase.from('platform_snapshots').insert({
       user_id:      userId,
       platform:     result.platform,
       profile_id:   result.profileId,
@@ -327,11 +389,15 @@ export const handler: Handler = async (event) => {
       image_url:    result.imageUrl,
       raw_meta:     result.rawMeta,
     })
+    if (snapErr) {
+      console.error(`[platform-fetch] platform_snapshots insert error:`, snapErr)
+      saveWarnings.push(`Snapshot not stored: ${snapErr.message}`)
+    }
   }
 
   return {
     statusCode: 200,
     headers: { ...CORS, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ok: true, data: result }),
+    body: JSON.stringify({ ok: true, data: result, warnings: saveWarnings.length ? saveWarnings : undefined }),
   }
 }

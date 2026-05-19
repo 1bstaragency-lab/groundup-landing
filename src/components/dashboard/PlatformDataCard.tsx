@@ -92,7 +92,10 @@ function statTiles(platform: PlatformId, snap: Snapshot): StatTile[] {
   const s = snap.stats ?? {}
   switch (platform) {
     case 'spotify':
-      return [{ label: 'Monthly Listeners', value: s.monthlyListeners as number | null }]
+      return [
+        { label: 'Monthly Listeners', value: s.monthlyListeners as number | null },
+        { label: 'Followers',         value: s.followers        as number | null },
+      ]
     case 'apple_music':
       return [{ label: 'Genre', value: (s.genre as string) ?? '—' }]
     case 'soundcloud':
@@ -130,6 +133,25 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
           .order('fetched_at', { ascending: false }).limit(1).maybeSingle(),
       ])
       if (cancelled) return
+
+      // If the column doesn't exist yet, surface that clearly so the user runs SQL
+      if (prefsRes.error) {
+        const msg = String(prefsRes.error.message ?? prefsRes.error)
+        if (/column|does not exist|schema/i.test(msg)) {
+          setError(`Schema missing — run the platform_snapshots SQL migration in Supabase to enable link binding.`)
+        } else {
+          console.warn(`[${platform}] prefs load error:`, msg)
+        }
+      }
+      if (snapRes.error) {
+        const msg = String(snapRes.error.message ?? snapRes.error)
+        if (/relation|does not exist|table/i.test(msg)) {
+          setError(`Schema missing — run the platform_snapshots SQL migration in Supabase to enable link binding.`)
+        } else {
+          console.warn(`[${platform}] snapshot load error:`, msg)
+        }
+      }
+
       const u = (prefsRes.data as Record<string, string> | null)?.[meta.urlField] ?? ''
       setSavedUrl(u)
       setUrl(u)
@@ -163,6 +185,9 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
           image_url:    data.data.imageUrl,
           fetched_at:   new Date().toISOString(),
         })
+        if (Array.isArray(data.warnings) && data.warnings.length) {
+          setError(`Stored snapshot, but: ${data.warnings.join(' · ')}`)
+        }
       }
     } catch {
       setError('Network error — try again.')
@@ -190,9 +215,16 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
             <Music2 size={16} />
           </div>
           <div className="min-w-0">
-            <p className={`${meta.accent} text-[10px] font-black uppercase tracking-[0.3em]`}>{meta.label}</p>
+            <div className="flex items-center gap-1.5">
+              <p className={`${meta.accent} text-[10px] font-black uppercase tracking-[0.3em]`}>{meta.label}</p>
+              {savedUrl && (
+                <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-green-400 bg-green-500/10 border border-green-500/20 px-1.5 py-0.5 rounded-full">
+                  <Check size={8} strokeWidth={3} /> Linked
+                </span>
+              )}
+            </div>
             <h3 className="text-white font-black text-base sm:text-lg tracking-tighter truncate">
-              {latest?.display_name ?? 'Not connected'}
+              {latest?.display_name ?? (savedUrl ? 'Syncing…' : 'Not connected')}
             </h3>
           </div>
         </div>
