@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
 import { TrendingUp, Music2, Share2, Play, ExternalLink, BarChart2, Headphones, Mic2, MessageCircle, Radio } from 'lucide-react';
 import { PlatformStreamOverview } from '../ui/platform-stream-overview';
+import { SpotifyDataCard } from './SpotifyDataCard';
+import { useAuth } from '../../hooks/useAuth';
 
 interface StatCardProps {
   label: string;
@@ -107,19 +109,23 @@ const PLATFORMS = [
 ];
 
 export function AnalyticsSection() {
+  const { user } = useAuth()
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl lg:text-5xl font-black text-white tracking-tighter uppercase mb-2">Analytics</h1>
-          <p className="text-white/30 text-sm font-bold">Connect your platforms to see real-time data.</p>
+          <p className="text-white/30 text-sm font-bold">Paste your platform link → we pull live public data.</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-zinc-900/60 border border-white/5 rounded-2xl">
           <BarChart2 size={14} className="text-[#FFD700]" />
-          <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Live when connected</span>
+          <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Live</span>
         </div>
       </div>
+
+      {/* Spotify link → public data */}
+      {user && <SpotifyDataCard userId={user.id} />}
 
       {/* Platform Stream Overview */}
       <div className="bg-zinc-900/40 border border-white/5 rounded-3xl p-6 backdrop-blur-xl">
