@@ -128,9 +128,8 @@ export function AnalyticsSection() {
       {user && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <PlatformDataCard userId={user.id} platform="spotify" />
-          <PlatformDataCard userId={user.id} platform="apple_music" />
           <PlatformDataCard userId={user.id} platform="soundcloud" />
-          <PlatformDataCard userId={user.id} platform="tiktok" />
+          <PlatformDataCard userId={user.id} platform="youtube" />
         </div>
       )}
 

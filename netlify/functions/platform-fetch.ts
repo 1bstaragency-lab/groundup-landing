@@ -26,7 +26,7 @@ const UA =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 ' +
   '(KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36'
 
-type Platform = 'spotify' | 'apple_music' | 'soundcloud' | 'tiktok'
+type Platform = 'spotify' | 'soundcloud' | 'youtube'
 
 interface ScrapeResult {
   platform:     Platform
@@ -46,16 +46,18 @@ function detectPlatform(url: string): { platform: Platform; profileId: string } 
   let m = u.match(/(?:spotify[.:](?:com\/(?:[a-z-]+\/)?)?artist[/:])([a-zA-Z0-9]{16,32})/i)
   if (m) return { platform: 'spotify', profileId: m[1] }
 
-  m = u.match(/music\.apple\.com\/[a-z]{2}\/artist\/[^/]+\/(\d+)/i)
-  if (m) return { platform: 'apple_music', profileId: m[1] }
-
   m = u.match(/soundcloud\.com\/([a-z0-9_\-.]+)(?:\/|$|\?)/i)
   if (m && !['discover', 'search', 'stream', 'you'].includes(m[1].toLowerCase())) {
     return { platform: 'soundcloud', profileId: m[1] }
   }
 
-  m = u.match(/tiktok\.com\/@([a-zA-Z0-9_.]+)/i)
-  if (m) return { platform: 'tiktok', profileId: m[1] }
+  // YouTube — channel (/channel/UCxxx), handle (/@xxx), legacy (/c/xxx, /user/xxx)
+  m = u.match(/youtube\.com\/channel\/(UC[a-zA-Z0-9_\-]+)/i)
+  if (m) return { platform: 'youtube', profileId: m[1] }
+  m = u.match(/youtube\.com\/@([a-zA-Z0-9_\-.]+)/i)
+  if (m) return { platform: 'youtube', profileId: `@${m[1]}` }
+  m = u.match(/youtube\.com\/(?:c|user)\/([a-zA-Z0-9_\-]+)/i)
+  if (m) return { platform: 'youtube', profileId: `@${m[1]}` }
 
   return null
 }
@@ -239,17 +241,18 @@ async function chartmetricGet(path: string, token: string): Promise<unknown | nu
 }
 
 async function getChartmetricByPlatform(
-  platform: 'spotify' | 'soundcloud' | 'tiktok' | 'apple_music',
+  platform: 'spotify' | 'soundcloud' | 'youtube',
   profileId: string,
 ): Promise<ChartmetricArtist | null> {
   const token = await getChartmetricToken()
   if (!token) return null
 
+  // For YouTube, profileId is either a UC... channel ID or @handle.
+  // Chartmetric supports lookups by channel ID via /api/artist/youtube/{channelId}.
   const findPath =
-    platform === 'spotify'     ? `/api/artist/spotify/${profileId}` :
-    platform === 'soundcloud'  ? `/api/artist/soundcloud/${encodeURIComponent(profileId)}` :
-    platform === 'tiktok'      ? `/api/artist/tiktok/${encodeURIComponent(profileId)}` :
-                                  `/api/artist/itunes/${profileId}`
+    platform === 'spotify'    ? `/api/artist/spotify/${profileId}` :
+    platform === 'soundcloud' ? `/api/artist/soundcloud/${encodeURIComponent(profileId)}` :
+                                 `/api/artist/youtube/${encodeURIComponent(profileId.replace(/^@/, ''))}`
 
   // Step 1: resolve to chartmetric artist ID
   const findRes = await chartmetricGet(findPath, token) as { obj?: ChartmetricArtist | ChartmetricArtist[] } | null
@@ -269,56 +272,9 @@ async function getChartmetricByPlatform(
 
 // ─── Spotify ──────────────────────────────────────────────────────────────────
 
-/**
- * Spotify Client Credentials flow — server-to-server.
- * NOT user OAuth. Requires SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET env vars
- * (created once in a Spotify developer app at developer.spotify.com).
- * Token cached in-memory across warm invocations.
- */
-let cachedSpotifyToken: { value: string; expiresAt: number } | null = null
-
-async function getSpotifyToken(): Promise<string | null> {
-  const clientId     = process.env.SPOTIFY_CLIENT_ID     ?? ''
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET ?? ''
-  if (!clientId || !clientSecret) return null
-
-  // Reuse cached token while valid (subtract 60s safety margin)
-  if (cachedSpotifyToken && Date.now() < cachedSpotifyToken.expiresAt - 60_000) {
-    return cachedSpotifyToken.value
-  }
-
-  try {
-    const basic = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
-    const res = await fetch('https://accounts.spotify.com/api/token', {
-      method:  'POST',
-      headers: {
-        'Authorization': `Basic ${basic}`,
-        'Content-Type':  'application/x-www-form-urlencoded',
-      },
-      body: 'grant_type=client_credentials',
-    })
-    if (!res.ok) {
-      console.warn('[spotify-token] non-OK:', res.status, await res.text())
-      return null
-    }
-    const data = await res.json() as { access_token: string; expires_in: number }
-    cachedSpotifyToken = {
-      value:     data.access_token,
-      expiresAt: Date.now() + (data.expires_in * 1000),
-    }
-    return data.access_token
-  } catch (err) {
-    console.warn('[spotify-token] fetch error:', err)
-    return null
-  }
-}
-
 async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
   let displayName: string | null = null
   let imageUrl:    string | null = null
-  let followers:   number | null = null
-  let popularity:  number | null = null
-  let genres:      string[] = []
   let monthlyListeners: number | null = null
   let topItems: ScrapeResult['topItems'] = []
   let rawMeta: Record<string, string> = {}
@@ -346,10 +302,6 @@ async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
     // og:image
     if (meta['og:image']) imageUrl = meta['og:image']
 
-    // Genres
-    const genreMatches = [...html.matchAll(/<a[^>]+href="\/genre\/[^"]+"[^>]*>([^<]+)<\/a>/gi)]
-    if (genreMatches.length) genres = genreMatches.map(g => g[1].trim()).slice(0, 3)
-
     // Track names via aria-label="Play X by Y" — first 5 = popular tracks
     const ariaMatches = [...html.matchAll(/aria-label="Play ([^"]+?)(?: by [^"]+)?"/gi)]
     trackNames = ariaMatches
@@ -372,80 +324,19 @@ async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
     console.warn('[scrapeSpotify] Jina fetch failed:', err)
   }
 
-  // ─── SECONDARY: Client Credentials API for richer data when configured ──
-  const token = await getSpotifyToken()
-  if (token) {
+  // Chartmetric fallback for monthly listeners only (if Jina parse missed it)
+  if (monthlyListeners === null) {
     try {
-      const [artistRes, tracksRes] = await Promise.all([
-        fetch(`https://api.spotify.com/v1/artists/${profileId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`https://api.spotify.com/v1/artists/${profileId}/top-tracks?market=US`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ])
-
-      if (artistRes.ok) {
-        const a = await artistRes.json() as {
-          name?: string
-          images?: Array<{ url: string }>
-          followers?: { total: number }
-          popularity?: number
-          genres?: string[]
-        }
-        displayName = a.name ?? null
-        imageUrl    = a.images?.[0]?.url ?? null
-        followers   = a.followers?.total ?? null
-        popularity  = typeof a.popularity === 'number' ? a.popularity : null
-        genres      = a.genres ?? []
-      } else {
-        console.warn('[scrapeSpotify] artist API non-OK:', artistRes.status)
-      }
-
-      if (tracksRes.ok) {
-        const t = await tracksRes.json() as {
-          tracks?: Array<{ name: string; album?: { images?: Array<{ url: string }> }; popularity?: number }>
-        }
-        topItems = (t.tracks ?? []).slice(0, 5).map(track => ({
-          name:     track.name,
-          image:    track.album?.images?.[0]?.url ?? null,
-          subtitle: typeof track.popularity === 'number' ? `Popularity ${track.popularity}` : null,
-        }))
-      } else {
-        console.warn('[scrapeSpotify] top-tracks API non-OK:', tracksRes.status)
+      const cm = await getChartmetricByPlatform('spotify', profileId)
+      if (cm) {
+        const stats = cm.cm_statistics ?? {}
+        if (stats.sp_monthly_listeners) monthlyListeners = stats.sp_monthly_listeners
+        if (!displayName && cm.name)      displayName = cm.name
+        if (!imageUrl    && cm.image_url) imageUrl    = cm.image_url
       }
     } catch (err) {
-      console.warn('[scrapeSpotify] Spotify API call failed:', err)
+      console.warn('[scrapeSpotify] Chartmetric enrich failed:', err)
     }
-  }
-
-  // ─── TERTIARY: Chartmetric API (rich aggregated stats) ─────────────────
-  let cmRank: number | null = null
-  let cmScore: number | null = null
-  let country: string | null = null
-  try {
-    const cm = await getChartmetricByPlatform('spotify', profileId)
-    if (cm) {
-      const stats = cm.cm_statistics ?? {}
-      if (monthlyListeners === null) monthlyListeners = stats.sp_monthly_listeners ?? null
-      if (followers        === null) followers        = stats.sp_followers ?? null
-      if (popularity       === null) popularity       = stats.sp_popularity ?? null
-      if (!displayName && cm.name)      displayName = cm.name
-      if (!imageUrl    && cm.image_url) imageUrl    = cm.image_url
-      cmRank  = cm.cm_artist_rank  ?? null
-      cmScore = cm.cm_artist_score ?? null
-      country = cm.code2 ?? null
-
-      // Enrich genres from Chartmetric if Jina didn't get any
-      if (genres.length === 0 && Array.isArray(cm.spotify_genres)) {
-        genres = cm.spotify_genres
-          .map(g => typeof g === 'string' ? g : g.name)
-          .filter(Boolean)
-          .slice(0, 3)
-      }
-    }
-  } catch (err) {
-    console.warn('[scrapeSpotify] Chartmetric enrich failed:', err)
   }
 
   // If the API path didn't fill topItems, build them from Jina-scraped data
@@ -464,87 +355,17 @@ async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
   }
 
   console.log('[scrapeSpotify]', JSON.stringify({
-    profileId, displayName, followers, monthlyListeners, popularity, genres: genres.length, tracks: topItems.length,
+    profileId, displayName, monthlyListeners, tracks: topItems.length,
   }))
 
   return {
     platform:    'spotify',
     profileId,
     displayName,
-    stats:       {
-      monthlyListeners,
-      followers,
-      popularity,
-      genres:  genres.length > 0 ? genres.slice(0, 3).join(', ') : null,
-      cmRank,
-      cmScore,
-      country,
-    },
+    stats:       { monthlyListeners },
     topItems,
     imageUrl,
     rawMeta,
-  }
-}
-
-// ─── Apple Music ──────────────────────────────────────────────────────────────
-
-async function scrapeAppleMusic(profileId: string, originalUrl: string): Promise<ScrapeResult> {
-  let displayName: string | null = null
-  let imageUrl:    string | null = null
-  let genre:       string | null = null
-  let listeners:   number | null = null
-  let subscribers: number | null = null
-  const topItems: ScrapeResult['topItems'] = []
-
-  // ─── Path 1: scrape rendered page for name, genre, top tracks ──────────
-  try {
-    const html = await htmlOf(originalUrl)
-    const meta = parseMeta(html)
-    const ld = parseJsonLd(html)
-
-    const musicGroup = ld.find(j => {
-      const t = j['@type']
-      return t === 'MusicGroup' || (Array.isArray(t) && t.includes('MusicGroup'))
-    }) as Record<string, unknown> | undefined
-
-    displayName = (musicGroup?.name as string | undefined)
-      ?? meta['og:title']?.split(/[—|]/)[0]?.trim() ?? null
-    imageUrl = (musicGroup?.image as string | undefined) ?? meta['og:image'] ?? null
-    genre = (musicGroup?.genre as string | undefined) ?? null
-
-    const tracks = (musicGroup?.track as Array<Record<string, unknown>> | undefined) ?? []
-    for (const t of tracks.slice(0, 5)) {
-      const name = String(t.name ?? '').trim()
-      if (name) topItems.push({ name, image: typeof t.image === 'string' ? t.image : null })
-    }
-  } catch (err) {
-    console.warn('[scrapeAppleMusic] HTML scrape failed:', err)
-  }
-
-  // ─── Path 2: Chartmetric for follower / listener / subscriber numbers ──
-  try {
-    const cm = await getChartmetricByPlatform('apple_music', profileId)
-    if (cm) {
-      const s = cm.cm_statistics ?? {}
-      listeners   = s.am_listeners   ?? null
-      subscribers = s.am_subscribers ?? s.am_followers ?? null
-      if (!displayName && cm.name)      displayName = cm.name
-      if (!imageUrl    && cm.image_url) imageUrl    = cm.image_url
-    }
-  } catch (err) {
-    console.warn('[scrapeAppleMusic] Chartmetric enrich failed:', err)
-  }
-
-  console.log('[scrapeAppleMusic]', JSON.stringify({ profileId, displayName, listeners, subscribers }))
-
-  return {
-    platform:    'apple_music',
-    profileId,
-    displayName,
-    stats:       { genre, listeners, subscribers },
-    topItems,
-    imageUrl,
-    rawMeta:     {},
   }
 }
 
@@ -649,68 +470,77 @@ async function scrapeSoundCloud(profileId: string): Promise<ScrapeResult> {
   }
 }
 
-// ─── TikTok ───────────────────────────────────────────────────────────────────
+// ─── YouTube ──────────────────────────────────────────────────────────────────
 
-async function scrapeTikTok(profileId: string): Promise<ScrapeResult> {
-  const html = await htmlOf(`https://www.tiktok.com/@${profileId}`)
-  const meta = parseMeta(html)
+async function scrapeYouTube(profileId: string): Promise<ScrapeResult> {
+  let displayName: string | null = null
+  let imageUrl:    string | null = null
+  const stats: Record<string, number | null> = { subscribers: null, views: null, videos: null }
+  const topItems: ScrapeResult['topItems'] = []
 
-  const stats: Record<string, number | null> = {
-    followers: null, following: null, hearts: null, videos: null,
-  }
+  // Build canonical channel URL: /channel/UCxxx or /@handle
+  const url = profileId.startsWith('UC')
+    ? `https://www.youtube.com/channel/${profileId}`
+    : `https://www.youtube.com/${profileId.startsWith('@') ? profileId : '@' + profileId}`
 
-  // TikTok embeds SIGI_STATE / __UNIVERSAL_DATA_FOR_REHYDRATION__ JSON
-  const universalMatch = html.match(/<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/)
-  if (universalMatch) {
-    try {
-      const data = JSON.parse(universalMatch[1])
-      const scope = data?.__DEFAULT_SCOPE__ ?? {}
-      const userDetail = scope?.['webapp.user-detail'] ?? {}
-      const userInfo = userDetail?.userInfo ?? {}
-      const userStats = userInfo?.stats ?? {}
-      stats.followers = Number(userStats.followerCount  ?? null) || null
-      stats.following = Number(userStats.followingCount ?? null) || null
-      stats.hearts    = Number(userStats.heartCount     ?? null) || null
-      stats.videos    = Number(userStats.videoCount     ?? null) || null
-    } catch { /* ignore */ }
-  }
-
-  // Fallback: parse the "X Followers · Y Following · Z Likes" og description
-  const desc = meta['og:description'] ?? ''
-  if (stats.followers === null) {
-    const f = desc.match(/([\d.,]+[KMB]?)\s+Followers/i)
-    if (f) stats.followers = parseHumanNumber(f[1])
-  }
-  if (stats.hearts === null) {
-    const l = desc.match(/([\d.,]+[KMB]?)\s+Likes/i)
-    if (l) stats.hearts = parseHumanNumber(l[1])
-  }
-
-  let displayName: string | null = meta['og:title']?.replace(/ \(@.*\) on TikTok$/, '') ?? null
-  let imageUrl: string | null = meta['og:image'] ?? null
-
-  // Chartmetric enrichment for TikTok follower / like counts
+  // ─── Path 1: Jina-rendered channel page ───────────────────────────────
   try {
-    const cm = await getChartmetricByPlatform('tiktok', profileId)
-    if (cm) {
-      const cmStats = cm.cm_statistics ?? {}
-      if (stats.followers === null && cmStats.tiktok_followers) stats.followers = cmStats.tiktok_followers
-      if (stats.hearts    === null && cmStats.tiktok_likes)     stats.hearts    = cmStats.tiktok_likes
-      if (!displayName && cm.name) displayName = cm.name
-      if (!imageUrl    && cm.image_url) imageUrl = cm.image_url
+    const md = await markdownOf(url)
+
+    // Channel name from `Title: NAME - YouTube`
+    const t = md.match(/^Title:\s*(.+?)\s*-\s*YouTube/im)
+    if (t) displayName = t[1].trim()
+
+    // Subscribers — "X.XM subscribers"
+    const subs = md.match(/([\d.,]+[KMB]?)\s+subscribers?/i)
+    if (subs) stats.subscribers = parseHumanNumber(subs[1])
+
+    // Video count — "X videos"
+    const vids = md.match(/(\d[\d,]*)\s+videos?(?:\s|<|$)/i)
+    if (vids) stats.videos = parseInt(vids[1].replace(/,/g, ''), 10)
+
+    // Total views — "X,XXX,XXX views" (often appears in About tab)
+    const views = md.match(/([\d,]+)\s+views?\s*$/im)
+    if (views) stats.views = parseInt(views[1].replace(/,/g, ''), 10)
+
+    // Top videos pattern: [TITLE](url) followed by view count
+    const videoPattern = /\[([^\]]{3,80}?)\]\((https?:\/\/(?:www\.)?youtube\.com\/watch\?v=[^)]+)\)[^\n]*?([\d.,]+[KMB]?)\s+views/gi
+    let m: RegExpExecArray | null
+    while ((m = videoPattern.exec(md)) !== null && topItems.length < 5) {
+      const views = parseHumanNumber(m[3])
+      topItems.push({
+        name:     m[1].trim(),
+        subtitle: views ? `${views.toLocaleString()} views` : null,
+      })
     }
   } catch (err) {
-    console.warn('[scrapeTikTok] Chartmetric enrich failed:', err)
+    console.warn('[scrapeYouTube] Jina fetch failed:', err)
   }
 
+  // ─── Path 2: Chartmetric enrichment ───────────────────────────────────
+  try {
+    const cm = await getChartmetricByPlatform('youtube', profileId)
+    if (cm) {
+      const s = cm.cm_statistics ?? {}
+      if (stats.subscribers === null && s.youtube_subscribers) stats.subscribers = s.youtube_subscribers
+      if (stats.views       === null && s.youtube_views)       stats.views       = s.youtube_views
+      if (!displayName && cm.name)      displayName = cm.name
+      if (!imageUrl    && cm.image_url) imageUrl    = cm.image_url
+    }
+  } catch (err) {
+    console.warn('[scrapeYouTube] Chartmetric enrich failed:', err)
+  }
+
+  console.log('[scrapeYouTube]', JSON.stringify({ profileId, displayName, ...stats }))
+
   return {
-    platform:    'tiktok',
+    platform:    'youtube',
     profileId,
     displayName,
     stats,
-    topItems:    [],
+    topItems,
     imageUrl,
-    rawMeta:     meta,
+    rawMeta:     {},
   }
 }
 
@@ -734,17 +564,16 @@ export const handler: Handler = async (event) => {
     return {
       statusCode: 200,
       headers: { ...CORS, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ok: false, error: 'unknown_platform', message: "We don't recognize that URL — paste a Spotify, Apple Music, SoundCloud, or TikTok link." }),
+      body: JSON.stringify({ ok: false, error: 'unknown_platform', message: "We don't recognize that URL — paste a Spotify, SoundCloud, or YouTube link." }),
     }
   }
 
   let result: ScrapeResult
   try {
     result =
-      detected.platform === 'spotify'     ? await scrapeSpotify(detected.profileId) :
-      detected.platform === 'apple_music' ? await scrapeAppleMusic(detected.profileId, url) :
-      detected.platform === 'soundcloud'  ? await scrapeSoundCloud(detected.profileId) :
-                                            await scrapeTikTok(detected.profileId)
+      detected.platform === 'spotify'    ? await scrapeSpotify(detected.profileId) :
+      detected.platform === 'soundcloud' ? await scrapeSoundCloud(detected.profileId) :
+                                            await scrapeYouTube(detected.profileId)
   } catch (err) {
     console.error(`[platform-fetch:${detected.platform}] scrape error:`, err)
     return {
@@ -758,9 +587,8 @@ export const handler: Handler = async (event) => {
   if (SUPABASE_URL && SUPABASE_KEY) {
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
     const urlColumn =
-      detected.platform === 'apple_music' ? 'apple_music_url' :
-      detected.platform === 'soundcloud'  ? 'soundcloud_url'  :
-      detected.platform === 'tiktok'      ? 'tiktok_url'      :
+      detected.platform === 'soundcloud' ? 'soundcloud_url' :
+      detected.platform === 'youtube'    ? 'youtube_url'    :
                                             'spotify_url'
 
     // Update existing row. If the user has no artist_preferences row yet

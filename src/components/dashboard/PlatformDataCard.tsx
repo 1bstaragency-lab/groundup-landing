@@ -5,14 +5,14 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Music2, Loader2, RefreshCw, Check, ExternalLink, AlertCircle } from "lucide-react"
 import { supabase } from "../../lib/supabaseClient"
 
-export type PlatformId = 'spotify' | 'apple_music' | 'soundcloud' | 'tiktok'
+export type PlatformId = 'spotify' | 'soundcloud' | 'youtube'
 
 interface PlatformMeta {
   label:      string
   accent:     string  // tailwind color suffix e.g. 'green-400'
   border:     string  // border color class
   bg:         string  // accent background
-  urlField:   'spotify_url' | 'apple_music_url' | 'soundcloud_url' | 'tiktok_url'
+  urlField:   'spotify_url' | 'soundcloud_url' | 'youtube_url'
   hint:       string
   placeholder:string
 }
@@ -27,15 +27,6 @@ const META: Record<PlatformId, PlatformMeta> = {
     hint:     'Paste your Spotify artist URL',
     placeholder: 'https://open.spotify.com/artist/...',
   },
-  apple_music: {
-    label: 'Apple Music',
-    accent: 'text-pink-300',
-    border: 'border-pink-500/15',
-    bg:     'bg-pink-500/15 border-pink-500/25',
-    urlField: 'apple_music_url',
-    hint:     'Paste your Apple Music artist URL',
-    placeholder: 'https://music.apple.com/us/artist/.../...',
-  },
   soundcloud: {
     label: 'SoundCloud',
     accent: 'text-orange-400',
@@ -45,14 +36,14 @@ const META: Record<PlatformId, PlatformMeta> = {
     hint:     'Paste your SoundCloud profile URL',
     placeholder: 'https://soundcloud.com/your-handle',
   },
-  tiktok: {
-    label: 'TikTok',
-    accent: 'text-sky-400',
-    border: 'border-sky-500/15',
-    bg:     'bg-sky-500/15 border-sky-500/25',
-    urlField: 'tiktok_url',
-    hint:     'Paste your TikTok profile URL',
-    placeholder: 'https://tiktok.com/@your-handle',
+  youtube: {
+    label: 'YouTube',
+    accent: 'text-red-400',
+    border: 'border-red-500/15',
+    bg:     'bg-red-500/15 border-red-500/25',
+    urlField: 'youtube_url',
+    hint:     'Paste your YouTube channel URL',
+    placeholder: 'https://youtube.com/@your-handle',
   },
 }
 
@@ -94,14 +85,6 @@ function statTiles(platform: PlatformId, snap: Snapshot): StatTile[] {
     case 'spotify':
       return [
         { label: 'Monthly Listeners', value: s.monthlyListeners as number | null },
-        { label: 'Followers',         value: s.followers        as number | null },
-        { label: 'Popularity',        value: (s.popularity as number | null) !== null ? `${s.popularity}/100` : null },
-      ]
-    case 'apple_music':
-      return [
-        { label: 'Listeners',   value: s.listeners   as number | null },
-        { label: 'Subscribers', value: s.subscribers as number | null },
-        { label: 'Genre',       value: (s.genre as string | null) ?? null },
       ]
     case 'soundcloud':
       return [
@@ -109,11 +92,11 @@ function statTiles(platform: PlatformId, snap: Snapshot): StatTile[] {
         { label: 'Plays',     value: s.plays     as number | null },
         { label: 'Tracks',    value: s.tracks    as number | null },
       ]
-    case 'tiktok':
+    case 'youtube':
       return [
-        { label: 'Followers', value: s.followers as number | null },
-        { label: 'Likes',     value: s.hearts    as number | null },
-        { label: 'Videos',    value: s.videos    as number | null },
+        { label: 'Subscribers', value: s.subscribers as number | null },
+        { label: 'Total Views', value: s.views       as number | null },
+        { label: 'Videos',      value: s.videos      as number | null },
       ]
   }
 }
@@ -296,37 +279,6 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
             ))}
           </div>
 
-          {/* Genres (Spotify) */}
-          {platform === 'spotify' && latest.stats?.genres && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {String(latest.stats.genres).split(',').map((g, i) => (
-                <span key={i} className="text-[10px] font-bold uppercase tracking-widest text-white/50 bg-white/5 border border-white/8 px-2 py-1 rounded-full">
-                  {g.trim()}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Chartmetric rank / score / country (Spotify) */}
-          {platform === 'spotify' && (latest.stats?.cmRank || latest.stats?.cmScore || latest.stats?.country) && (
-            <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest">
-              {latest.stats.cmRank && (
-                <span className="text-[#FFD700] bg-[#FFD700]/8 border border-[#FFD700]/20 px-2.5 py-1 rounded-full">
-                  CM Rank #{Number(latest.stats.cmRank).toLocaleString()}
-                </span>
-              )}
-              {latest.stats.cmScore && (
-                <span className="text-white/60 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full">
-                  CM Score {Math.round(Number(latest.stats.cmScore))}
-                </span>
-              )}
-              {latest.stats.country && (
-                <span className="text-white/40 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full">
-                  {String(latest.stats.country)}
-                </span>
-              )}
-            </div>
-          )}
 
 
           {/* Top items (Spotify tracks etc.) */}
