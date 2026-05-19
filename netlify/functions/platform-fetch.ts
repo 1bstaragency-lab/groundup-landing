@@ -86,15 +86,48 @@ function parseJsonLd(html: string): Array<Record<string, unknown>> {
   return out
 }
 
+/**
+ * Fetch a page through Jina AI's free reader proxy. They run real browsers
+ * server-side and return the fully-rendered HTML — bypasses Spotify/SoundCloud/
+ * TikTok bot-detection because the request originates from their browser
+ * infrastructure, not our Netlify IPs.
+ *
+ * No API key needed. Free tier: ~200 req/hr.
+ * Add JINA_API_KEY env var later for higher limits.
+ */
 async function htmlOf(url: string): Promise<string> {
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent':       UA,
-      'Accept':           'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language':  'en-US,en;q=0.9',
-      'Cache-Control':    'no-cache',
-    },
-  })
+  const jinaUrl = `https://r.jina.ai/${url}`
+  const headers: Record<string, string> = {
+    'X-Return-Format': 'html',
+    'User-Agent':      UA,
+  }
+  if (process.env.JINA_API_KEY) {
+    headers['Authorization'] = `Bearer ${process.env.JINA_API_KEY}`
+  }
+  const res = await fetch(jinaUrl, { headers })
+  if (!res.ok) {
+    console.warn(`[htmlOf] Jina returned ${res.status} for ${url} — falling back to direct fetch`)
+    // Best-effort fallback (likely returns minimal HTML but at least we try)
+    const direct = await fetch(url, {
+      headers: {
+        'User-Agent':      UA,
+        'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+    })
+    return direct.text()
+  }
+  return res.text()
+}
+
+/** Fetch as markdown (Jina default — easier text parsing for follower lines etc.) */
+async function markdownOf(url: string): Promise<string> {
+  const jinaUrl = `https://r.jina.ai/${url}`
+  const headers: Record<string, string> = { 'User-Agent': UA }
+  if (process.env.JINA_API_KEY) {
+    headers['Authorization'] = `Bearer ${process.env.JINA_API_KEY}`
+  }
+  const res = await fetch(jinaUrl, { headers })
   return res.text()
 }
 
@@ -166,13 +199,33 @@ async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
   let monthlyListeners: number | null = null
   let topItems: ScrapeResult['topItems'] = []
   let rawMeta: Record<string, string> = {}
-  let setupNote: string | null = null
 
-  // ─── Primary: Client Credentials → official Spotify API ────────────────
-  const token = await getSpotifyToken()
-  if (!token) {
-    setupNote = 'Add SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET in Netlify env vars to pull metrics (5-min setup at developer.spotify.com — no user OAuth needed).'
+  // ─── PRIMARY: Jina-rendered HTML (works without any API keys) ──────────
+  try {
+    const html = await htmlOf(`https://open.spotify.com/artist/${profileId}`)
+    const meta = parseMeta(html)
+    rawMeta = meta
+
+    // Monthly listeners — rendered into HTML by Spotify's React app
+    const ml = html.match(/([\d,]+)\s+monthly\s+listeners/i)
+    if (ml) monthlyListeners = parseInt(ml[1].replace(/,/g, ''), 10)
+
+    // Artist name
+    const titleMatch = html.match(/<title>([^|<]+)\s*\|\s*Spotify<\/title>/i)
+    if (titleMatch) displayName = titleMatch[1].trim()
+
+    // og:image
+    if (meta['og:image']) imageUrl = meta['og:image']
+
+    // Genres show up as `genre` chips — parse from anchor labels
+    const genreMatches = [...html.matchAll(/<a[^>]+href="\/genre\/[^"]+"[^>]*>([^<]+)<\/a>/gi)]
+    if (genreMatches.length) genres = genreMatches.map(g => g[1].trim()).slice(0, 3)
+  } catch (err) {
+    console.warn('[scrapeSpotify] Jina fetch failed:', err)
   }
+
+  // ─── SECONDARY: Client Credentials API for richer data when configured ──
+  const token = await getSpotifyToken()
   if (token) {
     try {
       const [artistRes, tracksRes] = await Promise.all([
@@ -214,40 +267,8 @@ async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
         console.warn('[scrapeSpotify] top-tracks API non-OK:', tracksRes.status)
       }
     } catch (err) {
-      console.warn('[scrapeSpotify] anon API call failed:', err)
+      console.warn('[scrapeSpotify] Spotify API call failed:', err)
     }
-  } else {
-    console.warn('[scrapeSpotify] anon token fetch failed')
-  }
-
-  // ─── Try to extract monthly listeners from kworb.net (community stats) ──
-  // Their /spotify/artist/{id}_songs.html page exposes monthly listeners
-  try {
-    const kw = await fetch(`https://kworb.net/spotify/artist/${profileId}_songs.html`, {
-      headers: { 'User-Agent': UA, 'Accept': 'text/html' },
-    })
-    if (kw.ok) {
-      const kwHtml = await kw.text()
-      const m = kwHtml.match(/([\d,]+)\s*monthly\s*listeners/i)
-      if (m) monthlyListeners = parseInt(m[1].replace(/,/g, ''), 10)
-    }
-  } catch (err) {
-    console.warn('[scrapeSpotify] kworb fallback failed:', err)
-  }
-
-  // ─── Fallback: og meta + embed HTML scan if API failed ─────────────────
-  if (!displayName || followers === null) {
-    try {
-      const mainHtml = await htmlOf(`https://open.spotify.com/artist/${profileId}`)
-      const meta = parseMeta(mainHtml)
-      rawMeta = meta
-      if (!displayName) displayName = meta['og:title']?.split(' | Spotify')[0]?.trim() ?? null
-      if (!imageUrl)    imageUrl    = meta['og:image'] ?? null
-
-      const desc = meta['og:description'] ?? ''
-      const ml = desc.match(/([\d,]+)\s+monthly\s+listeners/i)
-      if (ml && monthlyListeners === null) monthlyListeners = parseInt(ml[1].replace(/,/g, ''), 10)
-    } catch { /* ignore */ }
   }
 
   console.log('[scrapeSpotify]', JSON.stringify({
@@ -263,7 +284,6 @@ async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
       followers,
       popularity,
       genres: genres.length > 0 ? genres.slice(0, 3).join(', ') : null,
-      setupNote,
     },
     topItems,
     imageUrl,
@@ -308,9 +328,42 @@ async function scrapeSoundCloud(profileId: string): Promise<ScrapeResult> {
   const stats: Record<string, number | null> = { followers: null, plays: null, tracks: null }
   let displayName: string | null = null
   let imageUrl:    string | null = null
-  let rawMeta:     Record<string, string> = {}
 
-  // ─── Path 1: oEmbed (always responds, gives basic info) ───────────────
+  // Jina-rendered markdown — SoundCloud's rendered profile page exposes
+  // "Followers 2.34M" / "Tracks 190" / "Following 11" as anchors with
+  // exact counts in the title attribute.
+  let md = ''
+  try {
+    md = await markdownOf(`https://soundcloud.com/${profileId}`)
+  } catch (err) {
+    console.warn('[scrapeSoundCloud] Jina fetch failed:', err)
+  }
+
+  // Title: "# Stream Post Malone music | ..." or "# ARTIST"
+  const titleMatch = md.match(/^Title:\s*Stream\s+([^|]+?)\s+music/im)
+    ?? md.match(/^#\s+Stream\s+([^|]+?)\s+music/im)
+    ?? md.match(/^Title:\s*([^|\n]+)/im)
+  if (titleMatch) displayName = titleMatch[1].trim()
+
+  // Followers — "Followers 2.34M](url "2,341,832 followers")"
+  const fExact = md.match(/"([\d,]+)\s+followers"/i)
+  if (fExact) {
+    stats.followers = parseInt(fExact[1].replace(/,/g, ''), 10)
+  } else {
+    const fHuman = md.match(/Followers\s+([\d.,]+[KMB]?)/i)
+    if (fHuman) stats.followers = parseHumanNumber(fHuman[1])
+  }
+
+  // Tracks — "Tracks 190](url "190 tracks")"
+  const tExact = md.match(/"(\d+)\s+tracks?"/i)
+  if (tExact) {
+    stats.tracks = parseInt(tExact[1], 10)
+  } else {
+    const tHuman = md.match(/Tracks\s+([\d.,]+[KMB]?)/i)
+    if (tHuman) stats.tracks = parseHumanNumber(tHuman[1])
+  }
+
+  // oEmbed for thumbnail
   try {
     const oembedRes = await fetch(
       `https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(`https://soundcloud.com/${profileId}`)}`,
@@ -318,63 +371,10 @@ async function scrapeSoundCloud(profileId: string): Promise<ScrapeResult> {
     )
     if (oembedRes.ok) {
       const o = await oembedRes.json() as { title?: string; author_name?: string; thumbnail_url?: string }
-      displayName = o.author_name ?? o.title ?? null
-      imageUrl    = o.thumbnail_url ?? null
+      if (!displayName) displayName = o.author_name ?? o.title ?? null
+      imageUrl = o.thumbnail_url ?? null
     }
-  } catch (err) {
-    console.warn('[scrapeSoundCloud] oEmbed failed:', err)
-  }
-
-  // ─── Path 2: scrape the public HTML page for follower / play counts ───
-  try {
-    const html = await htmlOf(`https://soundcloud.com/${profileId}`)
-    const meta = parseMeta(html)
-    rawMeta = meta
-    const ld = parseJsonLd(html)
-
-    if (!displayName) displayName = meta['og:title']?.split(/[—|·]/)[0]?.trim() ?? null
-    if (!imageUrl)    imageUrl    = meta['og:image'] ?? null
-
-    const musicGroup = ld.find(j => {
-      const t = j['@type']
-      return t === 'MusicGroup' || t === 'Person' || t === 'ProfilePage'
-    }) as Record<string, unknown> | undefined
-
-    const interactions = (musicGroup?.interactionStatistic as Array<Record<string, unknown>> | undefined) ?? []
-    for (const i of interactions) {
-      const kind = String(((i.interactionType as Record<string, unknown>)?.['@type'] ?? '')).toLowerCase()
-      const count = parseHumanNumber(String(i.userInteractionCount ?? ''))
-      if (kind.includes('follow'))   stats.followers = count
-      if (kind.includes('listen'))   stats.plays     = count
-    }
-
-    // Free-text fallbacks from raw HTML
-    if (stats.followers === null) {
-      const m = html.match(/"followers_count"\s*:\s*(\d+)/)
-      if (m) stats.followers = parseInt(m[1], 10)
-    }
-    if (stats.plays === null) {
-      const m = html.match(/"playback_count"\s*:\s*(\d+)/)
-      if (m) stats.plays = parseInt(m[1], 10)
-    }
-    if (stats.tracks === null) {
-      const m = html.match(/"track_count"\s*:\s*(\d+)/)
-      if (m) stats.tracks = parseInt(m[1], 10)
-    }
-
-    // Last-ditch description parse: "X Followers · Y Tracks"
-    const desc = meta['og:description'] ?? ''
-    if (stats.followers === null) {
-      const f = desc.match(/([\d.,]+[KMB]?)\s+Followers/i)
-      if (f) stats.followers = parseHumanNumber(f[1])
-    }
-    if (stats.tracks === null) {
-      const t = desc.match(/(\d[\d,]*)\s+tracks?/i)
-      if (t) stats.tracks = parseInt(t[1].replace(/,/g, ''), 10)
-    }
-  } catch (err) {
-    console.warn('[scrapeSoundCloud] HTML scrape failed:', err)
-  }
+  } catch { /* ignore */ }
 
   console.log('[scrapeSoundCloud]', JSON.stringify({ profileId, displayName, ...stats }))
 
@@ -385,7 +385,7 @@ async function scrapeSoundCloud(profileId: string): Promise<ScrapeResult> {
     stats,
     topItems:    [],
     imageUrl,
-    rawMeta,
+    rawMeta:     {},
   }
 }
 

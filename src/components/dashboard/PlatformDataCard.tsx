@@ -303,14 +303,6 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
             </div>
           )}
 
-          {/* Setup note (e.g. "add SPOTIFY_CLIENT_ID...") */}
-          {latest.stats?.setupNote && (
-            <div className="mt-3 px-3 py-2.5 rounded-xl bg-[#FFD700]/8 border border-[#FFD700]/25">
-              <p className="text-[#FFD700] text-[10px] font-medium leading-relaxed">
-                ⚙️ {String(latest.stats.setupNote)}
-              </p>
-            </div>
-          )}
 
           {/* Top items (Spotify tracks etc.) */}
           {latest.top_items && latest.top_items.length > 0 && (
