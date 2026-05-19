@@ -95,7 +95,6 @@ function statTiles(platform: PlatformId, snap: Snapshot): StatTile[] {
     case 'youtube':
       return [
         { label: 'Subscribers', value: s.subscribers as number | null },
-        { label: 'Total Views', value: s.views       as number | null },
         { label: 'Videos',      value: s.videos      as number | null },
       ]
   }
