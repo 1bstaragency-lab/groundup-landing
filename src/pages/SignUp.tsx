@@ -3,12 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { SignUpForm } from '../components/auth/SignUpForm'
 import { ArtistProfileForm } from '../components/onboarding/ArtistProfileForm'
 import { ToneSelectionOnboarding } from '../components/onboarding/ToneSelectionOnboarding'
+import { PlanSelectionOnboarding } from '../components/onboarding/PlanSelectionOnboarding'
 import { AuthOrbitPanel } from '../components/auth/AuthOrbitPanel'
 import { EarlyAccessPopup } from '../components/ui/early-access-popup'
 import { useAuth } from '../hooks/useAuth'
 import type { ArtistTone } from '../types/auth.types'
 
-type Step = 'signup' | 'profile' | 'tone'
+type Step = 'signup' | 'profile' | 'tone' | 'plan'
 
 interface SignUpPageProps {
   onComplete?: () => void
@@ -19,21 +20,27 @@ export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
   const { user, saveProfile } = useAuth()
   const [step, setStep] = useState<Step>('signup')
   const [profileData, setProfileData] = useState<{ artistName: string; genre: string; bio: string } | null>(null)
+  const [selectedTone, setSelectedTone] = useState<ArtistTone | null>(null)
   const [saving, setSaving] = useState(false)
   const [showEarlyAccess, setShowEarlyAccess] = useState(false)
 
-  const STEP_NUM: Record<Step, number> = { signup: 1, profile: 2, tone: 3 }
+  const STEP_NUM: Record<Step, number> = { signup: 1, profile: 2, tone: 3, plan: 4 }
 
   async function handleToneComplete(tone: ArtistTone) {
-    if (!profileData) return
+    setSelectedTone(tone)
+    setStep('plan')
+  }
+
+  async function handlePlanComplete(tier: 'free' | 'pro' | 'growth') {
+    if (!profileData || !selectedTone) return
     setSaving(true)
     await saveProfile({
       artist_name: profileData.artistName,
       genre: profileData.genre,
       bio: profileData.bio,
-      tone,
+      tone: selectedTone,
       onboarding_complete: true,
-      plan_tier: 'free',
+      plan_tier: tier === 'free' ? 'free' : tier, // pro/growth set to 'free' until Stripe webhook flips it
     })
     setSaving(false)
     onComplete?.()
@@ -47,7 +54,11 @@ export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
 
         {/* Back button */}
         <button
-          onClick={() => setStep(step === 'tone' ? 'profile' : 'signup')}
+          onClick={() => setStep(
+            step === 'plan'    ? 'tone' :
+            step === 'tone'    ? 'profile' :
+                                 'signup'
+          )}
           className="absolute top-5 left-5 z-20 flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-white hover:border-white/20 transition-all text-[11px] font-black uppercase tracking-widest"
           aria-label="Back"
         >
@@ -59,7 +70,7 @@ export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
 
           {/* Progress */}
           <div className="w-full max-w-xl flex gap-2 mb-16 relative z-10">
-            {[1, 2, 3].map(i => (
+            {[1, 2, 3, 4].map(i => (
               <div
                 key={i}
                 className={`h-1 flex-1 rounded-full transition-all duration-500 ${i <= STEP_NUM[step] ? 'bg-[#FFD700]' : 'bg-white/10'}`}
@@ -80,6 +91,15 @@ export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
               {step === 'tone' && (
                 <motion.div key="tone" className="w-full flex justify-center">
                   <ToneSelectionOnboarding onComplete={handleToneComplete} loading={saving} />
+                </motion.div>
+              )}
+              {step === 'plan' && user?.id && (
+                <motion.div key="plan" className="w-full flex justify-center">
+                  <PlanSelectionOnboarding
+                    userId={user.id}
+                    artistName={profileData?.artistName}
+                    onComplete={handlePlanComplete}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
