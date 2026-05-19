@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { TrendingUp, Music2, Share2, Play, ExternalLink, BarChart2, Headphones, Mic2, MessageCircle, Radio } from 'lucide-react';
 import { PlatformStreamOverview } from '../ui/platform-stream-overview';
-import { SpotifyDataCard } from './SpotifyDataCard';
+import { PlatformDataCard } from './PlatformDataCard';
 import { useAuth } from '../../hooks/useAuth';
 
 interface StatCardProps {
@@ -124,8 +124,15 @@ export function AnalyticsSection() {
         </div>
       </div>
 
-      {/* Spotify link → public data */}
-      {user && <SpotifyDataCard userId={user.id} />}
+      {/* Platform link cards — paste URL, pull live public data */}
+      {user && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <PlatformDataCard userId={user.id} platform="spotify" />
+          <PlatformDataCard userId={user.id} platform="apple_music" />
+          <PlatformDataCard userId={user.id} platform="soundcloud" />
+          <PlatformDataCard userId={user.id} platform="tiktok" />
+        </div>
+      )}
 
       {/* Platform Stream Overview */}
       <div className="bg-zinc-900/40 border border-white/5 rounded-3xl p-6 backdrop-blur-xl">
