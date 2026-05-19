@@ -113,94 +113,130 @@ function parseHumanNumber(text: string): number | null {
 
 // ─── Spotify ──────────────────────────────────────────────────────────────────
 
-async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
-  // Fetch main + embed in parallel — different sources expose different metrics
-  const [mainHtml, embedHtml] = await Promise.all([
-    htmlOf(`https://open.spotify.com/artist/${profileId}`),
-    htmlOf(`https://open.spotify.com/embed/artist/${profileId}`),
-  ])
-
-  const meta = parseMeta(mainHtml)
-  const desc = meta['og:description'] ?? meta['description'] ?? ''
-
-  let monthlyListeners: number | null = null
-  let followers:        number | null = null
-  let displayName: string | null = null
-  let topItems: ScrapeResult['topItems'] = []
-  let imageUrl: string | null = meta['og:image'] ?? null
-
-  // ─── Strategy 1: og:description regex ─────────────────
-  const ml1 = desc.match(/([\d,]+)\s+monthly\s+listeners/i)
-  if (ml1) monthlyListeners = parseInt(ml1[1].replace(/,/g, ''), 10)
-
-  // ─── Strategy 2: search anywhere in main HTML ─────────
-  if (monthlyListeners === null) {
-    const m2 = mainHtml.match(/"monthlyListeners"\s*:\s*"?(\d+)/)
-    if (m2) monthlyListeners = parseInt(m2[1], 10)
-  }
-  if (monthlyListeners === null) {
-    const m3 = mainHtml.match(/(\d[\d,]*)\s*monthly\s*listeners/i)
-    if (m3) monthlyListeners = parseInt(m3[1].replace(/,/g, ''), 10)
-  }
-
-  // followers in main HTML
-  const f1 = mainHtml.match(/"followers"\s*:\s*\{?\s*"total"\s*:\s*(\d+)/)
-  if (f1) followers = parseInt(f1[1], 10)
-  if (followers === null) {
-    const f2 = mainHtml.match(/"totalFollowing"\s*:\s*"?(\d+)/)
-    if (f2) followers = parseInt(f2[1], 10)
-  }
-
-  // ─── Strategy 3: parse embed __NEXT_DATA__ JSON ───────
+/**
+ * Get an anonymous Spotify web access token — same flow used by the public
+ * embed iframes. Lasts ~1 hour. No user OAuth needed.
+ */
+async function getSpotifyAnonToken(): Promise<string | null> {
   try {
-    const nd = embedHtml.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)
-    if (nd) {
-      const data = JSON.parse(nd[1])
-      const entity = data?.props?.pageProps?.state?.data?.entity ?? {}
+    const res = await fetch(
+      'https://open.spotify.com/get_access_token?reason=transport&productType=embed',
+      { headers: { 'User-Agent': UA, 'Accept': 'application/json' } },
+    )
+    if (!res.ok) return null
+    const data = await res.json() as { accessToken?: string }
+    return data.accessToken ?? null
+  } catch {
+    return null
+  }
+}
 
-      if (entity.name && !displayName) displayName = String(entity.name)
-      if (entity.visualIdentity?.image?.[0]?.url && !imageUrl) imageUrl = String(entity.visualIdentity.image[0].url)
+async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
+  let displayName: string | null = null
+  let imageUrl:    string | null = null
+  let followers:   number | null = null
+  let popularity:  number | null = null
+  let genres:      string[] = []
+  let monthlyListeners: number | null = null
+  let topItems: ScrapeResult['topItems'] = []
+  let rawMeta: Record<string, string> = {}
 
-      if (monthlyListeners === null && entity.monthlyListeners) {
-        monthlyListeners = Number(entity.monthlyListeners) || null
+  // ─── Primary: use anonymous web access token + official API ────────────
+  const token = await getSpotifyAnonToken()
+  if (token) {
+    try {
+      const [artistRes, tracksRes] = await Promise.all([
+        fetch(`https://api.spotify.com/v1/artists/${profileId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`https://api.spotify.com/v1/artists/${profileId}/top-tracks?market=US`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ])
+
+      if (artistRes.ok) {
+        const a = await artistRes.json() as {
+          name?: string
+          images?: Array<{ url: string }>
+          followers?: { total: number }
+          popularity?: number
+          genres?: string[]
+        }
+        displayName = a.name ?? null
+        imageUrl    = a.images?.[0]?.url ?? null
+        followers   = a.followers?.total ?? null
+        popularity  = typeof a.popularity === 'number' ? a.popularity : null
+        genres      = a.genres ?? []
+      } else {
+        console.warn('[scrapeSpotify] artist API non-OK:', artistRes.status)
       }
-      if (followers === null && entity.totalFollowing) {
-        followers = Number(entity.totalFollowing) || null
-      }
 
-      const tracks = (entity.trackList ?? entity.tracks ?? []) as Array<Record<string, unknown>>
-      topItems = tracks.slice(0, 5).map(t => ({
-        name:  String(t.title ?? t.name ?? ''),
-        image: ((t.albumOfTrack as Record<string, unknown>)?.coverArt as { sources?: Array<{ url: string }> })?.sources?.[0]?.url ?? null,
-      })).filter(t => t.name)
+      if (tracksRes.ok) {
+        const t = await tracksRes.json() as {
+          tracks?: Array<{ name: string; album?: { images?: Array<{ url: string }> }; popularity?: number }>
+        }
+        topItems = (t.tracks ?? []).slice(0, 5).map(track => ({
+          name:     track.name,
+          image:    track.album?.images?.[0]?.url ?? null,
+          subtitle: typeof track.popularity === 'number' ? `Popularity ${track.popularity}` : null,
+        }))
+      } else {
+        console.warn('[scrapeSpotify] top-tracks API non-OK:', tracksRes.status)
+      }
+    } catch (err) {
+      console.warn('[scrapeSpotify] anon API call failed:', err)
+    }
+  } else {
+    console.warn('[scrapeSpotify] anon token fetch failed')
+  }
+
+  // ─── Try to extract monthly listeners from kworb.net (community stats) ──
+  // Their /spotify/artist/{id}_songs.html page exposes monthly listeners
+  try {
+    const kw = await fetch(`https://kworb.net/spotify/artist/${profileId}_songs.html`, {
+      headers: { 'User-Agent': UA, 'Accept': 'text/html' },
+    })
+    if (kw.ok) {
+      const kwHtml = await kw.text()
+      const m = kwHtml.match(/([\d,]+)\s*monthly\s*listeners/i)
+      if (m) monthlyListeners = parseInt(m[1].replace(/,/g, ''), 10)
     }
   } catch (err) {
-    console.warn('[scrapeSpotify] embed parse failed:', err)
+    console.warn('[scrapeSpotify] kworb fallback failed:', err)
   }
 
-  // ─── Strategy 4: scan embed HTML free-text for metrics ─
-  if (monthlyListeners === null) {
-    const m4 = embedHtml.match(/"monthlyListeners"\s*:\s*"?(\d+)/)
-    if (m4) monthlyListeners = parseInt(m4[1], 10)
-  }
-  if (followers === null) {
-    const f3 = embedHtml.match(/"totalFollowing"\s*:\s*"?(\d+)/)
-    if (f3) followers = parseInt(f3[1], 10)
+  // ─── Fallback: og meta + embed HTML scan if API failed ─────────────────
+  if (!displayName || followers === null) {
+    try {
+      const mainHtml = await htmlOf(`https://open.spotify.com/artist/${profileId}`)
+      const meta = parseMeta(mainHtml)
+      rawMeta = meta
+      if (!displayName) displayName = meta['og:title']?.split(' | Spotify')[0]?.trim() ?? null
+      if (!imageUrl)    imageUrl    = meta['og:image'] ?? null
+
+      const desc = meta['og:description'] ?? ''
+      const ml = desc.match(/([\d,]+)\s+monthly\s+listeners/i)
+      if (ml && monthlyListeners === null) monthlyListeners = parseInt(ml[1].replace(/,/g, ''), 10)
+    } catch { /* ignore */ }
   }
 
-  // Name fallback
-  if (!displayName) displayName = meta['og:title']?.split(' | Spotify')[0]?.trim() ?? null
-
-  console.log('[scrapeSpotify]', JSON.stringify({ profileId, displayName, monthlyListeners, followers, topItemsCount: topItems.length }))
+  console.log('[scrapeSpotify]', JSON.stringify({
+    profileId, displayName, followers, monthlyListeners, popularity, genres: genres.length, tracks: topItems.length,
+  }))
 
   return {
     platform:    'spotify',
     profileId,
     displayName,
-    stats:       { monthlyListeners, followers },
+    stats:       {
+      monthlyListeners,
+      followers,
+      popularity,
+      genres: genres.length > 0 ? genres.slice(0, 3).join(', ') : null,
+    },
     topItems,
     imageUrl,
-    rawMeta:     meta,
+    rawMeta,
   }
 }
 

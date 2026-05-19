@@ -95,6 +95,7 @@ function statTiles(platform: PlatformId, snap: Snapshot): StatTile[] {
       return [
         { label: 'Monthly Listeners', value: s.monthlyListeners as number | null },
         { label: 'Followers',         value: s.followers        as number | null },
+        { label: 'Popularity',        value: (s.popularity as number | null) !== null ? `${s.popularity}/100` : null },
       ]
     case 'apple_music':
       return [{ label: 'Genre', value: (s.genre as string) ?? '—' }]
@@ -290,6 +291,17 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
               </div>
             ))}
           </div>
+
+          {/* Genres (Spotify) */}
+          {platform === 'spotify' && latest.stats?.genres && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {String(latest.stats.genres).split(',').map((g, i) => (
+                <span key={i} className="text-[10px] font-bold uppercase tracking-widest text-white/50 bg-white/5 border border-white/8 px-2 py-1 rounded-full">
+                  {g.trim()}
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* Top items (Spotify tracks etc.) */}
           {latest.top_items && latest.top_items.length > 0 && (
