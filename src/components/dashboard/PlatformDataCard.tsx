@@ -98,7 +98,11 @@ function statTiles(platform: PlatformId, snap: Snapshot): StatTile[] {
         { label: 'Popularity',        value: (s.popularity as number | null) !== null ? `${s.popularity}/100` : null },
       ]
     case 'apple_music':
-      return [{ label: 'Genre', value: (s.genre as string) ?? '—' }]
+      return [
+        { label: 'Listeners',   value: s.listeners   as number | null },
+        { label: 'Subscribers', value: s.subscribers as number | null },
+        { label: 'Genre',       value: (s.genre as string | null) ?? null },
+      ]
     case 'soundcloud':
       return [
         { label: 'Followers', value: s.followers as number | null },
@@ -300,6 +304,27 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
                   {g.trim()}
                 </span>
               ))}
+            </div>
+          )}
+
+          {/* Chartmetric rank / score / country (Spotify) */}
+          {platform === 'spotify' && (latest.stats?.cmRank || latest.stats?.cmScore || latest.stats?.country) && (
+            <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest">
+              {latest.stats.cmRank && (
+                <span className="text-[#FFD700] bg-[#FFD700]/8 border border-[#FFD700]/20 px-2.5 py-1 rounded-full">
+                  CM Rank #{Number(latest.stats.cmRank).toLocaleString()}
+                </span>
+              )}
+              {latest.stats.cmScore && (
+                <span className="text-white/60 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full">
+                  CM Score {Math.round(Number(latest.stats.cmScore))}
+                </span>
+              )}
+              {latest.stats.country && (
+                <span className="text-white/40 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full">
+                  {String(latest.stats.country)}
+                </span>
+              )}
             </div>
           )}
 

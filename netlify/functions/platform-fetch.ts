@@ -182,57 +182,89 @@ async function getChartmetricToken(): Promise<string | null> {
 }
 
 /**
- * Look up a Chartmetric artist by their Spotify ID and return their consolidated
- * stats across platforms (followers, monthly listeners, popularity, socials).
+ * Look up a Chartmetric artist by their Spotify/Apple Music/SoundCloud/TikTok
+ * ID. Returns the full artist record including cm_statistics — the rich
+ * cross-platform stat bag (followers, monthly listeners, popularity, ranks).
+ *
+ * Two-step lookup: the /artist/{platform}/{id} endpoint returns a slim "find"
+ * payload (just cm_id + name); the full record lives at /artist/{cm_id}.
  */
 interface ChartmetricArtist {
-  id?:                  number
-  name?:                string
-  image_url?:           string
-  sp_followers?:        number
-  sp_monthly_listeners?:number
-  sp_popularity?:       number
-  cm_artist_rank?:      number
-  code2?:               string
+  id?:                   number
+  name?:                 string
+  image_url?:            string
+  code2?:                string                       // country code
+  cm_artist_rank?:       number
+  cm_artist_score?:      number
+  verified?:             boolean
+  spotify_genres?:       Array<string | { name: string }>
   cm_statistics?: {
     sp_monthly_listeners?: number
     sp_followers?:         number
     sp_popularity?:        number
+    sp_where_people_listen?: Array<{ city: string; listeners: number }>
+    am_listeners?:         number
+    am_subscribers?:       number
+    am_followers?:         number
     ins_followers?:        number
+    ins_engagement_rate?:  number
     tiktok_followers?:     number
     tiktok_likes?:         number
+    tiktok_top_video_views?: number
     soundcloud_followers?: number
+    soundcloud_plays?:     number
     youtube_subscribers?:  number
+    youtube_views?:        number
+    twitter_followers?:    number
+    facebook_followers?:   number
+    shazam_count?:         number
+    deezer_fans?:          number
   }
 }
 
-async function getChartmetricByPlatform(
-  platform: 'spotify' | 'soundcloud' | 'tiktok',
-  profileId: string,
-): Promise<ChartmetricArtist | null> {
-  const token = await getChartmetricToken()
-  if (!token) return null
-
-  const path =
-    platform === 'spotify'    ? `/api/artist/spotify/${profileId}` :
-    platform === 'soundcloud' ? `/api/artist/soundcloud/${encodeURIComponent(profileId)}` :
-                                 `/api/artist/tiktok/${encodeURIComponent(profileId)}`
-
+async function chartmetricGet(path: string, token: string): Promise<unknown | null> {
   try {
     const res = await fetch(`https://api.chartmetric.com${path}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     if (!res.ok) {
-      console.warn(`[chartmetric:${platform}] non-OK:`, res.status)
+      console.warn(`[chartmetric] ${path} non-OK:`, res.status)
       return null
     }
-    const data = await res.json() as { obj?: ChartmetricArtist | ChartmetricArtist[] }
-    const obj = Array.isArray(data.obj) ? data.obj[0] : data.obj
-    return obj ?? null
+    return res.json()
   } catch (err) {
-    console.warn(`[chartmetric:${platform}] error:`, err)
+    console.warn(`[chartmetric] ${path} error:`, err)
     return null
   }
+}
+
+async function getChartmetricByPlatform(
+  platform: 'spotify' | 'soundcloud' | 'tiktok' | 'apple_music',
+  profileId: string,
+): Promise<ChartmetricArtist | null> {
+  const token = await getChartmetricToken()
+  if (!token) return null
+
+  const findPath =
+    platform === 'spotify'     ? `/api/artist/spotify/${profileId}` :
+    platform === 'soundcloud'  ? `/api/artist/soundcloud/${encodeURIComponent(profileId)}` :
+    platform === 'tiktok'      ? `/api/artist/tiktok/${encodeURIComponent(profileId)}` :
+                                  `/api/artist/itunes/${profileId}`
+
+  // Step 1: resolve to chartmetric artist ID
+  const findRes = await chartmetricGet(findPath, token) as { obj?: ChartmetricArtist | ChartmetricArtist[] } | null
+  const slim = Array.isArray(findRes?.obj) ? findRes.obj[0] : findRes?.obj
+  if (!slim?.id) {
+    console.warn(`[chartmetric:${platform}] no cm_id found for ${profileId}`)
+    return slim ?? null
+  }
+
+  // Step 2: fetch full artist record (includes cm_statistics)
+  const fullRes = await chartmetricGet(`/api/artist/${slim.id}`, token) as { obj?: ChartmetricArtist } | null
+  const full = fullRes?.obj
+  if (!full) return slim
+  // Merge — full record is richer
+  return { ...slim, ...full, cm_statistics: full.cm_statistics ?? slim.cm_statistics }
 }
 
 // ─── Spotify ──────────────────────────────────────────────────────────────────
@@ -388,24 +420,29 @@ async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
   }
 
   // ─── TERTIARY: Chartmetric API (rich aggregated stats) ─────────────────
-  // If CHARTMETRIC_REFRESH_TOKEN is configured, pull follower/popularity/
-  // monthly-listener counts from chartmetric — works without any Spotify API
-  // setup, useful when scraping + Spotify API both miss numbers.
+  let cmRank: number | null = null
+  let cmScore: number | null = null
+  let country: string | null = null
   try {
     const cm = await getChartmetricByPlatform('spotify', profileId)
     if (cm) {
       const stats = cm.cm_statistics ?? {}
-      if (monthlyListeners === null) {
-        monthlyListeners = cm.sp_monthly_listeners ?? stats.sp_monthly_listeners ?? null
+      if (monthlyListeners === null) monthlyListeners = stats.sp_monthly_listeners ?? null
+      if (followers        === null) followers        = stats.sp_followers ?? null
+      if (popularity       === null) popularity       = stats.sp_popularity ?? null
+      if (!displayName && cm.name)      displayName = cm.name
+      if (!imageUrl    && cm.image_url) imageUrl    = cm.image_url
+      cmRank  = cm.cm_artist_rank  ?? null
+      cmScore = cm.cm_artist_score ?? null
+      country = cm.code2 ?? null
+
+      // Enrich genres from Chartmetric if Jina didn't get any
+      if (genres.length === 0 && Array.isArray(cm.spotify_genres)) {
+        genres = cm.spotify_genres
+          .map(g => typeof g === 'string' ? g : g.name)
+          .filter(Boolean)
+          .slice(0, 3)
       }
-      if (followers === null) {
-        followers = cm.sp_followers ?? stats.sp_followers ?? null
-      }
-      if (popularity === null) {
-        popularity = cm.sp_popularity ?? stats.sp_popularity ?? null
-      }
-      if (!displayName && cm.name) displayName = cm.name
-      if (!imageUrl    && cm.image_url) imageUrl = cm.image_url
     }
   } catch (err) {
     console.warn('[scrapeSpotify] Chartmetric enrich failed:', err)
@@ -438,7 +475,10 @@ async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
       monthlyListeners,
       followers,
       popularity,
-      genres: genres.length > 0 ? genres.slice(0, 3).join(', ') : null,
+      genres:  genres.length > 0 ? genres.slice(0, 3).join(', ') : null,
+      cmRank,
+      cmScore,
+      country,
     },
     topItems,
     imageUrl,
@@ -449,31 +489,62 @@ async function scrapeSpotify(profileId: string): Promise<ScrapeResult> {
 // ─── Apple Music ──────────────────────────────────────────────────────────────
 
 async function scrapeAppleMusic(profileId: string, originalUrl: string): Promise<ScrapeResult> {
-  const html = await htmlOf(originalUrl)
-  const meta = parseMeta(html)
-  const ld = parseJsonLd(html)
+  let displayName: string | null = null
+  let imageUrl:    string | null = null
+  let genre:       string | null = null
+  let listeners:   number | null = null
+  let subscribers: number | null = null
+  const topItems: ScrapeResult['topItems'] = []
 
-  // Apple Music JSON-LD often has MusicGroup with tracks
-  const musicGroup = ld.find(j => {
-    const t = j['@type']
-    return t === 'MusicGroup' || (Array.isArray(t) && t.includes('MusicGroup'))
-  }) ?? {} as Record<string, unknown>
+  // ─── Path 1: scrape rendered page for name, genre, top tracks ──────────
+  try {
+    const html = await htmlOf(originalUrl)
+    const meta = parseMeta(html)
+    const ld = parseJsonLd(html)
 
-  // Pull popular albums/tracks from any embedded data
-  const tracks = (musicGroup.track as Array<Record<string, unknown>> | undefined) ?? []
-  const topItems = tracks.slice(0, 5).map(t => ({
-    name:  String(t.name ?? ''),
-    image: typeof t.image === 'string' ? t.image : null,
-  })).filter(t => t.name)
+    const musicGroup = ld.find(j => {
+      const t = j['@type']
+      return t === 'MusicGroup' || (Array.isArray(t) && t.includes('MusicGroup'))
+    }) as Record<string, unknown> | undefined
+
+    displayName = (musicGroup?.name as string | undefined)
+      ?? meta['og:title']?.split(/[—|]/)[0]?.trim() ?? null
+    imageUrl = (musicGroup?.image as string | undefined) ?? meta['og:image'] ?? null
+    genre = (musicGroup?.genre as string | undefined) ?? null
+
+    const tracks = (musicGroup?.track as Array<Record<string, unknown>> | undefined) ?? []
+    for (const t of tracks.slice(0, 5)) {
+      const name = String(t.name ?? '').trim()
+      if (name) topItems.push({ name, image: typeof t.image === 'string' ? t.image : null })
+    }
+  } catch (err) {
+    console.warn('[scrapeAppleMusic] HTML scrape failed:', err)
+  }
+
+  // ─── Path 2: Chartmetric for follower / listener / subscriber numbers ──
+  try {
+    const cm = await getChartmetricByPlatform('apple_music', profileId)
+    if (cm) {
+      const s = cm.cm_statistics ?? {}
+      listeners   = s.am_listeners   ?? null
+      subscribers = s.am_subscribers ?? s.am_followers ?? null
+      if (!displayName && cm.name)      displayName = cm.name
+      if (!imageUrl    && cm.image_url) imageUrl    = cm.image_url
+    }
+  } catch (err) {
+    console.warn('[scrapeAppleMusic] Chartmetric enrich failed:', err)
+  }
+
+  console.log('[scrapeAppleMusic]', JSON.stringify({ profileId, displayName, listeners, subscribers }))
 
   return {
     platform:    'apple_music',
     profileId,
-    displayName: (musicGroup.name as string | undefined) ?? meta['og:title']?.split(/[—|]/)[0]?.trim() ?? null,
-    stats:       { genre: (musicGroup.genre as string | undefined) ?? null },
+    displayName,
+    stats:       { genre, listeners, subscribers },
     topItems,
-    imageUrl:    (musicGroup.image as string | undefined) ?? meta['og:image'] ?? null,
-    rawMeta:     meta,
+    imageUrl,
+    rawMeta:     {},
   }
 }
 
@@ -551,16 +622,15 @@ async function scrapeSoundCloud(profileId: string): Promise<ScrapeResult> {
     }
   } catch { /* ignore */ }
 
-  // Chartmetric enrichment for SoundCloud follower data
+  // Chartmetric enrichment for SoundCloud follower + total plays
   try {
     const cm = await getChartmetricByPlatform('soundcloud', profileId)
     if (cm) {
       const cmStats = cm.cm_statistics ?? {}
-      if (stats.followers === null && cmStats.soundcloud_followers) {
-        stats.followers = cmStats.soundcloud_followers
-      }
-      if (!displayName && cm.name) displayName = cm.name
-      if (!imageUrl    && cm.image_url) imageUrl = cm.image_url
+      if (stats.followers === null && cmStats.soundcloud_followers) stats.followers = cmStats.soundcloud_followers
+      if (stats.plays     === null && cmStats.soundcloud_plays)     stats.plays     = cmStats.soundcloud_plays
+      if (!displayName && cm.name)      displayName = cm.name
+      if (!imageUrl    && cm.image_url) imageUrl    = cm.image_url
     }
   } catch (err) {
     console.warn('[scrapeSoundCloud] Chartmetric enrich failed:', err)
