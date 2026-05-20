@@ -2,16 +2,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Calendar, Trash2, ChevronRight, CheckSquare, Square, X,
-  Disc3, Layers, Music, ListMusic, Sparkles, Upload, ChevronLeft,
+  Disc3, Layers, Music, ListMusic, Sparkles, Upload, ChevronLeft, Radio,
 } from 'lucide-react';
 import { BudgetCard } from '../ui/analytics-bento';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 
-type ReleaseType  = 'Single' | 'EP' | 'Album' | 'Mixtape';
+type ReleaseType  = 'Single' | 'EP' | 'Album' | 'Mixtape' | 'SoundCloud Exclusive';
 type BudgetLevel  = 'DIY / Low' | 'Moderate' | 'Full Push';
 type FocusArea    = 'Streaming & Playlists' | 'Social Media & Virality' | 'Fan Community' | 'Visual Storytelling' | 'Press & Blogs' | 'Live & Touring';
-type RolloutWeeks = 4 | 8 | 12;
+type RolloutWeeks = 1 | 4 | 8 | 12;
 
 interface ChecklistItem { id: string; label: string; done: boolean; category: string }
 interface Release {
@@ -43,6 +43,7 @@ const TYPE_META: Record<ReleaseType, { color: string; bg: string; border: string
   EP:      { color: 'text-blue-400',   bg: 'bg-blue-500/10',   border: 'border-blue-500/20',   icon: <Layers size={26} />,   desc: '3–6 tracks. Introduce a sound without full album pressure.' },
   Album:   { color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', icon: <Music size={26} />,    desc: 'Your full statement. Plan the rollout months in advance.' },
   Mixtape: { color: 'text-green-400',  bg: 'bg-green-500/10',  border: 'border-green-500/20',  icon: <ListMusic size={26} />, desc: 'Raw, uncut. Rapid-fire community-first release.' },
+  'SoundCloud Exclusive': { color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', icon: <Radio size={26} />, desc: 'SC-first drop. Build hype with the underground before DSPs.' },
 };
 
 const TYPE_COLORS: Record<ReleaseType, string> = {
@@ -50,6 +51,7 @@ const TYPE_COLORS: Record<ReleaseType, string> = {
   EP: 'bg-blue-500/20 text-blue-400',
   Album: 'bg-purple-500/20 text-purple-400',
   Mixtape: 'bg-green-500/20 text-green-400',
+  'SoundCloud Exclusive': 'bg-orange-500/20 text-orange-400',
 };
 
 const FOCUS_AREAS: FocusArea[] = [
@@ -64,6 +66,7 @@ const BUDGET_OPTIONS: { value: BudgetLevel; sub: string }[] = [
 ];
 
 const TIMELINE_OPTIONS: { value: RolloutWeeks; label: string; sub: string }[] = [
+  { value: 1,  label: '1 Week',   sub: 'Soft release' },
   { value: 4,  label: '4 Weeks',  sub: 'Rush timeline' },
   { value: 8,  label: '8 Weeks',  sub: 'Standard timeline' },
   { value: 12, label: '12 Weeks', sub: 'Extended timeline' },
@@ -151,18 +154,36 @@ interface WizardProps {
   onCreate: (release: Release) => void;
 }
 
+const WIZARD_DRAFT_KEY = 'gup_rollout_draft_v1';
+
 function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: WizardProps) {
-  const [step, setStep] = useState(0);
+  // Restore any in-progress draft so swiping away (component unmount) doesn't
+  // wipe what the user was filling out.
+  const restored: (Partial<WizardData> & { step?: number }) | null = (() => {
+    try {
+      const raw = sessionStorage.getItem(WIZARD_DRAFT_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  })();
+
+  const [step, setStep] = useState<number>(restored?.step ?? 0);
   const [data, setData] = useState<WizardData>({
-    title: '',
-    type: initialType ?? 'Single',
-    date: '',
-    coverArt: undefined,
-    feature: '',
-    budget: '',
-    focusAreas: [],
-    timeline: 0,
+    title:      restored?.title ?? '',
+    type:       restored?.type ?? initialType ?? 'Single',
+    date:       restored?.date ?? '',
+    coverArt:   restored?.coverArt,
+    feature:    restored?.feature ?? '',
+    budget:     restored?.budget ?? '',
+    focusAreas: restored?.focusAreas ?? [],
+    timeline:   restored?.timeline ?? 0,
   });
+
+  // Persist the draft on every change so it survives navigation away & back.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(WIZARD_DRAFT_KEY, JSON.stringify({ ...data, step }));
+    } catch { /* quota / private mode — non-fatal */ }
+  }, [data, step]);
 
   function handleCover(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -187,6 +208,10 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
     return true;
   }
 
+  function clearDraft() {
+    try { sessionStorage.removeItem(WIZARD_DRAFT_KEY); } catch { /* noop */ }
+  }
+
   function finish() {
     const checklist = buildChecklist(data);
     const release: Release = {
@@ -200,6 +225,7 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
       timeline: data.timeline as RolloutWeeks,
       checklist,
     };
+    clearDraft();
     onCreate(release);
   }
 
@@ -305,16 +331,16 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
                   {/* Type */}
                   <div>
                     <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-2">Type</p>
-                    <div className="grid grid-cols-4 gap-2">
-                      {(['Single', 'EP', 'Album', 'Mixtape'] as ReleaseType[]).map(t => (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {(['Single', 'EP', 'Album', 'Mixtape', 'SoundCloud Exclusive'] as ReleaseType[]).map(t => (
                         <button
                           key={t}
                           onClick={() => setData(prev => ({ ...prev, type: t }))}
-                          className={`py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
+                          className={`py-2.5 px-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all text-center leading-tight ${
                             data.type === t ? 'bg-[#FFD700] border-transparent text-black' : 'bg-zinc-900/60 border-white/8 text-white/40 hover:text-white'
                           }`}
                         >
-                          {t}
+                          {t === 'SoundCloud Exclusive' ? 'SoundCloud' : t}
                         </button>
                       ))}
                     </div>
@@ -386,7 +412,7 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
                   {/* Timeline */}
                   <div>
                     <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-2">Timeline</p>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {TIMELINE_OPTIONS.map(({ value, label, sub }) => (
                         <button
                           key={value}
