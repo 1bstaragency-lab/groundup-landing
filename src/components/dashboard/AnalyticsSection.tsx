@@ -9,10 +9,10 @@ export function AnalyticsSection() {
 
   // Top-line stats — only show tiles with data. Empty state when nothing linked.
   const headlineTiles = [
-    { label: 'Monthly Listeners', value: stats.monthlyListeners, color: 'text-green-400',  hint: 'Spotify' },
-    { label: 'SoundCloud Plays',  value: stats.scPlays,          color: 'text-orange-400', hint: 'SoundCloud' },
-    { label: 'YouTube Subscribers', value: stats.ytSubscribers,  color: 'text-red-400',    hint: 'YouTube' },
-    { label: 'Total Reach',       value: stats.totalReach,       color: 'text-[#FFD700]',  hint: 'Across platforms' },
+    { label: 'Monthly Listeners',     value: stats.monthlyListeners, color: 'text-green-400',  hint: 'Spotify' },
+    { label: 'SoundCloud Followers',  value: stats.scFollowers,      color: 'text-orange-400', hint: 'SoundCloud' },
+    { label: 'YouTube Subscribers',   value: stats.ytSubscribers,    color: 'text-red-400',    hint: 'YouTube' },
+    { label: 'Total Reach',           value: stats.totalReach,       color: 'text-[#FFD700]',  hint: 'Across platforms' },
   ]
   const hasAnyData = headlineTiles.some(t => t.value !== null)
 
