@@ -261,12 +261,16 @@ export function AppFunnel() {
 
   return (
     <div
-      className="min-h-[100dvh] bg-black text-white overflow-x-hidden relative"
+      className="min-h-[100dvh] bg-black text-white relative"
       style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      {/* Lighter blur on mobile — big blurs tank mobile GPU/scroll perf */}
-      <div className="absolute -top-24 -left-24 w-72 h-72 sm:w-[500px] sm:h-[500px] bg-[#FFD700]/8 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none" />
-      <div className="absolute -bottom-24 -right-24 w-72 h-72 sm:w-[500px] sm:h-[500px] bg-[#B8860B]/8 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none" />
+      {/* Blur orbs in a FIXED clipped layer — keeps them from causing
+          horizontal overflow without turning the page into its own
+          scroll container (which broke momentum scroll on mobile). */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute -top-24 -left-24 w-72 h-72 sm:w-[500px] sm:h-[500px] bg-[#FFD700]/8 rounded-full blur-[80px] sm:blur-[120px]" />
+        <div className="absolute -bottom-24 -right-24 w-72 h-72 sm:w-[500px] sm:h-[500px] bg-[#B8860B]/8 rounded-full blur-[80px] sm:blur-[120px]" />
+      </div>
 
       <header className="relative z-10 px-5 py-4 flex items-center justify-between">
         {/* Brand mark, upper-left — replaces the wordmark, doubles as reset-to-hero */}
