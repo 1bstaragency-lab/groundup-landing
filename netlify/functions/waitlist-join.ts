@@ -3,9 +3,14 @@
  *
  * POST body: { phone: string, source?: string }
  *
- * Writes to the `waitlist` table and (if Blooio is configured) sends a
- * short welcome iMessage with the web-app link so users get a touchpoint
- * before they ever install.
+ * Writes to public.app_waitlist (phone unique). Returns a position number
+ * the user sees as their spot on the list, calculated as:
+ *   base offset (200) + current waitlist count + small jitter (0-15)
+ * so the first signup sees something like #214, the 50th sees #259, etc.
+ *
+ * Repeat submissions return the previously-assigned position (stable).
+ *
+ * Also fires a one-shot Blooio iMessage with the web-app link when configured.
  *
  * Env vars:
  *   VITE_SUPABASE_URL
@@ -29,7 +34,6 @@ const CORS = {
 function normalizePhone(raw: string): string {
   const digits = raw.replace(/\D/g, '')
   if (!digits) return ''
-  // US 10-digit gets +1 prefix; otherwise assume user included country code
   if (digits.length === 10) return `+1${digits}`
   if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`
   return `+${digits}`
@@ -51,21 +55,51 @@ export const handler: Handler = async (event) => {
     }
   }
 
-  // Persist
+  let position: number | null = null
+  let isNew = false
+
   if (SUPABASE_URL && SUPABASE_KEY) {
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
-    const { error } = await supabase.from('waitlist').upsert({
-      phone,
-      platform: body.source ?? 'tiktok_funnel',
-    }, { onConflict: 'phone' })
-    if (error) console.error('[waitlist-join] upsert error:', error)
+
+    // If they're already on the list, return their existing position
+    const { data: existing } = await supabase
+      .from('app_waitlist')
+      .select('position')
+      .eq('phone', phone)
+      .maybeSingle()
+
+    if (existing) {
+      position = existing.position as number
+    } else {
+      isNew = true
+      // Compute new position: base + count + jitter
+      const { count } = await supabase
+        .from('app_waitlist')
+        .select('*', { count: 'exact', head: true })
+      const base = 200
+      const jitter = Math.floor(Math.random() * 16) // 0–15
+      position = base + (count ?? 0) + jitter
+
+      const { error } = await supabase.from('app_waitlist').insert({
+        phone,
+        source:   body.source ?? 'tiktok_funnel',
+        position,
+      })
+      if (error) {
+        console.error('[waitlist-join] insert error:', error)
+        // If it failed due to unique constraint race, re-read
+        const { data: retry } = await supabase
+          .from('app_waitlist').select('position').eq('phone', phone).maybeSingle()
+        if (retry?.position) position = retry.position as number
+      }
+    }
   }
 
-  // Tease iMessage (best-effort)
-  if (BLOOIO_KEY) {
+  // Fire welcome iMessage (only on first signup so we don't spam re-visits)
+  if (BLOOIO_KEY && isNew) {
     const text =
-      `Yo 👋 You're on the GrounduP launch list — we'll text you the moment the iOS app drops.\n\n` +
-      `In the meantime, try it on web: https://groundupapp.com/signup\n\n` +
+      `Yo 👋 You're #${position} on the GrounduP launch list — we'll text you the moment the iOS app drops.\n\n` +
+      `Don't want to wait? Try it on web right now: https://groundupapp.com/signup\n\n` +
       `— uP`
     try {
       await fetch(BLOOIO_URL, {
@@ -81,6 +115,6 @@ export const handler: Handler = async (event) => {
   return {
     statusCode: 200,
     headers: { ...CORS, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ok: true }),
+    body: JSON.stringify({ ok: true, position }),
   }
 }
