@@ -198,10 +198,7 @@ export function AppFunnel() {
 
   function reveal() {
     setRevealed(true)
-    // Smooth-scroll the form into view after it expands
-    setTimeout(() => {
-      document.getElementById('waitlist-anchor')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }, 120)
+    window.scrollTo({ top: 0 })
   }
 
   async function submitPhone() {
@@ -220,9 +217,7 @@ export function AppFunnel() {
       } else {
         if (typeof data.position === 'number') setPosition(data.position)
         setSubmitted(true)
-        setTimeout(() => {
-          document.getElementById('waitlist-anchor')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }, 120)
+        window.scrollTo({ top: 0 })
       }
     } catch {
       setErr('Network error — try again.')
@@ -241,155 +236,149 @@ export function AppFunnel() {
       <div className="absolute -bottom-24 -right-24 w-72 h-72 sm:w-[500px] sm:h-[500px] bg-[#B8860B]/8 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none" />
 
       <header className="relative z-10 px-5 py-4 flex items-center justify-between">
-        <a href="/" className="font-black text-sm uppercase tracking-tighter">GrounduP</a>
+        <button onClick={() => { if (revealed || submitted) { setRevealed(false); setSubmitted(false) } }} className="font-black text-sm uppercase tracking-tighter">GrounduP</button>
         <a href="/login" className="text-white/40 active:text-white text-[10px] font-black uppercase tracking-widest transition-colors">Sign In</a>
       </header>
 
-      <main className="relative z-10 px-5 pb-12 flex flex-col items-center pt-6 sm:pt-10">
-        <div className="w-full max-w-md text-center">
+      <main className="relative z-10 px-5">
+        <AnimatePresence mode="wait">
 
-          {/* Hero — always visible */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FFD700]/8 border border-[#FFD700]/20 mb-5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#FFD700] animate-pulse" />
-            <span className="text-[#FFD700] text-[10px] font-black uppercase tracking-widest">
-              Now in early beta access
-            </span>
-          </div>
+          {/* ─── HERO view ─────────────────────────────────── */}
+          {!revealed && !submitted && (
+            <motion.div
+              key="hero"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-md mx-auto text-center flex flex-col items-center justify-center min-h-[calc(100dvh-140px)]"
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FFD700]/8 border border-[#FFD700]/20 mb-5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FFD700] animate-pulse" />
+                <span className="text-[#FFD700] text-[10px] font-black uppercase tracking-widest">Now in early beta access</span>
+              </div>
 
-          <h1 className="text-[2.75rem] leading-[0.92] sm:text-5xl font-black tracking-tighter uppercase mb-4">
-            Run your whole<br />music career<br />
-            <span className="text-[#FFD700]">from a text.</span>
-          </h1>
+              <h1 className="text-[2.75rem] leading-[0.92] sm:text-5xl font-black tracking-tighter uppercase mb-4">
+                Run your whole<br />music career<br />
+                <span className="text-[#FFD700]">from a text.</span>
+              </h1>
 
-          <p className="text-white/55 text-[15px] font-medium leading-snug mb-7 max-w-[20rem] mx-auto">
-            AI release rollouts, real-time stats, and your own music exec texting you when it matters. <span className="text-white/80">2,000+ artists</span> already inside.
-          </p>
+              <p className="text-white/55 text-[15px] font-medium leading-snug mb-8 max-w-[20rem] mx-auto">
+                AI release rollouts, real-time stats, and your own music exec texting you when it matters. <span className="text-white/80">2,000+ artists</span> already inside.
+              </p>
 
-          {/* Store badges — full-width stacked on mobile */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-4 justify-center">
-            <AppStoreBadge onClick={reveal} />
-            <GooglePlayBadge onClick={reveal} />
-          </div>
+              <div className="flex flex-col sm:flex-row gap-3 mb-4 justify-center w-full">
+                <AppStoreBadge onClick={reveal} />
+                <GooglePlayBadge onClick={reveal} />
+              </div>
 
-          <button
-            onClick={() => navigate('/signup')}
-            className="py-2 text-white/40 active:text-white text-[12px] font-bold uppercase tracking-widest transition-colors"
-          >
-            Or continue on web →
-          </button>
-
-          {/* Anchor for scroll target */}
-          <div id="waitlist-anchor" />
-
-          {/* Inline waitlist reveal */}
-          <AnimatePresence mode="wait">
-            {revealed && !submitted && (
-              <motion.div
-                key="form"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className="overflow-hidden"
+              <button
+                onClick={() => navigate('/signup')}
+                className="py-2 text-white/40 active:text-white text-[12px] font-bold uppercase tracking-widest transition-colors"
               >
-                <div className="mt-8 pt-8 border-t border-white/8">
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900 border border-white/10 mb-4">
-                    <span className="text-white/60 text-[10px] font-black uppercase tracking-widest">App launching soon</span>
-                  </div>
-                  <h2 className="text-2xl sm:text-3xl font-black tracking-tighter uppercase mb-2">
-                    Get early access
-                  </h2>
-                  <p className="text-white/40 text-sm font-medium mb-6">
-                    Drop your number — uP texts you the install link the moment beta opens, plus founding-artist perks.
-                  </p>
+                Or continue on web →
+              </button>
+            </motion.div>
+          )}
 
-                  <div className="flex gap-2 mb-3">
-                    <div className="relative">
-                      <select
-                        value={cc}
-                        onChange={e => setCc(e.target.value)}
-                        className="appearance-none bg-zinc-950 border border-white/10 rounded-2xl pl-4 pr-9 py-4 text-white font-bold text-sm outline-none focus:border-[#FFD700]/30 cursor-pointer"
-                      >
-                        {COUNTRY_CODES.map((c, i) => (
-                          <option key={`${c.code}-${i}`} value={c.code} className="bg-zinc-950">{c.flag} {c.code}</option>
-                        ))}
-                      </select>
-                      <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" />
-                    </div>
-                    <div className="flex-1 flex items-center bg-zinc-950 border border-white/10 focus-within:border-[#FFD700]/30 rounded-2xl px-4 transition-colors">
-                      <Phone size={14} className="text-white/20 mr-2 shrink-0" />
-                      <input
-                        type="tel" inputMode="tel" autoFocus
-                        placeholder="(555) 000-0000"
-                        value={phone}
-                        onChange={e => setPhone(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && submitPhone()}
-                        className="flex-1 bg-transparent text-white text-base font-bold outline-none placeholder-white/20 min-w-0"
-                      />
-                    </div>
-                  </div>
+          {/* ─── FORM view (top-aligned so keyboard never hides it) ── */}
+          {revealed && !submitted && (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-md mx-auto text-center pt-6"
+            >
+              <button onClick={() => setRevealed(false)} className="mb-6 text-white/30 active:text-white/70 text-[11px] font-black uppercase tracking-widest">← Back</button>
 
-                  <p className="text-white/20 text-[10px] font-medium mb-5">One text. No spam. Reply STOP anytime.</p>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900 border border-white/10 mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FFD700] animate-pulse" />
+                <span className="text-white/60 text-[10px] font-black uppercase tracking-widest">App launching soon</span>
+              </div>
+              <h2 className="text-3xl font-black tracking-tighter uppercase mb-2">Get early access</h2>
+              <p className="text-white/40 text-sm font-medium mb-6 max-w-[19rem] mx-auto">
+                Drop your number — uP texts you the install link the moment beta opens, plus founding-artist perks.
+              </p>
 
-                  <button
-                    onClick={submitPhone}
-                    disabled={busy || !phone.trim()}
-                    className={`w-full h-14 rounded-2xl font-black text-base uppercase tracking-tight transition-all flex items-center justify-center gap-2 ${
-                      phone.trim()
-                        ? 'bg-[#FFD700] text-black hover:scale-[1.02] shadow-[0_8px_32px_rgba(255,215,0,0.25)]'
-                        : 'bg-white/5 text-white/30 cursor-not-allowed'
-                    }`}
+              <div className="flex gap-2 mb-3">
+                <div className="relative">
+                  <select
+                    value={cc}
+                    onChange={e => setCc(e.target.value)}
+                    className="appearance-none bg-zinc-950 border border-white/10 rounded-2xl pl-4 pr-9 py-4 text-white font-bold text-sm outline-none focus:border-[#FFD700]/30"
                   >
-                    {busy ? <><Loader2 size={16} className="animate-spin" /> Saving your spot…</> : <>Reserve my spot <ArrowRight size={18} /></>}
-                  </button>
-                  {err && <p className="text-red-400 text-[11px] font-bold mt-3">{err}</p>}
+                    {COUNTRY_CODES.map((c, i) => (
+                      <option key={`${c.code}-${i}`} value={c.code} className="bg-zinc-950">{c.flag} {c.code}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" />
                 </div>
-              </motion.div>
-            )}
+                <div className="flex-1 flex items-center bg-zinc-950 border border-white/10 focus-within:border-[#FFD700]/30 rounded-2xl px-4 transition-colors">
+                  <Phone size={14} className="text-white/20 mr-2 shrink-0" />
+                  <input
+                    type="tel" inputMode="tel"
+                    placeholder="(555) 000-0000"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && submitPhone()}
+                    className="flex-1 bg-transparent text-white text-base font-bold outline-none placeholder-white/20 min-w-0"
+                  />
+                </div>
+              </div>
 
-            {submitted && (
-              <motion.div
-                key="done"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              <p className="text-white/20 text-[10px] font-medium mb-5">One text. No spam. Reply STOP anytime.</p>
+
+              <button
+                onClick={submitPhone}
+                disabled={busy || !phone.trim()}
+                className={`w-full h-14 rounded-2xl font-black text-base uppercase tracking-tight transition-all flex items-center justify-center gap-2 ${
+                  phone.trim()
+                    ? 'bg-[#FFD700] text-black active:scale-[0.98] shadow-[0_8px_32px_rgba(255,215,0,0.25)]'
+                    : 'bg-white/5 text-white/30 cursor-not-allowed'
+                }`}
               >
-                <div className="mt-8 pt-8 border-t border-white/8">
-                  {/* Position */}
-                  <motion.div
-                    initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: 'spring', damping: 16, stiffness: 220, delay: 0.05 }}
-                    className="mb-5"
-                  >
-                    <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.4em] mb-1">You're on the list</p>
-                    <p className="text-6xl sm:text-7xl font-black tracking-tighter text-white leading-none">#{position ?? '—'}</p>
-                  </motion.div>
+                {busy ? <><Loader2 size={16} className="animate-spin" /> Saving your spot…</> : <>Reserve my spot <ArrowRight size={18} /></>}
+              </button>
+              {err && <p className="text-red-400 text-[11px] font-bold mt-3">{err}</p>}
+            </motion.div>
+          )}
 
-                  <div className="flex items-center justify-center gap-2 text-white/40 text-xs font-medium mb-7">
-                    <Check size={14} className="text-green-400" />
-                    <span>We just texted you the welcome message</span>
-                  </div>
-
-                  {/* Continue on web */}
-                  <button
-                    onClick={() => navigate('/signup')}
-                    className="w-full h-14 rounded-2xl bg-[#FFD700] text-black font-black text-base uppercase tracking-tight transition-transform hover:scale-[1.02] active:scale-[0.99] shadow-[0_8px_32px_rgba(255,215,0,0.25)] flex items-center justify-center gap-2 mb-2"
-                  >
-                    Skip the line — continue on web
-                    <ArrowRight size={18} />
-                  </button>
-                  <p className="text-white/20 text-[10px] font-medium mb-10">Same uP. Same data. No install required.</p>
-
-                  {/* Add to home screen tutorial */}
-                  <HomeScreenTutorial />
-                </div>
+          {/* ─── DONE view (scrollable for the tutorial) ───── */}
+          {submitted && (
+            <motion.div
+              key="done"
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-md mx-auto text-center pt-8 pb-12"
+            >
+              <motion.div
+                initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', damping: 16, stiffness: 220, delay: 0.05 }}
+                className="mb-5"
+              >
+                <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.4em] mb-1">You're on the list</p>
+                <p className="text-7xl font-black tracking-tighter text-white leading-none">#{position ?? '—'}</p>
               </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+
+              <div className="flex items-center justify-center gap-2 text-white/40 text-xs font-medium mb-7">
+                <Check size={14} className="text-green-400" />
+                <span>We just texted you the welcome message</span>
+              </div>
+
+              <button
+                onClick={() => navigate('/signup')}
+                className="w-full h-14 rounded-2xl bg-[#FFD700] text-black font-black text-base uppercase tracking-tight transition-transform active:scale-[0.98] shadow-[0_8px_32px_rgba(255,215,0,0.25)] flex items-center justify-center gap-2 mb-2"
+              >
+                Skip the line — continue on web
+                <ArrowRight size={18} />
+              </button>
+              <p className="text-white/20 text-[10px] font-medium mb-10">Same uP. Same data. No install required.</p>
+
+              <HomeScreenTutorial />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
-      <footer className="relative z-10 px-5 pb-6 text-center">
+      <footer className="relative z-10 px-5 py-6 text-center">
         <p className="text-white/15 text-[10px] font-bold uppercase tracking-widest">
           © {new Date().getFullYear()} GrounduP · The Artist OS
         </p>
