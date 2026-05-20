@@ -5,10 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Check, Loader2, MessageCircle, Sparkles, Phone, ChevronDown } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-/** Replace once stores actually list the app. */
-const APP_STORE_URL    = 'https://apps.apple.com/app/grounduphq/id0000000000'
-const PLAY_STORE_URL   = 'https://play.google.com/store/apps/details?id=com.grounduphq.app'
-
 type Step = 'hero' | 'phone' | 'done'
 
 const COUNTRY_CODES = [
@@ -29,18 +25,18 @@ const COUNTRY_CODES = [
 ]
 
 // ─── Store badges ────────────────────────────────────────────────────────────
+// Visually identical to the real Apple / Google badges so the ad creative
+// reads as "tap to download" — but tapping reveals the waitlist instead,
+// since the iOS / Android app isn't shipping for ~60 days.
 
-function AppStoreBadge({ onClick }: { onClick?: (e: React.MouseEvent) => void }) {
+function AppStoreBadge({ onClick }: { onClick?: () => void }) {
   return (
-    <a
-      href={APP_STORE_URL}
-      target="_blank"
-      rel="noopener noreferrer"
+    <button
+      type="button"
       onClick={onClick}
       className="flex items-center gap-2.5 bg-black border border-white/25 hover:border-white/50 rounded-xl px-4 py-2.5 transition-all hover:scale-[1.02] active:scale-[0.99] flex-1 sm:flex-initial sm:min-w-[170px]"
       aria-label="Download on the App Store"
     >
-      {/* Apple logo */}
       <svg className="w-6 h-6 fill-white shrink-0" viewBox="0 0 384 512">
         <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
       </svg>
@@ -48,21 +44,18 @@ function AppStoreBadge({ onClick }: { onClick?: (e: React.MouseEvent) => void })
         <p className="text-white/65 text-[9px] font-medium uppercase tracking-wide">Download on the</p>
         <p className="text-white text-[15px] font-semibold tracking-tight -mt-0.5">App Store</p>
       </div>
-    </a>
+    </button>
   )
 }
 
-function GooglePlayBadge({ onClick }: { onClick?: (e: React.MouseEvent) => void }) {
+function GooglePlayBadge({ onClick }: { onClick?: () => void }) {
   return (
-    <a
-      href={PLAY_STORE_URL}
-      target="_blank"
-      rel="noopener noreferrer"
+    <button
+      type="button"
       onClick={onClick}
       className="flex items-center gap-2.5 bg-black border border-white/25 hover:border-white/50 rounded-xl px-4 py-2.5 transition-all hover:scale-[1.02] active:scale-[0.99] flex-1 sm:flex-initial sm:min-w-[170px]"
       aria-label="Get it on Google Play"
     >
-      {/* Google Play multicolor triangle */}
       <svg className="w-6 h-6 shrink-0" viewBox="0 0 512 512">
         <linearGradient id="ggp1" x1="46" x2="280" y1="69" y2="303" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#00C3FF"/>
@@ -89,7 +82,7 @@ function GooglePlayBadge({ onClick }: { onClick?: (e: React.MouseEvent) => void 
         <p className="text-white/65 text-[9px] font-medium uppercase tracking-wide">Get it on</p>
         <p className="text-white text-[15px] font-semibold tracking-tight -mt-0.5">Google Play</p>
       </div>
-    </a>
+    </button>
   )
 }
 
@@ -181,13 +174,14 @@ export function AppFunnel() {
                 Real-time analytics, AI release rollouts, and your personal music exec — uP — texting you when it matters. Used by 2,000+ indie artists.
               </p>
 
-              {/* Store badges */}
+              {/* Store badges — visually identical to real ones, but tapping
+                  opens the waitlist (app is web-only for the next ~60 days). */}
               <div className="flex flex-col sm:flex-row gap-2.5 mb-5 justify-center">
-                <AppStoreBadge onClick={() => setTimeout(() => setStep('phone'), 350)} />
-                <GooglePlayBadge onClick={() => setTimeout(() => setStep('phone'), 350)} />
+                <AppStoreBadge onClick={() => setStep('phone')} />
+                <GooglePlayBadge onClick={() => setStep('phone')} />
               </div>
 
-              {/* Waitlist CTA */}
+              {/* Direct waitlist CTA for users who skip the badges */}
               <button
                 onClick={() => setStep('phone')}
                 className="w-full h-14 rounded-2xl bg-[#FFD700] text-black font-black text-base uppercase tracking-tight transition-transform hover:scale-[1.02] active:scale-[0.99] shadow-[0_8px_32px_rgba(255,215,0,0.25)] flex items-center justify-center gap-2"
