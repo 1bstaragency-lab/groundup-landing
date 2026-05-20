@@ -36,6 +36,7 @@ export function ProfileSection() {
   const [original, setOriginal] = useState<Profile | null>(null)
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [phoneState, setPhoneState] = useState<'idle' | 'saving' | 'sent' | 'error' | 'msg_error'>('idle')
+  const [phoneErr, setPhoneErr] = useState<string | null>(null)
   const [countryCode, setCountryCode] = useState('+1')
   const [editingPhone, setEditingPhone] = useState(false)
   const [loading, setLoading]   = useState(true)
@@ -110,6 +111,7 @@ export function ProfileSection() {
   // ─── Save phone number + trigger welcome iMessage ─────────────────────────
   async function savePhone() {
     if (!user || !profile.phone_number.trim()) return
+    setPhoneErr(null)
     setPhoneState('saving')
     // Strip all non-digits and rebuild as E.164 — guarantees lookup will work
     const rawDigits = (countryCode + profile.phone_number).replace(/\D/g, '')
@@ -138,7 +140,7 @@ export function ProfileSection() {
     setProfile(prev => ({ ...prev, phone_number: fullPhone }))
     setEditingPhone(false)
 
-    // 2. Send welcome iMessage via LoopMessage
+    // 2. Send welcome iMessage via Blooio
     let msgSent = false
     try {
       const welcomeRes = await fetch('/.netlify/functions/up-welcome', {
@@ -153,7 +155,12 @@ export function ProfileSection() {
       const welcomeData = await welcomeRes.json().catch(() => ({}))
       console.log('[up-welcome] result:', welcomeData)
       msgSent = welcomeData.ok === true
-      if (!msgSent) console.warn('[up-welcome] LoopMessage error:', welcomeData)
+      if (!msgSent) {
+        console.warn('[up-welcome] Blooio error:', welcomeData)
+        // Surface the real provider message instead of a generic one
+        const apiMsg = welcomeData?.data?.message || welcomeData?.error
+        if (apiMsg) setPhoneErr(String(apiMsg))
+      }
     } catch (err) {
       console.error('[up-welcome] fetch failed:', err)
     }
@@ -396,7 +403,8 @@ export function ProfileSection() {
                     exit={{ opacity: 0 }}
                     className="text-red-400/70 text-[10px] font-bold mt-3"
                   >
-                    ✗ Number saved, but the text didn't send. Check that BLOOIO_API_KEY is set in Netlify env vars, then retry.
+                    ✗ Number saved, but the welcome text didn't send.
+                    {phoneErr ? ` ${phoneErr}` : ' Try again in a moment.'}
                   </motion.p>
                 )}
               </AnimatePresence>
