@@ -42,7 +42,18 @@ export const handler: Handler = async (event) => {
         message: `Idea generation isn't applicable for ${platform} — that's a placement, not a content post.` }) }
   }
 
-  const sys = `You are uP, a music marketing strategist. Generate ONE concrete, scroll-stopping ${platform} content idea an influencer/creator could post to promote a track. Be specific to the platform's native format and the creator's niche. 1-2 sentences, punchy, no preamble, no markdown, no hashtags list. Just the idea.`
+  // Each platform trends differently — tailor the format the idea should take.
+  const PLATFORM_GUIDE: Record<string, string> = {
+    TikTok: `TikTok ideas must be SHORT-FORM VIDEO concepts built around the track as a sound: a trend/challenge, a POV skit, a transition, a "use this sound" hook, or a relatable scenario synced to a specific lyric or beat drop. Reference timing/visual beats. Think viral-loop, watch-to-end.`,
+    Twitter: `Twitter/X ideas must fit the platform's TEXT-FIRST, fast-conversation culture: a punchy quote-tweet take, a meme/screenshot with a one-liner, a "name a song that goes harder than this" bait, a relatable hot-take tweet that links the track, or a reply-guy thread. NO video-trend formats — Twitter is about wit, debate, and shareable text/images, not choreography.`,
+    YouTube: `YouTube ideas must be longer-form or Shorts concepts: a reaction/first-listen, a "songs that should be bigger" breakdown, a beat/production analysis, a playlist placement with commentary, or a Short stitching the hook. Lean on watch-time and discovery via title/thumbnail.`,
+  }
+
+  const sys = `You are uP, a music marketing strategist. Generate ONE concrete, scroll-stopping ${platform} content idea a creator could post to promote a track.
+
+PLATFORM RULES — ${PLATFORM_GUIDE[platform]}
+
+Tailor it to the creator's niche. 1-2 sentences, punchy, no preamble, no markdown, no hashtag lists. Just the idea, in the native format for ${platform}.`
 
   const ctx = [
     influencerName && `Creator: ${influencerName}`,

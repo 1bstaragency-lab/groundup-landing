@@ -179,15 +179,20 @@ export function CampaignBuilder({ song, artist, onClose }: Props) {
                           {generating[inf.id] ? 'Thinking' : 'Generate idea'}
                         </button>
                       ) : (
-                        <span className="text-white/25 text-[9px] font-black uppercase tracking-widest shrink-0">Placement</span>
+                        <span className="text-white/25 text-[9px] font-black uppercase tracking-widest shrink-0">
+                          {inf.platform === 'SoundCloud' ? 'Upload Placement' : 'Placement'}
+                        </span>
                       )}
                     </div>
                     <textarea
                       value={briefs[inf.id] ?? ''}
                       onChange={e => setBriefs(prev => ({ ...prev, [inf.id]: e.target.value }))}
-                      placeholder={canIdea
-                        ? 'Describe the promotion / content idea — or hit Generate idea ↑'
-                        : 'Add placement notes (playlist target, pitch angle, timing…)'}
+                      placeholder={
+                        inf.platform === 'SoundCloud'
+                          ? 'Upload placement — track + any pin/repost notes (optional)'
+                          : canIdea
+                          ? 'Describe the promotion / content idea — or hit Generate idea ↑'
+                          : 'Add placement notes (playlist target, pitch angle, timing…)'}
                       rows={3}
                       className="w-full bg-zinc-950 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-[#FFD700]/30 resize-none"
                     />
