@@ -251,7 +251,22 @@ export function SchedulerSection() {
   }
 
   const todayDay = today.getMonth() === currentMonth && today.getFullYear() === currentYear ? today.getDate() : -1
-  const upcomingEvents = events.filter(e => e.day >= (todayDay > 0 ? todayDay : 1)).slice(0, 3)
+
+  // Merge Supabase release dates into the calendar as auto events
+  const releaseEvents: CalEvent[] = releases
+    .filter(r => {
+      if (!r.release_date) return false
+      const d = new Date(r.release_date)
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear
+    })
+    .map(r => ({
+      day: new Date(r.release_date).getDate(),
+      title: r.title,
+      type: 'Release',
+      color: 'bg-[#FFD700] text-black',
+    }))
+  const allEvents = [...releaseEvents, ...events]
+  const upcomingEvents = allEvents.filter(e => e.day >= (todayDay > 0 ? todayDay : 1)).slice(0, 3)
 
   return (
     <div className="space-y-6 pb-8">
@@ -301,7 +316,7 @@ export function SchedulerSection() {
               ))}
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const dayNum = i + 1
-                const event = events.find(e => e.day === dayNum)
+                const event = allEvents.find(e => e.day === dayNum)
                 const isToday = dayNum === todayDay
                 return (
                   <div key={i} className={`min-h-[60px] rounded-xl border p-2 transition-all duration-300 relative group ${
