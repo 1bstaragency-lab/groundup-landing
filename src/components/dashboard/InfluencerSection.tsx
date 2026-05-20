@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, TrendingUp, Users, Music2, Globe, ExternalLink, Zap, Play, Radio, Lock, Crown, X, Mail, Check } from 'lucide-react';
+import { Search, TrendingUp, Users, Music2, Globe, ExternalLink, Zap, Play, Radio, Lock, Crown, X, Mail, Check, Sparkles } from 'lucide-react';
+import { CampaignBuilder } from './CampaignBuilder';
 import { INFLUENCERS, NETWORK_STATS, type Platform, type TikTokTier } from '../../data/influencers';
 import { useAuth } from '../../hooks/useAuth';
 import { GlassCheckoutCard } from '../ui/glass-checkout-card';
@@ -84,6 +85,7 @@ export function InfluencerSection() {
   const [activeTier, setActiveTier]         = useState<TikTokTier | 'All'>('All');
   const [search, setSearch]                 = useState('');
   const [showUpgrade, setShowUpgrade]       = useState(false);
+  const [showCampaign, setShowCampaign]     = useState(false);
   const [outreachTarget, setOutreachTarget] = useState<OutreachTarget | null>(null);
 
   const isGmailConnected = !!(profile as any)?.gmail_refresh_token;
@@ -131,6 +133,7 @@ export function InfluencerSection() {
     <>
       <AnimatePresence>
         {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
+        {showCampaign && <CampaignBuilder onClose={() => setShowCampaign(false)} />}
       </AnimatePresence>
 
       {/* Outreach slide-in panel */}
@@ -198,8 +201,8 @@ export function InfluencerSection() {
           ))}
         </div>
 
-        {/* Platform tabs */}
-        <div className="flex flex-wrap gap-2">
+        {/* Platform tabs + Create Campaign */}
+        <div className="flex flex-wrap items-center gap-2">
           {PLATFORM_TABS.map(tab => (
             <button
               key={tab.id}
@@ -213,6 +216,15 @@ export function InfluencerSection() {
               {tab.icon}{tab.label}
             </button>
           ))}
+
+          {/* Create Campaign — yellow, Pro-gated, sits after the platform tabs */}
+          <button
+            onClick={() => isPro ? setShowCampaign(true) : setShowUpgrade(true)}
+            className="ml-auto flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FFD700] text-black font-black text-[10px] uppercase tracking-widest hover:scale-[1.03] transition-transform shadow-[0_0_18px_rgba(255,215,0,0.25)]"
+          >
+            <Sparkles size={12} /> Create Campaign
+            {!isPro && <Crown size={11} />}
+          </button>
         </div>
 
         {/* TikTok tier filter */}
