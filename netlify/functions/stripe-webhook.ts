@@ -17,6 +17,23 @@ async function setPlanTier(userId: string, tier: 'free' | 'pro' | 'growth') {
 }
 
 export const handler: Handler = async (event) => {
+  // Diagnostic: GET ?status=<userId> → current plan_tier + stripe linkage.
+  // Lets us confirm whether the webhook actually flipped the tier.
+  if (event.httpMethod === 'GET') {
+    const userId = event.queryStringParameters?.status;
+    if (!userId) return { statusCode: 400, body: 'pass ?status=<userId>' };
+    const { data, error } = await supabase
+      .from('artist_preferences')
+      .select('plan_tier, stripe_customer_id, artist_name')
+      .eq('user_id', userId)
+      .maybeSingle();
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data, error: error?.message }),
+    };
+  }
+
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
 
   const sig       = event.headers['stripe-signature']!;

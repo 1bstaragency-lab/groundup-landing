@@ -42,7 +42,7 @@ const INDUSTRY_NEWS = [
 ];
 
 export function HomeSection() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, refreshProfile } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
 
   const rawName = profile?.artist_name ?? user?.artistName ?? '';
@@ -60,6 +60,21 @@ export function HomeSection() {
     }
     clearPlanIntent();
     openCheckout(user.id, intent);
+  }, [user?.id]);
+
+  // ─── Returning from Stripe (?upgraded=1): the webhook flips plan_tier in the
+  // DB, but our cached profile still says the old tier. Re-fetch a few times so
+  // the unlocked features show without a manual reload (webhook can lag a sec).
+  useEffect(() => {
+    if (!user?.id) return;
+    if (!new URLSearchParams(window.location.search).has('upgraded')) return;
+    let tries = 0;
+    const poll = setInterval(async () => {
+      tries += 1;
+      await refreshProfile();
+      if (tries >= 6) clearInterval(poll); // ~12s of polling
+    }, 2000);
+    return () => clearInterval(poll);
   }, [user?.id]);
 
   async function handleSignOut() {
