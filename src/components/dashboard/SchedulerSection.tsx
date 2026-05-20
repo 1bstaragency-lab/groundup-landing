@@ -252,15 +252,23 @@ export function SchedulerSection() {
 
   const todayDay = today.getMonth() === currentMonth && today.getFullYear() === currentYear ? today.getDate() : -1
 
+  // Parse a "YYYY-MM-DD" string in LOCAL time (not UTC) to avoid the date-off-by-one
+  // that happens when new Date("2024-06-01") is treated as UTC midnight and rolls back
+  // to the previous day in any negative-offset timezone (US, etc.)
+  function parseLocalDate(iso: string): Date {
+    const [y, m, d] = iso.split('-').map(Number)
+    return new Date(y, m - 1, d)
+  }
+
   // Merge Supabase release dates into the calendar as auto events
   const releaseEvents: CalEvent[] = releases
     .filter(r => {
       if (!r.release_date) return false
-      const d = new Date(r.release_date)
+      const d = parseLocalDate(r.release_date)
       return d.getMonth() === currentMonth && d.getFullYear() === currentYear
     })
     .map(r => ({
-      day: new Date(r.release_date).getDate(),
+      day: parseLocalDate(r.release_date).getDate(),
       title: r.title,
       type: 'Release',
       color: 'bg-[#FFD700] text-black',
