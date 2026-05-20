@@ -20,16 +20,21 @@ const LABELS = [
 
 function LabelMark({ name, logo }: { name: string; logo: string }) {
   const [failed, setFailed] = useState(false)
-  if (failed) {
-    return <span className="text-white/55 text-base font-black uppercase tracking-tight">{name}</span>
-  }
+  // Uniform bounding box — every logo fits the same footprint via object-contain,
+  // so wide wordmarks and tall icons all read as the same visual size.
   return (
-    <img
-      src={logo}
-      alt={name}
-      className="h-8 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
-      onError={() => setFailed(true)}
-    />
+    <div className="h-12 w-[160px] flex items-center justify-center">
+      {failed ? (
+        <span className="text-white/55 text-sm font-black uppercase tracking-tight text-center">{name}</span>
+      ) : (
+        <img
+          src={logo}
+          alt={name}
+          className="max-h-full max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity"
+          onError={() => setFailed(true)}
+        />
+      )}
+    </div>
   )
 }
 
