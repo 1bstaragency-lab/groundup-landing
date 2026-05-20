@@ -118,6 +118,20 @@ function LandingPage() {
   const [showDemo, setShowDemo] = useState(false);
   const [navVisible, setNavVisible] = useState(true);
 
+  // Scroll to hash anchor on mount (handles /#pricing navigation from
+  // anywhere in the app). Defers slightly so the section's been laid out.
+  useEffect(() => {
+    if (!window.location.hash) return;
+    const id = window.location.hash.slice(1);
+    const tryScroll = () => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    // Run after first paint + a short delay so animated sections settle
+    setTimeout(tryScroll, 100);
+    setTimeout(tryScroll, 400);
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref');
@@ -507,6 +521,25 @@ function OnboardingPage() {
 }
 
 // ─── Root Router ─────────────────────────────────────────────────────────────
+function PricingStandalonePage() {
+  const navigate = useNavigate();
+  return (
+    <div className="min-h-screen bg-black text-white">
+      {/* Simple header */}
+      <header className="px-6 py-5 border-b border-white/5 flex items-center justify-between">
+        <a href="/" className="text-white font-black text-sm uppercase tracking-tighter">GrounduP</a>
+        <div className="flex items-center gap-3">
+          <a href="/login" className="text-white/40 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors">Sign In</a>
+          <a href="/signup" className="px-4 py-2 rounded-xl bg-[#FFD700] text-black text-[10px] font-black uppercase tracking-widest hover:scale-[1.03] transition-transform">Get Started</a>
+        </div>
+      </header>
+      <main className="px-6 py-16">
+        <PricingPage onSelect={() => navigate('/signup')} />
+      </main>
+    </div>
+  );
+}
+
 function App() {
   const [showSplash, setShowSplash] = useState(() => {
     // Show once per browser session
@@ -522,6 +555,7 @@ function App() {
       </AP>
       <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/pricing" element={<PricingStandalonePage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
       <Route
         path="/signup"

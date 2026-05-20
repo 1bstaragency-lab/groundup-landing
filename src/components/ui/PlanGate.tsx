@@ -1,8 +1,10 @@
 "use client"
 
-import { Lock, Sparkles, ArrowUpRight } from "lucide-react"
+import { useState } from "react"
+import { Lock, Sparkles, ArrowUpRight, Loader2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { usePlan } from "../../hooks/usePlan"
+import { useAuth } from "../../hooks/useAuth"
 import type { PlanTier } from "../../types/auth.types"
 
 interface PlanGateProps {
@@ -28,6 +30,51 @@ export function PlanGate({
   onUpgrade,
 }: PlanGateProps) {
   const plan = usePlan()
+  const { user } = useAuth()
+  const [busy, setBusy] = useState(false)
+  const [err, setErr]   = useState<string | null>(null)
+
+  async function handleUpgradeClick() {
+    if (onUpgrade) { onUpgrade(); return }
+
+    // If not authenticated, bounce to the public pricing page
+    if (!user) {
+      window.location.assign('/pricing')
+      return
+    }
+
+    // Authenticated → kick off Stripe Checkout directly. Growth = growth tier;
+    // anything else routes to Pro (we don't sell Starter, Plant is sales).
+    const tier = required === 'growth' ? 'growth' : 'pro'
+    setBusy(true)
+    setErr(null)
+    try {
+      const res = await fetch('/.netlify/functions/create-checkout-session', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId:    user.id,
+          tier,
+          returnUrl: window.location.href + '?upgraded=1',
+          cancelUrl: window.location.href,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (data.ok && data.url) {
+        window.location.href = data.url
+        return
+      }
+      setErr(
+        data.error === 'not_configured'
+          ? "Checkout isn't connected yet — Stripe keys still need to be added on the server."
+          : data.message ?? 'Could not start checkout. Try again in a moment.'
+      )
+    } catch {
+      setErr('Network error — try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   if (plan.loading || plan.isAtLeast(required)) {
     return <>{children}</>
@@ -64,13 +111,18 @@ export function PlanGate({
         </p>
 
         <button
-          onClick={() => onUpgrade?.() ?? window.location.assign('/#pricing')}
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#FFD700] text-black font-black text-[11px] uppercase tracking-widest hover:scale-[1.02] transition-transform shadow-[0_0_24px_rgba(255,215,0,0.25)]"
+          onClick={handleUpgradeClick}
+          disabled={busy}
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#FFD700] text-black font-black text-[11px] uppercase tracking-widest hover:scale-[1.02] transition-transform shadow-[0_0_24px_rgba(255,215,0,0.25)] disabled:opacity-60 disabled:hover:scale-100"
         >
-          <Sparkles size={12} />
-          Upgrade to {TIER_NAME[required]}
-          <ArrowUpRight size={13} />
+          {busy
+            ? <><Loader2 size={12} className="animate-spin" /> Opening checkout…</>
+            : <><Sparkles size={12} /> Upgrade to {TIER_NAME[required]} <ArrowUpRight size={13} /></>}
         </button>
+
+        {err && (
+          <p className="mt-3 text-[10px] font-medium text-[#FFD700]/70 max-w-md">{err}</p>
+        )}
       </div>
     </motion.div>
   )
