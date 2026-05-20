@@ -51,6 +51,7 @@ function PageSplash({ onDone }: { onDone: () => void }) {
 import { UpChatMockup, UpOrbMascot } from './components/ui/UpChatMockup';
 import { SignUpPage } from './pages/SignUp';
 import { LoginPage } from './pages/Login';
+import { AppFunnel } from './pages/AppFunnel';
 import { Dashboard } from './pages/Dashboard';
 import { JoinPage } from './pages/JoinPage';
 import { ForgotPasswordPage } from './pages/ForgotPassword';
@@ -597,6 +598,7 @@ function App() {
       <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/pricing" element={<PricingStandalonePage />} />
+      <Route path="/get-app" element={<AppFunnel />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
       <Route
         path="/signup"
