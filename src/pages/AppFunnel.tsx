@@ -6,29 +6,35 @@ import { ArrowRight, Check, Loader2, Phone, ChevronDown, Share, Plus, SquarePlus
 import { useNavigate } from 'react-router-dom'
 import { CAMPAIGNS } from '../data/campaigns'
 
-// Drop the official logo files into /public/labels/ (white/transparent PNG or
-// SVG). Until a file exists, the card falls back to the wordmark text.
+// Official logo files in /public/labels/. Mixed backgrounds (some black-on-
+// white, some white-on-black, some color) so each renders on a uniform white
+// chip for a clean logo-wall look. Missing files fall back to a text wordmark.
 const LABELS = [
-  { name: '10K Projects',         logo: '/labels/10k-projects.png' },
-  { name: 'Interscope Records',   logo: '/labels/interscope.png' },
-  { name: 'Geffen Records',       logo: '/labels/geffen.png' },
+  { name: '10K Projects',          logo: '/labels/10k-projects.svg' },
+  { name: 'Interscope Records',    logo: '/labels/interscope.webp' },
+  { name: 'Geffen Records',        logo: '/labels/geffen.webp' },
   { name: 'Simple Stupid Records', logo: '/labels/simple-stupid.png' },
-  { name: 'Atlantic Records',     logo: '/labels/atlantic.png' },
+  { name: 'Atlantic Records',      logo: '/labels/atlantic.webp' },
 ]
 
 function LabelMark({ name, logo }: { name: string; logo: string }) {
   const [failed, setFailed] = useState(false)
   if (failed) {
-    return <span className="text-white/55 text-base font-black uppercase tracking-tight">{name}</span>
+    return (
+      <div className="bg-white rounded-xl px-5 py-3 flex items-center justify-center min-h-[56px] w-44">
+        <span className="text-black/80 text-sm font-black uppercase tracking-tight text-center">{name}</span>
+      </div>
+    )
   }
   return (
-    <img
-      src={logo}
-      alt={name}
-      className="h-7 w-auto mx-auto object-contain opacity-60 hover:opacity-100 transition-opacity"
-      style={{ filter: 'grayscale(1) brightness(1.6)' }}
-      onError={() => setFailed(true)}
-    />
+    <div className="bg-white rounded-xl px-5 py-3 flex items-center justify-center min-h-[56px] w-44">
+      <img
+        src={logo}
+        alt={name}
+        className="max-h-9 w-auto object-contain"
+        onError={() => setFailed(true)}
+      />
+    </div>
   )
 }
 
