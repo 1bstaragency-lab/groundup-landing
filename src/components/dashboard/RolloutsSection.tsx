@@ -4,7 +4,7 @@ import {
   Plus, Calendar, Trash2, ChevronRight, CheckSquare, Square, X,
   Disc3, Layers, Music, ListMusic, Sparkles, Upload, ChevronLeft, Radio,
 } from 'lucide-react';
-import { BudgetCard } from '../ui/analytics-bento';
+import { CircularProgressCard } from '../ui/circular-progress-card';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -75,6 +75,25 @@ const TIMELINE_OPTIONS: { value: RolloutWeeks; label: string; sub: string }[] = 
 function uid() { return Math.random().toString(36).slice(2); }
 
 function buildChecklist(data: WizardData): ChecklistItem[] {
+  // SoundCloud Exclusive — quick, soft, community-first drop. Lean checklist:
+  // no distributor, no pre-save, no newsletter / listening party / BTS, no press.
+  if (data.type === 'SoundCloud Exclusive') {
+    const sc: { label: string; category: string }[] = [
+      { label: 'Finalize mix & master', category: 'Production' },
+      { label: 'Upload cover art', category: 'Production' },
+      { label: 'Upload to SoundCloud + set release time', category: 'Release' },
+      { label: 'Write description + tags', category: 'Release' },
+      { label: 'Post the SC link to your story / close friends', category: 'Social' },
+    ];
+    if (data.focusAreas.includes('Social Media & Virality')) {
+      sc.push({ label: 'Tease a clip on TikTok with the SC link', category: 'Social' });
+    }
+    if (data.focusAreas.includes('Fan Community')) {
+      sc.push({ label: 'Drop it in your group chat / Discord first', category: 'Community' });
+    }
+    return sc.map(i => ({ ...i, id: uid(), done: false }));
+  }
+
   const items: { label: string; category: string }[] = [];
 
   // Core items always present
@@ -805,20 +824,24 @@ export function RolloutsSection() {
                     ))}
                   </div>
 
-                  {/* Budget tracker — only shown when release has a budget set */}
-                  {activeRelease.budget && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 16 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                      className="mt-8 pt-6 border-t border-white/5"
-                    >
-                      <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.3em] mb-4">
-                        Release Tracker · {activeRelease.budget}
-                      </p>
-                      <BudgetCard />
-                    </motion.div>
-                  )}
+                  {/* Rollout progress — checklist completion as a progress ring */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="mt-8 pt-6 border-t border-white/5"
+                  >
+                    <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.3em] mb-4">
+                      Rollout Progress{activeRelease.budget ? ` · ${activeRelease.budget}` : ''}
+                    </p>
+                    <CircularProgressCard
+                      title="Checklist Complete"
+                      description={`${activeRelease.checklist.filter(i => i.done).length} of ${activeRelease.checklist.length} tasks done`}
+                      currentValue={activeRelease.checklist.filter(i => i.done).length}
+                      goalValue={Math.max(1, activeRelease.checklist.length)}
+                      label="done"
+                    />
+                  </motion.div>
                 </motion.div>
               ) : (
                 <motion.div
