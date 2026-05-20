@@ -2,24 +2,87 @@
 
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { X, Check, Sparkles, Loader2, Search, ArrowRight, ArrowLeft, Send } from 'lucide-react'
+import { X, Check, Sparkles, Loader2, Search, ArrowRight, ArrowLeft, Send, Info } from 'lucide-react'
 import { INFLUENCERS, type Influencer, type Platform } from '../../data/influencers'
 
 // Platforms where an AI "content idea" makes sense (a post you create).
 // Spotify/SoundCloud are placements, so no idea generation there.
 const IDEA_PLATFORMS: Platform[] = ['TikTok', 'Twitter', 'YouTube']
 
-interface Props {
-  song?:   string
-  artist?: string
-  onClose: () => void
+// ─── Platform color themes ───────────────────────────────────────────────────
+const PLATFORM_TAB_ACTIVE: Record<Platform | 'All', string> = {
+  All:        'bg-[#FFD700] text-black',
+  TikTok:     'bg-sky-500 text-white',
+  Twitter:    'bg-blue-500 text-white',
+  Spotify:    'bg-green-600 text-white',
+  Blog:       'bg-purple-500 text-white',
+  YouTube:    'bg-red-500 text-white',
+  SoundCloud: 'bg-orange-500 text-white',
 }
 
-export function CampaignBuilder({ song, artist, onClose }: Props) {
-  const [step, setStep]       = useState<0 | 1>(0)   // 0 = pick, 1 = brief
-  const [search, setSearch]   = useState('')
+// Left-border accent color strip on each brief card
+const PLATFORM_ACCENT_BAR: Record<Platform, string> = {
+  TikTok:     'bg-sky-500',
+  Twitter:    'bg-blue-500',
+  Spotify:    'bg-green-500',
+  Blog:       'bg-purple-500',
+  YouTube:    'bg-red-500',
+  SoundCloud: 'bg-orange-500',
+}
+
+// Card border/bg when checked in the pick-list
+const PLATFORM_CHECKED: Record<Platform, { border: string; bg: string }> = {
+  TikTok:     { border: 'border-sky-400/40',    bg: 'bg-sky-500/8' },
+  Twitter:    { border: 'border-blue-400/40',   bg: 'bg-blue-500/8' },
+  Spotify:    { border: 'border-green-400/40',  bg: 'bg-green-500/8' },
+  Blog:       { border: 'border-purple-400/40', bg: 'bg-purple-500/8' },
+  YouTube:    { border: 'border-red-400/40',    bg: 'bg-red-500/8' },
+  SoundCloud: { border: 'border-orange-400/40', bg: 'bg-orange-500/8' },
+}
+
+// Brief card header background tint
+const PLATFORM_BRIEF_BG: Record<Platform, string> = {
+  TikTok:     'bg-sky-500/6',
+  Twitter:    'bg-blue-500/6',
+  Spotify:    'bg-green-500/6',
+  Blog:       'bg-purple-500/6',
+  YouTube:    'bg-red-500/6',
+  SoundCloud: 'bg-orange-500/6',
+}
+
+// Platform badge styles (same as InfluencerSection for consistency)
+const PLATFORM_BADGE: Record<Platform, string> = {
+  TikTok:     'bg-sky-500/15 text-sky-400',
+  Twitter:    'bg-blue-500/15 text-blue-400',
+  Spotify:    'bg-green-500/15 text-green-400',
+  Blog:       'bg-purple-500/15 text-purple-400',
+  YouTube:    'bg-red-500/15 text-red-400',
+  SoundCloud: 'bg-orange-500/15 text-orange-400',
+}
+
+const PLATFORM_AVATAR: Record<Platform, string> = {
+  TikTok:     'bg-sky-500/20 text-sky-300',
+  Twitter:    'bg-blue-500/20 text-blue-300',
+  Spotify:    'bg-green-500/20 text-green-300',
+  Blog:       'bg-purple-500/20 text-purple-300',
+  YouTube:    'bg-red-500/20 text-red-300',
+  SoundCloud: 'bg-orange-500/20 text-orange-300',
+}
+
+interface Props {
+  song?:        string
+  artist?:      string
+  /** Pre-checked influencer ids coming from the guided curated flow */
+  preSelected?: Record<string, boolean>
+  onClose:      () => void
+}
+
+export function CampaignBuilder({ song, artist, preSelected, onClose }: Props) {
+  const hasPreSelected = preSelected && Object.values(preSelected).some(Boolean)
+  const [step, setStep]         = useState<0 | 1>(hasPreSelected ? 1 : 0)
+  const [search, setSearch]     = useState('')
   const [platform, setPlatform] = useState<Platform | 'All'>('All')
-  const [selected, setSelected] = useState<Record<string, boolean>>({})
+  const [selected, setSelected] = useState<Record<string, boolean>>(preSelected ?? {})
   const [briefs, setBriefs]     = useState<Record<string, string>>({})
   const [generating, setGenerating] = useState<Record<string, boolean>>({})
 
@@ -36,8 +99,18 @@ export function CampaignBuilder({ song, artist, onClose }: Props) {
   const chosen = INFLUENCERS.filter(i => selected[i.id])
   const count  = chosen.length
 
+  // SoundCloud: only one DJ host per campaign (radio-select behavior)
   function toggle(id: string) {
-    setSelected(prev => ({ ...prev, [id]: !prev[id] }))
+    const inf = INFLUENCERS.find(i => i.id === id)
+    setSelected(prev => {
+      const next = { ...prev, [id]: !prev[id] }
+      if (inf?.platform === 'SoundCloud' && next[id]) {
+        INFLUENCERS
+          .filter(i => i.platform === 'SoundCloud' && i.id !== id)
+          .forEach(i => { next[i.id] = false })
+      }
+      return next
+    })
   }
 
   async function generateIdea(inf: Influencer) {
@@ -105,38 +178,62 @@ export function CampaignBuilder({ song, artist, onClose }: Props) {
                     key={p}
                     onClick={() => setPlatform(p)}
                     className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                      platform === p ? 'bg-[#FFD700] text-black' : 'bg-zinc-900/60 border border-white/8 text-white/40 hover:text-white'
+                      platform === p
+                        ? PLATFORM_TAB_ACTIVE[p]
+                        : 'bg-zinc-900/60 border border-white/8 text-white/40 hover:text-white'
                     }`}
                   >
                     {p}
                   </button>
                 ))}
               </div>
+              {/* SoundCloud single-host notice */}
+              {platform === 'SoundCloud' && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-orange-500/8 border border-orange-500/20">
+                  <Info size={11} className="text-orange-400 shrink-0" />
+                  <p className="text-orange-300/80 text-[10px] font-bold">
+                    Only one SoundCloud DJ host can be added per campaign.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="overflow-y-auto px-6 py-4 space-y-2 flex-1">
               {filtered.map(inf => {
                 const on = !!selected[inf.id]
+                const theme = PLATFORM_CHECKED[inf.platform]
                 return (
                   <button
                     key={inf.id}
                     onClick={() => toggle(inf.id)}
                     className={`w-full flex items-center gap-3 p-3 rounded-2xl border text-left transition-all ${
-                      on ? 'bg-[#FFD700]/8 border-[#FFD700]/30' : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
+                      on
+                        ? `${theme.bg} ${theme.border}`
+                        : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
                     }`}
                   >
-                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ${
-                      on ? 'bg-[#FFD700] border-[#FFD700]' : 'border-white/20'
+                    {/* Avatar */}
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm shrink-0 ${
+                      on ? PLATFORM_AVATAR[inf.platform] : 'bg-zinc-800 text-white/50'
                     }`}>
-                      {on && <Check size={11} strokeWidth={3} className="text-black" />}
+                      {inf.name[0]}
                     </div>
+
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-bold text-sm truncate">{inf.name}</p>
                       <p className="text-white/35 text-[11px] truncate">{inf.handle} · {inf.niche}</p>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-white/60 text-xs font-bold">{inf.followers}</p>
-                      <p className="text-white/25 text-[9px] font-black uppercase tracking-widest">{inf.platform}</p>
+
+                    {/* Platform badge */}
+                    <span className={`shrink-0 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${PLATFORM_BADGE[inf.platform]}`}>
+                      {inf.platform}
+                    </span>
+
+                    {/* Checkbox */}
+                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
+                      on ? 'bg-[#FFD700] border-[#FFD700]' : 'border-white/20'
+                    }`}>
+                      {on && <Check size={11} strokeWidth={3} className="text-black" />}
                     </div>
                   </button>
                 )
@@ -161,13 +258,29 @@ export function CampaignBuilder({ song, artist, onClose }: Props) {
           <>
             <div className="overflow-y-auto px-6 py-4 space-y-4 flex-1">
               {chosen.map(inf => {
-                const canIdea = IDEA_PLATFORMS.includes(inf.platform)
+                const canIdea  = IDEA_PLATFORMS.includes(inf.platform)
+                const accentBar = PLATFORM_ACCENT_BAR[inf.platform]
+                const briefBg   = PLATFORM_BRIEF_BG[inf.platform]
                 return (
-                  <div key={inf.id} className="bg-zinc-900/40 border border-white/5 rounded-2xl p-4">
-                    <div className="flex items-center justify-between gap-3 mb-2">
-                      <div className="min-w-0">
-                        <p className="text-white font-bold text-sm truncate">{inf.name}</p>
-                        <p className="text-white/35 text-[11px] truncate">{inf.handle} · {inf.platform}</p>
+                  <div key={inf.id} className="rounded-2xl border border-white/8 overflow-hidden">
+                    {/* Platform-colored top accent bar */}
+                    <div className={`h-[3px] w-full ${accentBar}`} />
+
+                    {/* Card header */}
+                    <div className={`flex items-center justify-between gap-3 px-4 pt-3.5 pb-3 ${briefBg}`}>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm shrink-0 ${PLATFORM_AVATAR[inf.platform]}`}>
+                          {inf.name[0]}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-white font-bold text-sm truncate leading-none">{inf.name}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full ${PLATFORM_BADGE[inf.platform]}`}>
+                              {inf.platform}
+                            </span>
+                            <p className="text-white/30 text-[10px] truncate">{inf.handle}</p>
+                          </div>
+                        </div>
                       </div>
                       {canIdea ? (
                         <button
@@ -179,23 +292,30 @@ export function CampaignBuilder({ song, artist, onClose }: Props) {
                           {generating[inf.id] ? 'Thinking' : 'Generate idea'}
                         </button>
                       ) : (
-                        <span className="text-white/25 text-[9px] font-black uppercase tracking-widest shrink-0">
+                        <span className={`text-[9px] font-black uppercase tracking-widest shrink-0 ${
+                          inf.platform === 'SoundCloud' ? 'text-orange-400/70' : 'text-white/25'
+                        }`}>
                           {inf.platform === 'SoundCloud' ? 'Upload Placement' : 'Placement'}
                         </span>
                       )}
                     </div>
-                    <textarea
-                      value={briefs[inf.id] ?? ''}
-                      onChange={e => setBriefs(prev => ({ ...prev, [inf.id]: e.target.value }))}
-                      placeholder={
-                        inf.platform === 'SoundCloud'
-                          ? 'Upload placement — track + any pin/repost notes (optional)'
-                          : canIdea
-                          ? 'Describe the promotion / content idea — or hit Generate idea ↑'
-                          : 'Add placement notes (playlist target, pitch angle, timing…)'}
-                      rows={3}
-                      className="w-full bg-zinc-950 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-[#FFD700]/30 resize-none"
-                    />
+
+                    {/* Textarea */}
+                    <div className="px-4 pb-4 pt-2">
+                      <textarea
+                        value={briefs[inf.id] ?? ''}
+                        onChange={e => setBriefs(prev => ({ ...prev, [inf.id]: e.target.value }))}
+                        placeholder={
+                          inf.platform === 'SoundCloud'
+                            ? 'Upload placement — track + any pin/repost notes (optional)'
+                            : canIdea
+                            ? 'Describe the promotion / content idea — or hit Generate idea ↑'
+                            : 'Add placement notes (playlist target, pitch angle, timing…)'
+                        }
+                        rows={3}
+                        className="w-full bg-zinc-950 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-white/20 resize-none"
+                      />
+                    </div>
                   </div>
                 )
               })}
