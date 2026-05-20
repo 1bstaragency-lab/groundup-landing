@@ -6,7 +6,31 @@ import { ArrowRight, Check, Loader2, Phone, ChevronDown, Share, Plus, SquarePlus
 import { useNavigate } from 'react-router-dom'
 import { CAMPAIGNS } from '../data/campaigns'
 
-const LABELS = ['10K Projects', 'Interscope Records', 'Geffen Records', 'Simple Stupid Records', 'Atlantic Records']
+// Drop the official logo files into /public/labels/ (white/transparent PNG or
+// SVG). Until a file exists, the card falls back to the wordmark text.
+const LABELS = [
+  { name: '10K Projects',         logo: '/labels/10k-projects.png' },
+  { name: 'Interscope Records',   logo: '/labels/interscope.png' },
+  { name: 'Geffen Records',       logo: '/labels/geffen.png' },
+  { name: 'Simple Stupid Records', logo: '/labels/simple-stupid.png' },
+  { name: 'Atlantic Records',     logo: '/labels/atlantic.png' },
+]
+
+function LabelMark({ name, logo }: { name: string; logo: string }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) {
+    return <span className="text-white/55 text-base font-black uppercase tracking-tight">{name}</span>
+  }
+  return (
+    <img
+      src={logo}
+      alt={name}
+      className="h-7 w-auto mx-auto object-contain opacity-60 hover:opacity-100 transition-opacity"
+      style={{ filter: 'grayscale(1) brightness(1.6)' }}
+      onError={() => setFailed(true)}
+    />
+  )
+}
 
 const COUNTRY_CODES = [
   { code: '+1',   flag: '🇺🇸', label: 'US' },
@@ -314,9 +338,9 @@ export function AppFunnel() {
                 <p className="text-white/30 text-xs font-medium mb-6 max-w-xs mx-auto">
                   We've run rollouts across major & indie rosters.
                 </p>
-                <div className="flex flex-col gap-2.5">
+                <div className="flex flex-col items-center gap-4">
                   {LABELS.map(l => (
-                    <span key={l} className="text-white/55 text-base font-black uppercase tracking-tight">{l}</span>
+                    <LabelMark key={l.name} name={l.name} logo={l.logo} />
                   ))}
                 </div>
               </div>
