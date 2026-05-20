@@ -10,3 +10,9 @@
 
 [functions."scheduled-texts"]
   schedule = "0 14 * * 0,3"
+
+# Hourly check-in dispatcher — fires once per hour at :00.
+# Each invocation filters users to those whose checkin_hour in their timezone
+# matches the current hour, so daily check-ins fire at the user's local time.
+[functions."up-checkin"]
+  schedule = "0 * * * *"

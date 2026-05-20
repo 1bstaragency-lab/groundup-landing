@@ -11,6 +11,7 @@ import { supabase } from "../../lib/supabaseClient"
 import { useAuth } from "../../hooks/useAuth"
 import { GlassAccountSettingsCard } from "../ui/glass-account-settings-card"
 import { PlanGate } from "../ui/PlanGate"
+import { CheckInSettingsCard } from "./CheckInSettingsCard"
 
 interface Profile {
   artist_name: string
@@ -402,6 +403,13 @@ export function ProfileSection() {
             </div>
           </div>
           </PlanGate>
+
+          {/* uP Daily Check-In — Pro+ feature */}
+          {user && (
+            <PlanGate required="pro" feature="uP Daily Check-Ins" mode="block">
+              <CheckInSettingsCard userId={user.id} />
+            </PlanGate>
+          )}
 
           {/* Credentials */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
