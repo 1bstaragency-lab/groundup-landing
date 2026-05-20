@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { LogOut, TrendingUp, Zap, Globe, Music2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { HomeDashboard } from '../../components/dashboard/HomeDashboard';
 import { GmailConnectButton } from '../../components/ui/GmailCompose';
+import { readPlanIntent, clearPlanIntent, openCheckout } from '../../lib/pricingCheckout';
 
 const INDUSTRY_NEWS = [
   {
@@ -46,6 +47,20 @@ export function HomeSection() {
 
   const rawName = profile?.artist_name ?? user?.artistName ?? '';
   const displayName = rawName && !rawName.includes('@') ? rawName : 'Artist';
+
+  // ─── Auto-checkout: if user signed up via a pricing card, finish the flow ──
+  useEffect(() => {
+    if (!user?.id) return;
+    const intent = readPlanIntent();
+    if (!intent) return;
+    // Don't re-fire if Stripe already brought them back (returnUrl carries ?upgraded=1)
+    if (new URLSearchParams(window.location.search).has('upgraded')) {
+      clearPlanIntent();
+      return;
+    }
+    clearPlanIntent();
+    openCheckout(user.id, intent);
+  }, [user?.id]);
 
   async function handleSignOut() {
     setLoggingOut(true);

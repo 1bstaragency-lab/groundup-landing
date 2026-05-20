@@ -63,7 +63,15 @@ const OTHER_PLANS: OtherPlan[] = [
 type Choice = 'trial' | 'free' | 'growth' | 'plant'
 
 export function PlanSelectionOnboarding({ userId, artistName, onComplete }: Props) {
-  const [choice, setChoice]     = useState<Choice>('trial')
+  const [choice, setChoice]     = useState<Choice>(() => {
+    // Pre-select based on plan the user clicked on the public pricing page
+    try {
+      const stashed = localStorage.getItem('gup_intent_plan')
+      if (stashed === 'pro')    return 'trial'
+      if (stashed === 'growth') return 'growth'
+    } catch { /* noop */ }
+    return 'trial'
+  })
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState<string | null>(null)
   const [showOther, setShowOther] = useState(false)

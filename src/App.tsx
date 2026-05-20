@@ -15,6 +15,7 @@ import { TeamDashboardMockup } from './components/ui/TeamDashboardMockup';
 import ShaderShowcase from './components/ui/hero';
 import { LiquidButton } from './components/ui/liquid-glass-button';
 import { PricingPage } from './components/ui/pricing-page';
+import { handlePricingClick } from './lib/pricingCheckout';
 import { MarketingBadges } from './components/ui/marketing-badges';
 import { MagnifiedBento } from './components/ui/magnified-bento';
 import { InfiniteBentoPan } from './components/ui/infinite-bento-pan';
@@ -107,6 +108,7 @@ type NavKey = keyof typeof NAV_POPUPS;
 // ─── Landing Page ────────────────────────────────────────────────────────────
 function LandingPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', socialHandle: '', role: 'Artist'
   });
@@ -117,6 +119,17 @@ function LandingPage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
   const [navVisible, setNavVisible] = useState(true);
+  const [pricingError, setPricingError] = useState<string | null>(null);
+
+  async function onPlanSelect(planName: string) {
+    setPricingError(null);
+    const result = await handlePricingClick({
+      planName,
+      userId:   user?.id ?? null,
+      navigate,
+    });
+    if (result?.message) setPricingError(result.message);
+  }
 
   // Scroll to hash anchor on mount (handles /#pricing navigation from
   // anywhere in the app). Defers slightly so the section's been laid out.
@@ -458,7 +471,12 @@ function LandingPage() {
       {/* Pricing */}
       <section id="pricing" className="py-32 px-6 bg-black">
         <div className="max-w-7xl mx-auto">
-          <PricingPage onSelect={() => navigate('/signup')} />
+          <PricingPage onSelect={onPlanSelect} />
+          {pricingError && (
+            <p className="text-center text-[#FFD700]/70 text-xs font-medium mt-6 max-w-md mx-auto">
+              {pricingError}
+            </p>
+          )}
         </div>
       </section>
 
@@ -523,18 +541,41 @@ function OnboardingPage() {
 // ─── Root Router ─────────────────────────────────────────────────────────────
 function PricingStandalonePage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [err, setErr] = useState<string | null>(null);
+
+  async function onPlanSelect(planName: string) {
+    setErr(null);
+    const result = await handlePricingClick({
+      planName,
+      userId:   user?.id ?? null,
+      navigate,
+    });
+    if (result?.message) setErr(result.message);
+  }
+
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Simple header */}
       <header className="px-6 py-5 border-b border-white/5 flex items-center justify-between">
         <a href="/" className="text-white font-black text-sm uppercase tracking-tighter">GrounduP</a>
         <div className="flex items-center gap-3">
-          <a href="/login" className="text-white/40 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors">Sign In</a>
-          <a href="/signup" className="px-4 py-2 rounded-xl bg-[#FFD700] text-black text-[10px] font-black uppercase tracking-widest hover:scale-[1.03] transition-transform">Get Started</a>
+          {!user ? (
+            <>
+              <a href="/login" className="text-white/40 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors">Sign In</a>
+              <a href="/signup" className="px-4 py-2 rounded-xl bg-[#FFD700] text-black text-[10px] font-black uppercase tracking-widest hover:scale-[1.03] transition-transform">Get Started</a>
+            </>
+          ) : (
+            <a href="/dashboard/home" className="px-4 py-2 rounded-xl bg-[#FFD700] text-black text-[10px] font-black uppercase tracking-widest hover:scale-[1.03] transition-transform">Dashboard</a>
+          )}
         </div>
       </header>
       <main className="px-6 py-16">
-        <PricingPage onSelect={() => navigate('/signup')} />
+        <PricingPage onSelect={onPlanSelect} />
+        {err && (
+          <p className="text-center text-[#FFD700]/70 text-xs font-medium mt-6 max-w-md mx-auto">
+            {err}
+          </p>
+        )}
       </main>
     </div>
   );
