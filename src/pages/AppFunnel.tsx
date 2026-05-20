@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Check, Loader2, Phone, ChevronDown, Share, Plus, SquarePlus } from 'lucide-react'
+import { ArrowRight, Check, Loader2, Phone, ChevronDown, Share, Plus, SquarePlus, ChevronsDown } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { CAMPAIGNS } from '../data/campaigns'
+
+const LABELS = ['10K Projects', 'Interscope Records', 'Geffen Records', 'Simple Stupid Records', 'Atlantic Records']
 
 const COUNTRY_CODES = [
   { code: '+1',   flag: '🇺🇸', label: 'US' },
@@ -265,33 +268,99 @@ export function AppFunnel() {
               key="hero"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-md mx-auto text-center flex flex-col items-center justify-center min-h-[calc(100dvh-140px)]"
+              className="w-full max-w-md mx-auto"
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FFD700]/8 border border-[#FFD700]/20 mb-5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#FFD700] animate-pulse" />
-                <span className="text-[#FFD700] text-[10px] font-black uppercase tracking-widest">Now in early beta access</span>
+              {/* Above the fold — one viewport */}
+              <div className="text-center flex flex-col items-center justify-center min-h-[calc(100dvh-150px)]">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FFD700]/8 border border-[#FFD700]/20 mb-5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#FFD700] animate-pulse" />
+                  <span className="text-[#FFD700] text-[10px] font-black uppercase tracking-widest">Now in early beta access</span>
+                </div>
+
+                <h1 className="text-[2.75rem] leading-[0.92] sm:text-5xl font-black tracking-tighter uppercase mb-4">
+                  Run your whole<br />music career<br />
+                  <span className="text-[#FFD700]">from a text.</span>
+                </h1>
+
+                <p className="text-white/55 text-[15px] font-medium leading-snug mb-8 max-w-[20rem] mx-auto">
+                  AI release rollouts, real-time stats, and your own music exec texting you when it matters. <span className="text-white/80">2,000+ artists</span> already inside.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-3 mb-4 justify-center w-full">
+                  <AppStoreBadge onClick={reveal} />
+                  <GooglePlayBadge onClick={reveal} />
+                </div>
+
+                <button
+                  onClick={() => navigate('/signup')}
+                  className="py-2 text-white/40 active:text-white text-[12px] font-bold uppercase tracking-widest transition-colors"
+                >
+                  Or continue on web →
+                </button>
+
+                {/* scroll hint */}
+                <motion.div
+                  animate={{ y: [0, 6, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.8 }}
+                  className="mt-8 text-white/20"
+                >
+                  <ChevronsDown size={20} />
+                </motion.div>
               </div>
 
-              <h1 className="text-[2.75rem] leading-[0.92] sm:text-5xl font-black tracking-tighter uppercase mb-4">
-                Run your whole<br />music career<br />
-                <span className="text-[#FFD700]">from a text.</span>
-              </h1>
-
-              <p className="text-white/55 text-[15px] font-medium leading-snug mb-8 max-w-[20rem] mx-auto">
-                AI release rollouts, real-time stats, and your own music exec texting you when it matters. <span className="text-white/80">2,000+ artists</span> already inside.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-3 mb-4 justify-center w-full">
-                <AppStoreBadge onClick={reveal} />
-                <GooglePlayBadge onClick={reveal} />
+              {/* ── Social proof — labels ─────────────────────── */}
+              <div className="py-12 border-t border-white/8 text-center">
+                <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.35em] mb-2">Trusted by artists & teams signed to</p>
+                <p className="text-white/30 text-xs font-medium mb-6 max-w-xs mx-auto">
+                  We've run rollouts across major & indie rosters.
+                </p>
+                <div className="flex flex-col gap-2.5">
+                  {LABELS.map(l => (
+                    <span key={l} className="text-white/55 text-base font-black uppercase tracking-tight">{l}</span>
+                  ))}
+                </div>
               </div>
 
-              <button
-                onClick={() => navigate('/signup')}
-                className="py-2 text-white/40 active:text-white text-[12px] font-bold uppercase tracking-widest transition-colors"
-              >
-                Or continue on web →
-              </button>
+              {/* ── Social proof — campaigns ──────────────────── */}
+              <div className="py-12 border-t border-white/8">
+                <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.35em] mb-1 text-center">Our Campaigns</p>
+                <h2 className="text-3xl font-black tracking-tighter uppercase text-center mb-6">
+                  Rollouts that <span className="text-[#FFD700]">hit.</span>
+                </h2>
+                <div className="border-t border-white/8">
+                  {CAMPAIGNS.slice(0, 4).map((c, i) => (
+                    <div key={i} className="flex items-baseline justify-between gap-3 py-4 border-b border-white/8 text-left">
+                      <div className="min-w-0">
+                        <p className="text-white font-black text-base uppercase tracking-tight truncate">{c.artist}</p>
+                        <p className="text-white/40 text-[11px] font-medium truncate">
+                          {c.type}{c.result && <span className="text-[#FFD700]/70"> · ✦ {c.result}</span>}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-white/50 text-[11px] font-bold whitespace-nowrap">{c.label}</p>
+                        <p className="text-white/20 text-[9px] font-black uppercase tracking-widest">{c.year}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bottom CTA repeat */}
+              <div className="py-10 border-t border-white/8 text-center">
+                <button
+                  onClick={reveal}
+                  className="w-full h-14 rounded-2xl bg-[#FFD700] text-black font-black text-base uppercase tracking-tight active:scale-[0.98] shadow-[0_8px_32px_rgba(255,215,0,0.25)] flex items-center justify-center gap-2"
+                >
+                  Get early access
+                  <ArrowRight size={18} />
+                </button>
+                <button
+                  onClick={() => navigate('/signup')}
+                  className="mt-4 py-2 text-white/40 active:text-white text-[12px] font-bold uppercase tracking-widest transition-colors"
+                >
+                  Or continue on web →
+                </button>
+              </div>
             </motion.div>
           )}
 
