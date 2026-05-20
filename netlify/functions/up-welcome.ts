@@ -19,11 +19,11 @@ const CORS = {
 }
 
 const TONE_OPENERS: Record<string, string> = {
-  'Assistant Manager': "I've got your releases, calendar, and rollout tasks all loaded up. Need a status check or a plan? Just text me.",
-  'Your Boy':          "We bout to build something real. Anytime you need strategy, content ideas, or just to think through a move — I'm right here.",
-  'Label Rep':         "I've reviewed your catalog and upcoming schedule. Ready to talk positioning, pitching, or next-level growth plays whenever you are.",
-  'Road Manager':      "I've got your schedule locked in and I'm watching your rollout. Need something handled? Text me and it's done.",
-  'Creative Partner':  "I've been thinking about your sound and where it's headed. Whenever you're ready to create, strategize, or just riff — I'm here for it.",
+  'Assistant Manager': "I'm here to help your releases reach new audiences and grow your career overall — from rollout strategy to playlist pitching and everything in between.",
+  'Your Boy':          "I'm here to help you blow up — real talk. Releases, strategy, curators, content ideas — I got you on all of it.",
+  'Label Rep':         "My job is to position your catalog for maximum reach and long-term growth — pitching, playlisting, and data-backed career strategy.",
+  'Road Manager':      "I handle the details so you can focus on the music — rollout plans, deadlines, curator outreach, all of it.",
+  'Creative Partner':  "I'm here to help your music find the audiences it deserves — creatively, strategically, and consistently.",
 }
 
 function normalizePhone(phone: string): string {
@@ -60,9 +60,9 @@ export const handler: Handler = async (event) => {
   const to      = normalizePhone(phone)
 
   const text =
-    `Hey ${name} 👋 It's uP — your GrounduP AI.\n\n` +
+    `Welcome to GrounduP, ${name}! 👋 I'm uP — your personal music career assistant.\n\n` +
     `${opener}\n\n` +
-    `You can text me here anytime — I know your releases, your schedule, and your goals. Let's get to work.`
+    `Text me here anytime — and I'll be checking in regularly with career tips, strategy suggestions, and motivation to keep you moving forward. Let's build.`
 
   try {
     console.log('[up-welcome] Sending via Blooio to:', to)
