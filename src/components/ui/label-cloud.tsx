@@ -1,6 +1,8 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { ArrowUpRight } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 const LABELS = [
   '10K Projects',
@@ -17,6 +19,7 @@ const LABELS = [
  * on desktop.
  */
 export function LabelCloud() {
+  const navigate = useNavigate()
   return (
     <section className="py-20 px-6 bg-black border-y border-white/5 overflow-hidden">
       <div className="max-w-6xl mx-auto">
@@ -58,6 +61,17 @@ export function LabelCloud() {
               </span>
             ))}
           </div>
+        </div>
+
+        {/* Small link to the full campaigns page */}
+        <div className="text-center mt-10">
+          <button
+            onClick={() => navigate('/campaigns')}
+            className="inline-flex items-center gap-1.5 text-white/40 hover:text-[#FFD700] text-[11px] font-black uppercase tracking-widest transition-colors"
+          >
+            See our campaigns
+            <ArrowUpRight size={13} />
+          </button>
         </div>
       </div>
 
