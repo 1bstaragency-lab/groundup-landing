@@ -26,10 +26,10 @@ function CampaignRow({ c, index }: { c: Campaign; index: number }) {
           </span>
           <div className="min-w-0">
             <h3 className={`text-2xl sm:text-4xl font-black tracking-tighter uppercase transition-colors duration-300 truncate ${hover ? 'text-[#FFD700]' : 'text-white'}`}>
-              {c.artist}
+              {c.song}
             </h3>
             <p className="text-white/40 text-xs sm:text-sm font-medium mt-1 truncate">
-              {c.project} · {c.type}
+              {c.type}
             </p>
           </div>
         </div>
@@ -37,7 +37,7 @@ function CampaignRow({ c, index }: { c: Campaign; index: number }) {
         {/* meta + arrow */}
         <div className="flex items-center gap-4 sm:gap-8 shrink-0">
           <div className="hidden sm:block text-right">
-            <p className="text-white/60 text-sm font-bold whitespace-nowrap">{c.label}</p>
+            {c.artist && <p className="text-white/60 text-sm font-bold whitespace-nowrap">{c.artist}</p>}
             <p className="text-white/25 text-[10px] font-black uppercase tracking-widest mt-0.5">{c.year}</p>
           </div>
           <ArrowUpRight
@@ -60,7 +60,7 @@ function CampaignRow({ c, index }: { c: Campaign; index: number }) {
       )}
       {c.result && (
         <p className="sm:hidden text-[#FFD700]/70 text-[11px] font-black uppercase tracking-widest pl-8 mt-1">
-          ✦ {c.result} · {c.label} · {c.year}
+          ✦ {c.result}{c.artist && ` · ${c.artist}`}
         </p>
       )}
     </motion.div>

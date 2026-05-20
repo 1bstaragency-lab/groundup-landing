@@ -365,13 +365,13 @@ export function AppFunnel() {
                   {CAMPAIGNS.slice(0, 4).map((c, i) => (
                     <div key={i} className="flex items-baseline justify-between gap-3 py-4 border-b border-white/8 text-left">
                       <div className="min-w-0">
-                        <p className="text-white font-black text-base uppercase tracking-tight truncate">{c.artist}</p>
+                        <p className="text-white font-black text-base uppercase tracking-tight truncate">{c.song}</p>
                         <p className="text-white/40 text-[11px] font-medium truncate">
                           {c.type}{c.result && <span className="text-[#FFD700]/70"> · ✦ {c.result}</span>}
                         </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-white/50 text-[11px] font-bold whitespace-nowrap">{c.label}</p>
+                        {c.artist && <p className="text-white/50 text-[11px] font-bold whitespace-nowrap">{c.artist}</p>}
                         <p className="text-white/20 text-[9px] font-black uppercase tracking-widest">{c.year}</p>
                       </div>
                     </div>
