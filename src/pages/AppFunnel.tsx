@@ -236,8 +236,28 @@ export function AppFunnel() {
       <div className="absolute -bottom-24 -right-24 w-72 h-72 sm:w-[500px] sm:h-[500px] bg-[#B8860B]/8 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none" />
 
       <header className="relative z-10 px-5 py-4 flex items-center justify-between">
-        <button onClick={() => { if (revealed || submitted) { setRevealed(false); setSubmitted(false) } }} className="font-black text-sm uppercase tracking-tighter">GrounduP</button>
-        <a href="/login" className="text-white/40 active:text-white text-[10px] font-black uppercase tracking-widest transition-colors">Sign In</a>
+        <button
+          onClick={() => { if (revealed || submitted) { setRevealed(false); setSubmitted(false) } }}
+          className="font-black text-sm uppercase tracking-tighter"
+        >
+          GrounduP
+        </button>
+
+        <div className="flex items-center gap-4">
+          <a href="/login" className="text-white/40 active:text-white text-[10px] font-black uppercase tracking-widest transition-colors">
+            Sign In
+          </a>
+          {/* Brand mark, upper-right with a soft gold halo */}
+          <div className="relative">
+            <div className="absolute inset-0 -m-1.5 rounded-full bg-[#FFD700]/20 blur-md pointer-events-none" />
+            <img
+              src="/gu-icon.png"
+              alt="GrounduP"
+              className="relative w-9 h-9 object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.25)]"
+              onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+            />
+          </div>
+        </div>
       </header>
 
       <main className="relative z-10 px-5">
