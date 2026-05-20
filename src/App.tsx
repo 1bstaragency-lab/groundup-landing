@@ -15,6 +15,7 @@ import { TeamDashboardMockup } from './components/ui/TeamDashboardMockup';
 import ShaderShowcase from './components/ui/hero';
 import { LiquidButton } from './components/ui/liquid-glass-button';
 import { PricingPage } from './components/ui/pricing-page';
+import { LabelCloud } from './components/ui/label-cloud';
 import { handlePricingClick } from './lib/pricingCheckout';
 import { MarketingBadges } from './components/ui/marketing-badges';
 import { MagnifiedBento } from './components/ui/magnified-bento';
@@ -350,6 +351,9 @@ function LandingPage() {
       <section className="relative" id="hero-section">
         <ShaderShowcase />
       </section>
+
+      {/* Record labels using GrounduP */}
+      <LabelCloud />
 
       {/* Built for the Next Generation — moved above bento */}
       <section id="features" className="py-24 px-6 md:px-12 bg-black overflow-hidden">
