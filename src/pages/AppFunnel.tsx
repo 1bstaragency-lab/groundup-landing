@@ -369,22 +369,6 @@ export function AppFunnel() {
                 </div>
               </div>
 
-              {/* Bottom CTA repeat */}
-              <div className="py-10 border-t border-white/8 text-center">
-                <button
-                  onClick={reveal}
-                  className="w-full h-14 rounded-2xl bg-[#FFD700] text-black font-black text-base uppercase tracking-tight active:scale-[0.98] shadow-[0_8px_32px_rgba(255,215,0,0.25)] flex items-center justify-center gap-2"
-                >
-                  Get early access
-                  <ArrowRight size={18} />
-                </button>
-                <button
-                  onClick={() => navigate('/signup')}
-                  className="mt-4 py-2 text-white/40 active:text-white text-[12px] font-bold uppercase tracking-widest transition-colors"
-                >
-                  Or continue on web →
-                </button>
-              </div>
             </motion.div>
           )}
 
