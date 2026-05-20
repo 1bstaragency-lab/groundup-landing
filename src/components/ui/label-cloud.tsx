@@ -21,10 +21,10 @@ export function LabelCloud() {
     <section className="py-20 px-6 bg-black border-y border-white/5 overflow-hidden">
       <div className="max-w-6xl mx-auto">
         <p className="text-center text-[#FFD700] text-[10px] font-black uppercase tracking-[0.4em] mb-3">
-          Powering releases at
+          Trusted by artists & teams signed to
         </p>
         <p className="text-center text-white/30 text-sm font-medium mb-12 max-w-md mx-auto">
-          From bedroom artists to major-label rosters — GrounduP runs the rollout.
+          We've run rollouts for artists and management teams across these rosters.
         </p>
 
         {/* Desktop: static centered grid */}
