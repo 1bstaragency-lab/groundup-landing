@@ -9,32 +9,27 @@ import { CAMPAIGNS } from '../data/campaigns'
 // Official logo files in /public/labels/. Mixed backgrounds (some black-on-
 // white, some white-on-black, some color) so each renders on a uniform white
 // chip for a clean logo-wall look. Missing files fall back to a text wordmark.
+// White-on-transparent logo files — sit seamlessly on the black background.
 const LABELS = [
   { name: '10K Projects',          logo: '/labels/10k-projects.svg' },
-  { name: 'Interscope Records',    logo: '/labels/interscope.webp' },
-  { name: 'Geffen Records',        logo: '/labels/geffen.webp' },
+  { name: 'Interscope Records',    logo: '/labels/interscope.png' },
+  { name: 'Geffen Records',        logo: '/labels/geffen.png' },
   { name: 'Simple Stupid Records', logo: '/labels/simple-stupid.png' },
-  { name: 'Atlantic Records',      logo: '/labels/atlantic.webp' },
+  { name: 'Atlantic Records',      logo: '/labels/atlantic.png' },
 ]
 
 function LabelMark({ name, logo }: { name: string; logo: string }) {
   const [failed, setFailed] = useState(false)
   if (failed) {
-    return (
-      <div className="bg-white rounded-xl px-5 py-3 flex items-center justify-center min-h-[56px] w-44">
-        <span className="text-black/80 text-sm font-black uppercase tracking-tight text-center">{name}</span>
-      </div>
-    )
+    return <span className="text-white/55 text-base font-black uppercase tracking-tight">{name}</span>
   }
   return (
-    <div className="bg-white rounded-xl px-5 py-3 flex items-center justify-center min-h-[56px] w-44">
-      <img
-        src={logo}
-        alt={name}
-        className="max-h-9 w-auto object-contain"
-        onError={() => setFailed(true)}
-      />
-    </div>
+    <img
+      src={logo}
+      alt={name}
+      className="h-8 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
+      onError={() => setFailed(true)}
+    />
   )
 }
 
