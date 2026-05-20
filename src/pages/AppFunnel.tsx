@@ -29,15 +29,15 @@ function AppStoreBadge({ onClick }: { onClick?: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-2.5 bg-black border border-white/25 hover:border-white/50 rounded-xl px-4 py-2.5 transition-all hover:scale-[1.02] active:scale-[0.99] flex-1 sm:flex-initial sm:min-w-[170px]"
+      className="flex items-center justify-center gap-3 bg-black border border-white/25 active:border-white/50 hover:border-white/50 rounded-2xl px-5 h-[60px] w-full sm:w-auto sm:min-w-[185px] transition-all active:scale-[0.98]"
       aria-label="Download on the App Store"
     >
-      <svg className="w-6 h-6 fill-white shrink-0" viewBox="0 0 384 512">
+      <svg className="w-7 h-7 fill-white shrink-0" viewBox="0 0 384 512">
         <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
       </svg>
       <div className="text-left leading-tight">
-        <p className="text-white/65 text-[9px] font-medium uppercase tracking-wide">Download on the</p>
-        <p className="text-white text-[15px] font-semibold tracking-tight -mt-0.5">App Store</p>
+        <p className="text-white/65 text-[10px] font-medium uppercase tracking-wide">Download on the</p>
+        <p className="text-white text-[17px] font-semibold tracking-tight -mt-0.5">App Store</p>
       </div>
     </button>
   )
@@ -48,10 +48,10 @@ function GooglePlayBadge({ onClick }: { onClick?: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-2.5 bg-black border border-white/25 hover:border-white/50 rounded-xl px-4 py-2.5 transition-all hover:scale-[1.02] active:scale-[0.99] flex-1 sm:flex-initial sm:min-w-[170px]"
+      className="flex items-center justify-center gap-3 bg-black border border-white/25 active:border-white/50 hover:border-white/50 rounded-2xl px-5 h-[60px] w-full sm:w-auto sm:min-w-[185px] transition-all active:scale-[0.98]"
       aria-label="Get it on Google Play"
     >
-      <svg className="w-6 h-6 shrink-0" viewBox="0 0 512 512">
+      <svg className="w-7 h-7 shrink-0" viewBox="0 0 512 512">
         <linearGradient id="ggp1" x1="46" x2="280" y1="69" y2="303" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#00C3FF"/><stop offset="1" stopColor="#1BE2FA"/>
         </linearGradient>
@@ -70,8 +70,8 @@ function GooglePlayBadge({ onClick }: { onClick?: () => void }) {
         <path fill="url(#ggp4)" d="M101 28c-14-8-29-10-41-4l244 244 72-76L101 28z"/>
       </svg>
       <div className="text-left leading-tight">
-        <p className="text-white/65 text-[9px] font-medium uppercase tracking-wide">Get it on</p>
-        <p className="text-white text-[15px] font-semibold tracking-tight -mt-0.5">Google Play</p>
+        <p className="text-white/65 text-[10px] font-medium uppercase tracking-wide">Get it on</p>
+        <p className="text-white text-[17px] font-semibold tracking-tight -mt-0.5">Google Play</p>
       </div>
     </button>
   )
@@ -232,44 +232,48 @@ export function AppFunnel() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden relative">
-      <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-[#FFD700]/8 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-[#B8860B]/8 rounded-full blur-[120px] pointer-events-none" />
+    <div
+      className="min-h-[100dvh] bg-black text-white overflow-x-hidden relative"
+      style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
+      {/* Lighter blur on mobile — big blurs tank mobile GPU/scroll perf */}
+      <div className="absolute -top-24 -left-24 w-72 h-72 sm:w-[500px] sm:h-[500px] bg-[#FFD700]/8 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none" />
+      <div className="absolute -bottom-24 -right-24 w-72 h-72 sm:w-[500px] sm:h-[500px] bg-[#B8860B]/8 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none" />
 
-      <header className="relative z-10 px-5 py-5 flex items-center justify-between">
+      <header className="relative z-10 px-5 py-4 flex items-center justify-between">
         <a href="/" className="font-black text-sm uppercase tracking-tighter">GrounduP</a>
-        <a href="/login" className="text-white/40 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors">Sign In</a>
+        <a href="/login" className="text-white/40 active:text-white text-[10px] font-black uppercase tracking-widest transition-colors">Sign In</a>
       </header>
 
-      <main className="relative z-10 px-5 pb-16 flex flex-col items-center justify-center min-h-[calc(100dvh-120px)]">
+      <main className="relative z-10 px-5 pb-12 flex flex-col items-center pt-6 sm:pt-10">
         <div className="w-full max-w-md text-center">
 
           {/* Hero — always visible */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FFD700]/8 border border-[#FFD700]/20 mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FFD700]/8 border border-[#FFD700]/20 mb-5">
             <span className="w-1.5 h-1.5 rounded-full bg-[#FFD700] animate-pulse" />
             <span className="text-[#FFD700] text-[10px] font-black uppercase tracking-widest">
               Now in early beta access
             </span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase leading-[0.95] mb-4">
+          <h1 className="text-[2.75rem] leading-[0.92] sm:text-5xl font-black tracking-tighter uppercase mb-4">
             Run your whole<br />music career<br />
             <span className="text-[#FFD700]">from a text.</span>
           </h1>
 
-          <p className="text-white/50 text-sm sm:text-base font-medium leading-relaxed mb-8 max-w-sm mx-auto">
-            Real-time analytics, AI release rollouts, and your personal music exec — uP — texting you when it matters. Used by 2,000+ indie artists.
+          <p className="text-white/55 text-[15px] font-medium leading-snug mb-7 max-w-[20rem] mx-auto">
+            AI release rollouts, real-time stats, and your own music exec texting you when it matters. <span className="text-white/80">2,000+ artists</span> already inside.
           </p>
 
-          {/* Store badges */}
-          <div className="flex flex-col sm:flex-row gap-2.5 mb-4 justify-center">
+          {/* Store badges — full-width stacked on mobile */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-4 justify-center">
             <AppStoreBadge onClick={reveal} />
             <GooglePlayBadge onClick={reveal} />
           </div>
 
           <button
             onClick={() => navigate('/signup')}
-            className="text-white/40 hover:text-white text-[11px] font-bold uppercase tracking-widest transition-colors"
+            className="py-2 text-white/40 active:text-white text-[12px] font-bold uppercase tracking-widest transition-colors"
           >
             Or continue on web →
           </button>
