@@ -364,6 +364,7 @@ export function InfluencerSection() {
   const [pickPlatform, setPickPlatform]   = useState<Platform | 'All'>('All');
   const [pickTier, setPickTier]           = useState<TikTokTier | 'All'>('All');
   const [search, setSearch]               = useState('');
+  const [showCurator, setShowCurator]     = useState(false);
 
   const isPro           = profile?.plan_tier === 'pro' || profile?.plan_tier === 'growth';
   const isGmailConnected = !!(profile as any)?.gmail_refresh_token;
@@ -679,14 +680,14 @@ export function InfluencerSection() {
             {!isGmailConnected && <GmailConnectButton className="flex-shrink-0" />}
           </div>
 
-          {/* Platform tabs */}
+          {/* Platform tabs + Curator special tab */}
           <div className="flex flex-wrap items-center gap-2">
             {PLATFORM_TABS.map(tab => (
               <Tooltip key={tab.id} text={tab.tip} side="bottom">
                 <button
-                  onClick={() => { setPickPlatform(tab.id); setPickTier('All'); }}
+                  onClick={() => { setPickPlatform(tab.id); setPickTier('All'); setShowCurator(false); }}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl border font-black text-[10px] uppercase tracking-widest transition-all ${
-                    pickPlatform === tab.id
+                    !showCurator && pickPlatform === tab.id
                       ? tab.activeClass
                       : 'bg-zinc-900/40 border-white/5 text-white/40 hover:text-white hover:border-white/10'
                   }`}
@@ -695,10 +696,83 @@ export function InfluencerSection() {
                 </button>
               </Tooltip>
             ))}
+
+            {/* Curator — coming soon */}
+            <button
+              onClick={() => setShowCurator(v => !v)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl border font-black text-[10px] uppercase tracking-widest transition-all ${
+                showCurator
+                  ? 'bg-violet-500 border-transparent text-white'
+                  : 'bg-zinc-900/40 border-violet-500/25 text-violet-400/70 hover:text-violet-300 hover:border-violet-500/40'
+              }`}
+            >
+              <ListMusic size={12} /> Curator
+              <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full ${
+                showCurator ? 'bg-white/20 text-white' : 'bg-violet-500/20 text-violet-400'
+              }`}>Soon</span>
+            </button>
           </div>
 
+          {/* ── Curator coming-soon panel ── */}
+          <AnimatePresence>
+            {showCurator && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                className="rounded-3xl border border-violet-500/20 bg-gradient-to-br from-violet-500/8 via-zinc-900/60 to-zinc-900/40 overflow-hidden"
+              >
+                {/* Top accent */}
+                <div className="h-[3px] w-full bg-gradient-to-r from-violet-500 via-purple-400 to-violet-600" />
+
+                <div className="p-8 sm:p-10 flex flex-col items-center text-center">
+                  {/* Icon cluster */}
+                  <div className="relative mb-6">
+                    <div className="w-16 h-16 rounded-2xl bg-violet-500/15 border border-violet-500/30 flex items-center justify-center">
+                      <ListMusic size={28} className="text-violet-400" />
+                    </div>
+                    <div className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full bg-violet-500 text-white text-[9px] font-black uppercase tracking-widest shadow-lg">
+                      Coming Soon
+                    </div>
+                  </div>
+
+                  {/* Heading */}
+                  <h3 className="text-white font-black text-2xl lg:text-3xl tracking-tighter uppercase mb-3">
+                    Playlist Curator
+                  </h3>
+
+                  {/* Description */}
+                  <p className="text-white/55 text-sm font-medium leading-relaxed max-w-md mb-6">
+                    Drop any song from your catalog and we'll match it to real, active playlists that fit your sound —
+                    so you can pitch directly and grow your streams through placement, not luck.
+                  </p>
+
+                  {/* Feature breakdown */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-lg mb-8">
+                    {[
+                      { icon: '🎵', title: 'Song matching', desc: 'Paste any track from your catalog' },
+                      { icon: '📋', title: 'Playlist pairing', desc: 'We find playlists already playing your sound' },
+                      { icon: '📈', title: 'Stream growth', desc: 'Direct pitch to active curators for placement' },
+                    ].map(f => (
+                      <div key={f.title} className="bg-white/[0.03] border border-white/8 rounded-2xl p-4 text-left">
+                        <p className="text-xl mb-1.5">{f.icon}</p>
+                        <p className="text-white font-black text-[11px] uppercase tracking-widest leading-none mb-1">{f.title}</p>
+                        <p className="text-white/35 text-[10px] font-medium leading-snug">{f.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Notify CTA */}
+                  <p className="text-violet-400/60 text-[10px] font-black uppercase tracking-widest">
+                    This feature is in development — check back soon.
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* SoundCloud single-host notice */}
-          {pickPlatform === 'SoundCloud' && (
+          {!showCurator && pickPlatform === 'SoundCloud' && (
             <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-orange-500/8 border border-orange-500/20">
               <Radio size={12} className="text-orange-400 shrink-0" />
               <p className="text-orange-300/80 text-[10px] font-bold">Only one SoundCloud DJ host can be added per campaign — selecting a new one deselects the previous.</p>
@@ -706,7 +780,7 @@ export function InfluencerSection() {
           )}
 
           {/* TikTok tier filter */}
-          {pickPlatform === 'TikTok' && (
+          {!showCurator && pickPlatform === 'TikTok' && (
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap gap-2">
               {TIKTOK_TIERS.map(tier => (
                 <button
@@ -723,7 +797,7 @@ export function InfluencerSection() {
           )}
 
           {/* Search */}
-          <div className="relative">
+          {!showCurator && <div className="relative">
             <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25" />
             <input
               type="text"
@@ -732,16 +806,16 @@ export function InfluencerSection() {
               onChange={e => setSearch(e.target.value)}
               className="w-full bg-zinc-900/40 border border-white/5 rounded-2xl pl-10 pr-5 py-3.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/15 transition-colors"
             />
-          </div>
+          </div>}
 
           {/* Results count */}
-          <p className="text-white/25 text-[10px] font-black uppercase tracking-widest">
+          {!showCurator && <p className="text-white/25 text-[10px] font-black uppercase tracking-widest">
             {isPro ? `${pickList.length} creators` : `${unlocked.length} of ${pickList.length} shown`}
             {campaignGoal !== 'custom' && ` · sorted by ${goalObj.label.toLowerCase()}`}
-          </p>
+          </p>}
 
           {/* Creator grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+          {!showCurator && <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
             {unlocked.map((inf, i) => (
               <motion.div key={inf.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.025 }}>
                 <InfluencerCard
@@ -753,10 +827,10 @@ export function InfluencerSection() {
                 />
               </motion.div>
             ))}
-          </div>
+          </div>}
 
           {/* Paywall */}
-          {lockedCards.length > 0 && (
+          {!showCurator && lockedCards.length > 0 && (
             <div className="relative">
               <div className="relative z-10 rounded-3xl border border-[#FFD700]/20 bg-gradient-to-r from-[#FFD700]/8 to-transparent p-6 mb-4 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -797,7 +871,7 @@ export function InfluencerSection() {
             </div>
           )}
 
-          {pickList.length === 0 && (
+          {!showCurator && pickList.length === 0 && (
             <div className="flex flex-col items-center py-20 text-center">
               <Users size={32} className="text-white/10 mb-4" />
               <p className="text-white/20 font-black text-sm uppercase tracking-widest">No creators match your filters</p>
@@ -805,7 +879,7 @@ export function InfluencerSection() {
           )}
 
           {/* Sticky bottom bar */}
-          <div className="sticky bottom-4 z-20">
+          {!showCurator && <div className="sticky bottom-4 z-20">
             <div className="flex items-center justify-between gap-4 px-5 py-4 rounded-2xl bg-zinc-900/95 border border-white/10 backdrop-blur-md shadow-2xl">
               <div>
                 <p className="text-white font-black text-sm leading-none">
@@ -825,7 +899,7 @@ export function InfluencerSection() {
                 {!isPro && <Crown size={11} />}
               </button>
             </div>
-          </div>
+          </div>}
         </motion.div>
       )}
     </>
