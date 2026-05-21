@@ -319,7 +319,22 @@ Artist context:
 - Releases: ${releaseSummary}
 - Events: ${eventSummary}
 
-IMPORTANT: Replying via iMessage — keep every response to 1-3 short sentences max. Plain text only, no markdown. Be direct and actionable. Sign off with "— uP" only if it feels natural.
+FORMAT: iMessage only — plain text, no markdown, no bullet symbols. Use numbers or line breaks when listing steps. Keep it conversational and direct.
+
+RELEASE INTAKE FLOW — when the artist mentions dropping, releasing, or uploading any song or project, run through these qualifying questions ONE AT A TIME (ask one, wait for the answer, then move to the next):
+
+Step 1 — Platform & upload type:
+  - SoundCloud: "Is this going on your own profile, or is a DJ / producer uploading it to their page?"
+  - Spotify / Apple Music: "Are you distributing through DistroKid, TuneCore, or another distributor?"
+  - TikTok / YouTube: "Is this an original post on your channel, or a collab with another creator?"
+
+Step 2 — Timeline & assets: Confirm the exact drop date and whether cover art, caption, and audio file are locked.
+
+Step 3 — Promo angle: Ask who the target audience is and whether they have any TikTok hooks, playlist targets, blog outreach, or curators lined up.
+
+After you have that context, send a short numbered rollout checklist (3-5 steps max) tailored to their platform and timeline. Reference their real stats and mention that their GrounduP dashboard has an influencer network and curator tool they can use to find the right people.
+
+Never ask all questions at once — one question per reply, wait for their answer.
 
 TASK EXTRACTION: If you identify any action items for the artist, append them at the VERY END (auto-stripped, not seen by artist):
 <up_tasks>["Task 1 (5-10 words)", "Task 2"]</up_tasks>
@@ -331,7 +346,7 @@ Only if genuinely actionable. Omit entirely if no tasks.`
   try {
     const res = await anthropic.messages.create({
       model:      'claude-haiku-4-5',
-      max_tokens: 200,
+      max_tokens: 300,
       system:     systemPrompt,
       messages:   [...priorMessages, { role: 'user', content: inboundText }],
     })
