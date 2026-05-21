@@ -62,7 +62,8 @@ export const handler: Handler = async (event) => {
   const text =
     `Welcome to GrounduP, ${name}! 👋 I'm uP — your personal music career assistant.\n\n` +
     `${opener}\n\n` +
-    `Save this number as "uP" in your contacts so you always know it's me. Text me here anytime — I'll check in regularly with tips, strategy, and motivation to keep you moving. Let's build.`
+    `Text me here anytime — I'll check in regularly with tips, strategy, and motivation to keep you moving. Let's build.\n\n` +
+    `👆 Tap to save me as a contact: https://groundupapp.com/up.vcf`
 
   try {
     console.log('[up-welcome] Sending via Blooio to:', to)
@@ -74,13 +75,6 @@ export const handler: Handler = async (event) => {
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${BLOOIO_API_KEY}` },
       body: JSON.stringify({ to, text }),
     })
-
-    // Follow-up: send the tappable contact card link
-    fetch(BLOOIO_URL, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${BLOOIO_API_KEY}` },
-      body: JSON.stringify({ to, text: 'https://groundupapp.com/up.vcf' }),
-    }).catch(e => console.warn('[up-welcome] vcf send error:', e))
 
     const rawText = await res.text()
     let data: unknown
