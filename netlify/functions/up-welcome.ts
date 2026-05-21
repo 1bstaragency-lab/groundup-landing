@@ -19,11 +19,11 @@ const CORS = {
 }
 
 const TONE_OPENERS: Record<string, string> = {
-  'Assistant Manager': "I'm here to help your releases reach new audiences and grow your career overall — from rollout strategy to playlist pitching and everything in between.",
-  'Your Boy':          "I'm here to help you blow up — real talk. Releases, strategy, curators, content ideas — I got you on all of it.",
-  'Label Rep':         "My job is to position your catalog for maximum reach and long-term growth — pitching, playlisting, and data-backed career strategy.",
-  'Road Manager':      "I handle the details so you can focus on the music — rollout plans, deadlines, curator outreach, all of it.",
-  'Creative Partner':  "I'm here to help your music find the audiences it deserves — creatively, strategically, and consistently.",
+  'Assistant Manager': "Releases, rollout strategy, playlist pitching, career growth — I've got you covered.",
+  'Your Boy':          "Drops, strategy, curators, content — I got you on all of it.",
+  'Label Rep':         "Catalog positioning, pitching, playlisting, growth strategy — let's get to work.",
+  'Road Manager':      "Rollout plans, deadlines, curator outreach — I handle the details so you can focus on the music.",
+  'Creative Partner':  "Releases, strategy, creative direction — I'm here to help your music find its audience.",
 }
 
 function normalizePhone(phone: string): string {
@@ -60,10 +60,9 @@ export const handler: Handler = async (event) => {
   const to      = normalizePhone(phone)
 
   const text =
-    `Welcome to GrounduP, ${name}! 👋 I'm uP — your personal music career assistant.\n\n` +
-    `${opener}\n\n` +
-    `Text me here anytime — I'll check in regularly with tips, strategy, and motivation to keep you moving. Let's build.\n\n` +
-    `👆 Tap to save me as a contact: https://groundupapp.com/up.vcf`
+    `Hey ${name} 👋 I'm uP — your GrounduP career assistant. ${opener}\n\n` +
+    `Text me anytime. I'll check in with tips & strategy to keep you moving. Let's build.\n\n` +
+    `👆 Save my contact: https://groundupapp.com/up.vcf`
 
   try {
     console.log('[up-welcome] Sending via Blooio to:', to)
