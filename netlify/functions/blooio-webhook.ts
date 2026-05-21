@@ -314,6 +314,8 @@ export const handler: Handler = async (event) => {
 
   const systemPrompt = `You are uP, the AI music career assistant for ${profile.artist_name} on GrounduP. ${voice}
 
+Today's date: ${today}
+
 Artist context:
 - Live stats: ${statSummary}
 - Releases: ${releaseSummary}
@@ -336,6 +338,11 @@ After you have that context, send a short numbered rollout checklist (3-5 steps 
 
 Never ask all questions at once — one question per reply, wait for their answer.
 
+RELEASE SYNC: Once you know the song title AND release date (even approximate like "this Friday"), emit this block at the VERY END so the release gets added to the artist's dashboard calendar automatically:
+<up_release>{"title":"song title","type":"single","platform":"SoundCloud","release_date":"YYYY-MM-DD"}</up_release>
+Rules: Only emit ONCE per release — when both title and date are confirmed. Use today's date (${today}) to calculate relative dates like "this Friday" or "next Monday". type = single | EP | album. Omit entirely if title or date is still unknown.
+When you emit this, naturally mention in your text reply that you've added it to their dashboard.
+
 TASK EXTRACTION: If you identify any action items for the artist, append them at the VERY END (auto-stripped, not seen by artist):
 <up_tasks>["Task 1 (5-10 words)", "Task 2"]</up_tasks>
 Only if genuinely actionable. Omit entirely if no tasks.`
@@ -356,8 +363,32 @@ Only if genuinely actionable. Omit entirely if no tasks.`
     reply = "Ran into something on my end — open the GrounduP app for now."
   }
 
-  // ─── Extract tasks + clean reply ─────────────────────────────────────────
-  const { cleaned: cleanReply, tasks } = extractTasks(reply)
+  // ─── Extract release, tasks, and clean reply (order matters — release first) ─
+  const { cleaned: afterRelease, release } = extractRelease(reply)
+  const { cleaned: cleanReply, tasks }     = extractTasks(afterRelease)
+
+  // ─── Auto-create release in Supabase if confirmed ─────────────────────────
+  let releaseP: Promise<unknown> = Promise.resolve()
+  if (release?.title && release?.release_date) {
+    // Avoid duplicates: only insert if no release with this title exists
+    releaseP = supabase
+      .from('releases')
+      .select('id')
+      .eq('user_id', userId)
+      .ilike('title', release.title)
+      .maybeSingle()
+      .then(({ data: existing }) => {
+        if (!existing) {
+          return supabase.from('releases').insert({
+            user_id:      userId,
+            title:        release.title,
+            type:         release.type || 'single',
+            release_date: release.release_date,
+            checklist:    buildChecklist(release.platform || ''),
+          })
+        }
+      })
+  }
 
   // ─── Send reply + log in parallel; await both so Lambda doesn't freeze logging ──
   const sendP = sendBlooio(fromPhone, cleanReply)
@@ -369,7 +400,7 @@ Only if genuinely actionable. Omit entirely if no tasks.`
     ? supabase.from('up_tasks').insert(tasks.map(content => ({ user_id: userId, content, source: 'imessage' })))
     : Promise.resolve()
 
-  const [, logRes, tasksRes] = await Promise.all([sendP, logP, tasksP])
+  const [, logRes, tasksRes] = await Promise.all([sendP, logP, tasksP, releaseP])
   if (logRes && (logRes as { error?: unknown }).error) {
     console.error('[blooio-webhook] Conversation log error:', (logRes as { error: unknown }).error)
   }
@@ -390,6 +421,64 @@ function extractTasks(text: string): { cleaned: string; tasks: string[] } {
   if (!Array.isArray(tasks)) tasks = []
   const cleaned = text.replace(/<up_tasks>[\s\S]*?<\/up_tasks>/, '').trim()
   return { cleaned, tasks }
+}
+
+interface ExtractedRelease {
+  title: string
+  type: string
+  platform: string
+  release_date: string
+}
+
+function extractRelease(text: string): { cleaned: string; release: ExtractedRelease | null } {
+  const match = text.match(/<up_release>([\s\S]*?)<\/up_release>/)
+  if (!match) return { cleaned: text.trim(), release: null }
+  let release: ExtractedRelease | null = null
+  try {
+    const parsed = JSON.parse(match[1].trim())
+    if (parsed?.title && parsed?.release_date) release = parsed as ExtractedRelease
+  } catch { /* noop */ }
+  const cleaned = text.replace(/<up_release>[\s\S]*?<\/up_release>/, '').trim()
+  return { cleaned, release }
+}
+
+function buildChecklist(platform: string): Array<{ label: string; done: boolean }> {
+  const base = [
+    { label: 'Finalize audio master', done: false },
+    { label: 'Create cover art (3000×3000px)', done: false },
+    { label: 'Write release caption / description', done: false },
+  ]
+  if (platform === 'SoundCloud') return [
+    ...base,
+    { label: 'Upload track to SoundCloud', done: false },
+    { label: 'Add tags and genre', done: false },
+    { label: 'Pitch to SoundCloud DJs via Influencer Network', done: false },
+    { label: 'Pin track to profile on release day', done: false },
+    { label: 'Post on social media with SoundCloud link', done: false },
+  ]
+  if (platform === 'Spotify' || platform === 'Apple Music') return [
+    ...base,
+    { label: 'Submit to distributor (DistroKid / TuneCore)', done: false },
+    { label: 'Pitch to Spotify editorial via dashboard', done: false },
+    { label: 'Build pre-save link and share early', done: false },
+    { label: 'Reach out to playlist curators in Influencer Network', done: false },
+    { label: 'Plan social content for release week', done: false },
+  ]
+  if (platform === 'YouTube') return [
+    ...base,
+    { label: 'Upload and schedule YouTube video', done: false },
+    { label: 'Write SEO-optimized title and description', done: false },
+    { label: 'Create eye-catching thumbnail', done: false },
+    { label: 'Share YouTube Short on drop day', done: false },
+    { label: 'Pitch to YouTube curators in Influencer Network', done: false },
+  ]
+  return [
+    ...base,
+    { label: 'Upload and schedule release', done: false },
+    { label: 'Plan promotional content for release day', done: false },
+    { label: 'Reach out to curators and influencers in dashboard', done: false },
+    { label: 'Post on all social platforms', done: false },
+  ]
 }
 
 function normalizePhone(phone: string): string {
