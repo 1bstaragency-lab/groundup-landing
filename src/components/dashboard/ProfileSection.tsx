@@ -39,6 +39,7 @@ export function ProfileSection() {
   const [phoneErr, setPhoneErr] = useState<string | null>(null)
   const [countryCode, setCountryCode] = useState('+1')
   const [editingPhone, setEditingPhone] = useState(false)
+  const [cardState, setCardState] = useState<'idle' | 'setting' | 'done' | 'error'>('idle')
   const [loading, setLoading]   = useState(true)
 
   // ─── Load profile ──────────────────────────────────────────────────────────
@@ -171,6 +172,27 @@ export function ProfileSection() {
     } else {
       setPhoneState('msg_error')
       setTimeout(() => setPhoneState('idle'), 6000)
+    }
+  }
+
+  // ─── Push uP contact card to Blooio (name + avatar so recipients see "uP") ──
+  async function pushContactCard() {
+    setCardState('setting')
+    try {
+      const res  = await fetch('/.netlify/functions/up-contact-card', { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (data.ok) {
+        setCardState('done')
+        setTimeout(() => setCardState('idle'), 6000)
+      } else {
+        console.warn('[up-contact-card] error:', data)
+        setCardState('error')
+        setTimeout(() => setCardState('idle'), 4000)
+      }
+    } catch (err) {
+      console.error('[up-contact-card] fetch failed:', err)
+      setCardState('error')
+      setTimeout(() => setCardState('idle'), 4000)
     }
   }
 
@@ -307,6 +329,28 @@ export function ProfileSection() {
                     <Pencil size={11} />
                     Change Number
                   </button>
+                </div>
+
+                {/* Set uP contact card so recipients see "uP" name + avatar */}
+                <div className="mt-3 flex items-center gap-3">
+                  <button
+                    onClick={pushContactCard}
+                    disabled={cardState === 'setting' || cardState === 'done'}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest border transition-all ${
+                      cardState === 'done'
+                        ? 'bg-green-500/10 border-green-500/20 text-green-400 cursor-default'
+                        : cardState === 'error'
+                        ? 'bg-red-500/10 border-red-500/20 text-red-400'
+                        : 'bg-[#FFD700]/8 border-[#FFD700]/20 text-[#FFD700]/80 hover:bg-[#FFD700]/15 hover:text-[#FFD700]'
+                    }`}
+                  >
+                    {cardState === 'setting' && <Loader2 size={10} className="animate-spin" />}
+                    {cardState === 'done'    && <CheckCircle size={10} />}
+                    {cardState === 'setting' ? 'Updating…' : cardState === 'done' ? 'Contact card set!' : cardState === 'error' ? 'Failed — retry' : 'Set uP contact card'}
+                  </button>
+                  <p className="text-white/20 text-[9px] font-medium leading-snug">
+                    Makes recipients see "uP" with the gold avatar instead of a raw number
+                  </p>
                 </div>
               ) : (
                 <div className="flex flex-col sm:flex-row gap-3">
