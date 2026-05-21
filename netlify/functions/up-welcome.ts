@@ -67,14 +67,19 @@ export const handler: Handler = async (event) => {
   try {
     console.log('[up-welcome] Sending via Blooio to:', to)
 
-    const res = await fetch(BLOOIO_URL, {
-      method:  'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `Bearer ${BLOOIO_API_KEY}`,
-      },
-      body: JSON.stringify({ to, text }),
-    })
+    // Send welcome text + push contact card in parallel so recipient sees
+    // "uP" name & gold avatar right away instead of a raw number
+    const [res] = await Promise.all([
+      fetch(BLOOIO_URL, {
+        method:  'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${BLOOIO_API_KEY}`,
+        },
+        body: JSON.stringify({ to, text }),
+      }),
+      pushContactCard(),
+    ])
 
     const rawText = await res.text()
     let data: unknown
@@ -94,5 +99,48 @@ export const handler: Handler = async (event) => {
       headers: { ...CORS, 'Content-Type': 'application/json' },
       body: JSON.stringify({ ok: false, error: String(err) }),
     }
+  }
+}
+
+/** Push the uP name + gold avatar to the Blooio number so recipients see
+ *  "uP" as the contact name instead of a raw phone number. Idempotent — safe
+ *  to call on every welcome since Blooio just overwrites with the same values. */
+async function pushContactCard(): Promise<void> {
+  const BASE       = 'https://backend.blooio.com/v2/api'
+  const AVATAR_URL = 'https://groundupapp.com/up-avatar.png'
+
+  try {
+    // Fetch + base64-encode the avatar
+    const imgRes = await fetch(AVATAR_URL)
+    if (!imgRes.ok) { console.warn('[up-contact-card] avatar fetch failed:', imgRes.status); return }
+    const buf    = Buffer.from(await imgRes.arrayBuffer())
+    const avatar = buf.toString('base64')
+
+    // Get the account's active numbers
+    const numsRes = await fetch(`${BASE}/me/numbers`, {
+      headers: { Authorization: `Bearer ${BLOOIO_API_KEY}` },
+    })
+    if (!numsRes.ok) { console.warn('[up-contact-card] list numbers failed:', numsRes.status); return }
+    const numsData = await numsRes.json() as { numbers?: Array<{ phone_number: string; is_active: boolean }> }
+    const numbers  = (numsData.numbers ?? []).map(n => n.phone_number)
+
+    const cardBody = {
+      first_name: 'uP',
+      last_name:  '',
+      avatar,
+      sharing: { enabled: true, audience: 1, name_format: 1 },
+    }
+
+    await Promise.all(numbers.map(number =>
+      fetch(`${BASE}/me/numbers/${encodeURIComponent(number)}/contact-card`, {
+        method:  'PUT',
+        headers: { Authorization: `Bearer ${BLOOIO_API_KEY}`, 'Content-Type': 'application/json' },
+        body:    JSON.stringify(cardBody),
+      }).then(r => console.log(`[up-contact-card] ${number} → ${r.status}`))
+        .catch(e => console.error(`[up-contact-card] ${number} error:`, e))
+    ))
+  } catch (err) {
+    // Non-fatal — welcome text was already sent
+    console.error('[up-contact-card] unexpected error:', err)
   }
 }
