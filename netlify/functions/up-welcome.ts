@@ -67,19 +67,20 @@ export const handler: Handler = async (event) => {
   try {
     console.log('[up-welcome] Sending via Blooio to:', to)
 
-    // Send welcome text + push contact card in parallel so recipient sees
-    // "uP" name & gold avatar right away instead of a raw number
-    const [res] = await Promise.all([
-      fetch(BLOOIO_URL, {
-        method:  'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': `Bearer ${BLOOIO_API_KEY}`,
-        },
-        body: JSON.stringify({ to, text }),
-      }),
-      pushContactCard(),
-    ])
+    // Send welcome text, then immediately follow up with the VCF contact card
+    // so the recipient can tap once to save "uP" as a contact
+    const res = await fetch(BLOOIO_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${BLOOIO_API_KEY}` },
+      body: JSON.stringify({ to, text }),
+    })
+
+    // Follow-up: send the tappable contact card link
+    fetch(BLOOIO_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${BLOOIO_API_KEY}` },
+      body: JSON.stringify({ to, text: 'https://groundupapp.com/up.vcf' }),
+    }).catch(e => console.warn('[up-welcome] vcf send error:', e))
 
     const rawText = await res.text()
     let data: unknown
@@ -102,37 +103,3 @@ export const handler: Handler = async (event) => {
   }
 }
 
-/** Push the uP name to the Blooio number so recipients see "uP" instead of a
- *  raw number (Name & Photo Sharing). No avatar — Blooio needs JPEG but we
- *  serve PNG; name-only is reliable and is what triggers the display name. */
-async function pushContactCard(): Promise<void> {
-  const BASE = 'https://backend.blooio.com/v2/api'
-  try {
-    // List active numbers on the account
-    const numsRes = await fetch(`${BASE}/me/numbers`, {
-      headers: { Authorization: `Bearer ${BLOOIO_API_KEY}` },
-    })
-    if (!numsRes.ok) {
-      console.warn('[up-contact-card] list numbers failed:', numsRes.status, await numsRes.text())
-      return
-    }
-    const numsData = await numsRes.json() as { numbers?: Array<{ phone_number: string }> }
-    const numbers  = (numsData.numbers ?? []).map(n => n.phone_number)
-    if (numbers.length === 0) { console.warn('[up-contact-card] no numbers on account'); return }
-
-    // Set name + sharing — no avatar to keep payload small and avoid JPEG requirement
-    const cardBody = { first_name: 'uP', last_name: '', sharing: { enabled: true, audience: 1, name_format: 1 } }
-
-    await Promise.all(numbers.map(async number => {
-      const r    = await fetch(`${BASE}/me/numbers/${encodeURIComponent(number)}/contact-card`, {
-        method:  'PUT',
-        headers: { Authorization: `Bearer ${BLOOIO_API_KEY}`, 'Content-Type': 'application/json' },
-        body:    JSON.stringify(cardBody),
-      })
-      const body = await r.text()
-      console.log(`[up-contact-card] ${number} → ${r.status} ${body}`)
-    }))
-  } catch (err) {
-    console.error('[up-contact-card] unexpected error:', err)
-  }
-}
