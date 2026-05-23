@@ -18,7 +18,16 @@ const MESSAGES = [
   { from: 'user' as const, text: 'Yes, send them.' },
   {
     from: 'up' as const,
-    text: 'Done. Pitched to Chill R&B Vibes (480K), Late Night Feels (210K), and 6 more. I\'ll update you when they respond 🎯',
+    text: 'Sent ✓ — Chill R&B Vibes (480K), Late Night Feels (210K) + 6 more. I\'ll track responses and update you.',
+  },
+  {
+    from: 'up' as const,
+    text: 'Also — want me to run Meta ads pushing streams to Spotify and Apple Music? I can target fans of similar artists. ~400 new listeners/day at $20.',
+  },
+  { from: 'user' as const, text: 'Do it.' },
+  {
+    from: 'up' as const,
+    text: 'Campaign live 🎯 Last thing — should I find TikTok influencers for promo content? I can match you with dance creators, reaction pages, or artists in your lane.',
   },
 ];
 
@@ -46,21 +55,32 @@ function TypingDots() {
 }
 
 function IPhoneMock() {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-60px' });
+  const ref       = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inView    = useInView(ref, { once: true, margin: '-60px' });
 
   const [visibleMsgs, setVisibleMsgs] = useState(0);
-  const [showTyping1, setShowTyping1] = useState(false);
-  const [showTyping2, setShowTyping2] = useState(false);
+  const [showTyping,  setShowTyping]  = useState(false);
+
+  // Auto-scroll messages area to bottom whenever a new message appears
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  }, [visibleMsgs, showTyping]);
 
   useEffect(() => {
     if (!inView) return;
+    // show typing → reveal msg → user reply → show typing → reveal msg …
     const timers = [
-      setTimeout(() => setShowTyping1(true),  900),
-      setTimeout(() => { setVisibleMsgs(1); setShowTyping1(false); }, 2200),
-      setTimeout(() => setVisibleMsgs(2), 3200),
-      setTimeout(() => setShowTyping2(true),  3900),
-      setTimeout(() => { setVisibleMsgs(3); setShowTyping2(false); }, 5200),
+      setTimeout(() => setShowTyping(true),                    800),   // typing before msg 0
+      setTimeout(() => { setVisibleMsgs(1); setShowTyping(false); }, 2100),  // uP: curator pitch
+      setTimeout(() => setVisibleMsgs(2),                      3000),  // user: "Yes send them"
+      setTimeout(() => setShowTyping(true),                    3700),  // typing before msg 2
+      setTimeout(() => { setVisibleMsgs(3); setShowTyping(false); }, 4800),  // uP: sent confirmation
+      setTimeout(() => setShowTyping(true),                    5500),  // typing before msg 3
+      setTimeout(() => { setVisibleMsgs(4); setShowTyping(false); }, 6600),  // uP: Meta ads offer
+      setTimeout(() => setVisibleMsgs(5),                      7500),  // user: "Do it"
+      setTimeout(() => setShowTyping(true),                    8200),  // typing before msg 5
+      setTimeout(() => { setVisibleMsgs(6); setShowTyping(false); }, 9400),  // uP: TikTok influencers
     ];
     return () => timers.forEach(clearTimeout);
   }, [inView]);
@@ -109,68 +129,45 @@ function IPhoneMock() {
             </button>
           </div>
 
-          {/* Messages area */}
-          <div className="px-3 py-4 flex flex-col gap-2 min-h-[320px]">
+          {/* Messages area — auto-scrolls as conversation grows */}
+          <div
+            ref={scrollRef}
+            className="px-3 py-4 flex flex-col gap-2 overflow-y-auto"
+            style={{ height: '320px', scrollbarWidth: 'none' }}
+          >
             <AnimatePresence>
-              {/* Message 0 — uP */}
-              {visibleMsgs >= 1 && (
-                <motion.div
-                  key="msg0"
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                  className="flex justify-start"
-                >
-                  <div className="max-w-[82%] px-3 py-2.5 rounded-2xl rounded-bl-sm text-[12px] leading-[1.5] text-white"
-                    style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.2)' }}>
-                    {MESSAGES[0].text}
-                  </div>
-                </motion.div>
-              )}
+              {MESSAGES.map((msg, i) => {
+                if (visibleMsgs < i + 1) return null;
+                const isUp = msg.from === 'up';
+                return (
+                  <motion.div
+                    key={`msg${i}`}
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                    className={`flex ${isUp ? 'justify-start' : 'justify-end'}`}
+                  >
+                    <div
+                      className={`max-w-[82%] px-3 py-2.5 text-[12px] leading-[1.5] ${
+                        isUp
+                          ? 'rounded-2xl rounded-bl-sm text-white'
+                          : 'rounded-2xl rounded-br-sm text-white/80'
+                      }`}
+                      style={isUp
+                        ? { background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.2)' }
+                        : { background: '#1C1C1E', border: '1px solid rgba(255,255,255,0.08)' }
+                      }
+                    >
+                      {msg.text}
+                    </div>
+                  </motion.div>
+                );
+              })}
 
-              {/* Typing dots 1 */}
-              {showTyping1 && (
-                <div key="typing1" className="flex justify-start">
+              {/* Typing indicator — shows between uP messages */}
+              {showTyping && (
+                <motion.div key="typing" className="flex justify-start">
                   <TypingDots />
-                </div>
-              )}
-
-              {/* Message 1 — user */}
-              {visibleMsgs >= 2 && (
-                <motion.div
-                  key="msg1"
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                  className="flex justify-end"
-                >
-                  <div className="max-w-[72%] px-3 py-2.5 rounded-2xl rounded-br-sm text-[12px] leading-[1.5] text-white/80"
-                    style={{ background: '#1C1C1E', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    {MESSAGES[1].text}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Typing dots 2 */}
-              {showTyping2 && (
-                <div key="typing2" className="flex justify-start">
-                  <TypingDots />
-                </div>
-              )}
-
-              {/* Message 2 — uP */}
-              {visibleMsgs >= 3 && (
-                <motion.div
-                  key="msg2"
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                  className="flex justify-start"
-                >
-                  <div className="max-w-[82%] px-3 py-2.5 rounded-2xl rounded-bl-sm text-[12px] leading-[1.5] text-white"
-                    style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.2)' }}>
-                    {MESSAGES[2].text}
-                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
