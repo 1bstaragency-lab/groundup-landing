@@ -269,7 +269,7 @@ export const handler: Handler = async (event) => {
 
     // Step 1 — asked for name, now have it
     if (step === 1) {
-      const name = incomingText.trim().slice(0, 60)
+      const name = inboundText.trim().slice(0, 60)
       await supabase.from('guest_profiles').upsert(
         { phone_number: fromPhone, artist_name: name, onboarding_step: 2, message_count: msgCount + 1, updated_at: new Date().toISOString() },
         { onConflict: 'phone_number' }
@@ -281,7 +281,7 @@ export const handler: Handler = async (event) => {
 
     // Step 2 — asked for genre
     if (step === 2) {
-      const genre = incomingText.trim().slice(0, 60)
+      const genre = inboundText.trim().slice(0, 60)
       await supabase.from('guest_profiles').upsert(
         { phone_number: fromPhone, genre, onboarding_step: 3, message_count: msgCount + 1, updated_at: new Date().toISOString() },
         { onConflict: 'phone_number' }
@@ -297,7 +297,7 @@ export const handler: Handler = async (event) => {
         '1': 'Drop a new release', '2': 'Grow Spotify streams',
         '3': 'Run Meta ads & scale', '4': 'Build my fanbase',
       }
-      const goal = GOAL_MAP[incomingText.trim()] ?? incomingText.trim().slice(0, 80)
+      const goal = GOAL_MAP[inboundText.trim()] ?? inboundText.trim().slice(0, 80)
       const name = guest?.artist_name ?? 'there'
       const remaining = GUEST_FREE_LIMIT - (msgCount + 1)
       await supabase.from('guest_profiles').upsert(
@@ -309,30 +309,78 @@ export const handler: Handler = async (event) => {
       return { statusCode: 200, body: 'Guest onboarding complete' }
     }
 
-    // Step 4+ — active guest chat, AI-powered with limit warnings
+    // Step 4+ — active guest chat, AI-powered with full conversation history
     const newCount = msgCount + 1
-    await supabase.from('guest_profiles')
-      .update({ message_count: newCount, updated_at: new Date().toISOString() })
+
+    // Fetch last 8 messages from guest conversation history
+    const { data: guestHistory } = await supabase
+      .from('guest_conversations')
+      .select('role, content')
       .eq('phone_number', fromPhone)
+      .order('created_at', { ascending: false })
+      .limit(8)
+
+    const priorMsgs = (guestHistory ?? [])
+      .reverse()
+      .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }))
+
+    // Update count + store incoming message in parallel
+    await Promise.all([
+      supabase.from('guest_profiles')
+        .update({ message_count: newCount, updated_at: new Date().toISOString() })
+        .eq('phone_number', fromPhone),
+      supabase.from('guest_conversations').insert({
+        phone_number: fromPhone,
+        role: 'user',
+        content: inboundText,
+      }),
+    ])
 
     const remaining = GUEST_FREE_LIMIT - newCount
-    const guestRes = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 250,
-      system: `You are uP, GrounduP's AI music career assistant texting with ${guest?.artist_name ?? 'an artist'}, a ${guest?.genre ?? 'music'} artist whose goal is: ${guest?.goal ?? 'grow their career'}.
+    const today = new Date().toISOString().split('T')[0]
 
-Be direct, real, and helpful. Keep replies under 130 words. Give specific actionable advice.
+    let guestReply = "I'm on it — let me get back to you on that."
+    try {
+      const guestRes = await anthropic.messages.create({
+        model: 'claude-haiku-4-5',
+        max_tokens: 280,
+        system: `You are uP, GrounduP's AI music career assistant. You're texting with ${guest?.artist_name ?? 'an artist'}, a ${guest?.genre ?? 'music'} artist whose goal is: ${guest?.goal ?? 'grow their career'}.
 
-GrounduP's key features: Spotify playlist curator matching (pitch directly from dashboard), Meta ad campaign builder for streaming growth, release rollout planning, influencer network, and AI career strategy. Reference these naturally when relevant — never list them all at once.`,
-      messages: [{ role: 'user', content: incomingText }],
-    })
-    let guestReply = guestRes.content[0].type === 'text'
-      ? guestRes.content[0].text
-      : "I'm on it — let me get back to you on that."
-    if (remaining > 0 && remaining <= 3) {
-      guestReply += `\n\n_(${remaining} free message${remaining === 1 ? '' : 's'} left — unlock unlimited at groundupapp.com)_`
+Today's date: ${today}
+
+Be direct, real, and conversational — like a knowledgeable manager in their corner. Keep replies under 140 words. Give specific, actionable advice based on what they're asking.
+
+GrounduP features you can reference naturally (never list all at once):
+- Spotify playlist curator matching & direct pitching
+- Meta ad campaign builder targeting fans of similar artists
+- TikTok influencer network for promo content
+- Release rollout planning & release calendar
+- Apple Music + SoundCloud promotion tools
+- AI career strategy via iMessage
+
+When the artist seems ready to take action, guide them to create their full account: groundupapp.com`,
+        messages: [...priorMsgs, { role: 'user', content: inboundText }],
+      })
+      guestReply = guestRes.content[0].type === 'text'
+        ? guestRes.content[0].text
+        : guestReply
+    } catch (err) {
+      console.error('[blooio-webhook] Claude guest error:', err)
     }
-    await sendBlooio(fromPhone, guestReply)
+
+    if (remaining > 0 && remaining <= 3) {
+      guestReply += `\n\n_(${remaining} free message${remaining === 1 ? '' : 's'} left — unlock unlimited: groundupapp.com)_`
+    }
+
+    // Store assistant reply + send
+    await Promise.all([
+      supabase.from('guest_conversations').insert({
+        phone_number: fromPhone,
+        role: 'assistant',
+        content: guestReply,
+      }),
+      sendBlooio(fromPhone, guestReply),
+    ])
     return { statusCode: 200, body: 'Guest message handled' }
   }
 

@@ -14,6 +14,18 @@ CREATE TABLE IF NOT EXISTS guest_profiles (
   updated_at       timestamptz  NOT NULL DEFAULT now()
 );
 
+-- Guest conversation history: stores each message so Claude has context
+-- role: 'user' | 'assistant'
+
+CREATE TABLE IF NOT EXISTS guest_conversations (
+  id           uuid         PRIMARY KEY DEFAULT gen_random_uuid(),
+  phone_number text         NOT NULL REFERENCES guest_profiles(phone_number) ON DELETE CASCADE,
+  role         text         NOT NULL CHECK (role IN ('user', 'assistant')),
+  content      text         NOT NULL,
+  created_at   timestamptz  NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS guest_conversations_phone_created
+  ON guest_conversations (phone_number, created_at DESC);
+
 -- No RLS needed — only accessed via service role key from the webhook function.
--- If you want to expose this to the dashboard later, add:
---   ALTER TABLE guest_profiles ENABLE ROW LEVEL SECURITY;
