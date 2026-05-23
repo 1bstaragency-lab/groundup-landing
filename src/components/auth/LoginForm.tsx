@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Loader2, Mail, Lock } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
@@ -11,6 +12,7 @@ interface LoginFormProps {
 
 export function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProps) {
   const { signIn, resendVerificationEmail } = useAuth()
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -32,7 +34,7 @@ export function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProps) {
     setError(null)
     setLoading(true)
 
-    const { error: signInError } = await signIn({
+    const { error: signInError, mustChangePassword } = await signIn({
       email: formData.email,
       password: formData.password,
     })
@@ -51,6 +53,12 @@ export function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProps) {
       } else {
         setError(signInError)
       }
+      return
+    }
+
+    // Account created via iMessage onboarding — force password update
+    if (mustChangePassword) {
+      navigate('/reset-password')
       return
     }
 

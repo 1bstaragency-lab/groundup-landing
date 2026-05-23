@@ -34,7 +34,7 @@ function verifyBlooioSignature(rawBody: string, sigHeader: string, secret: strin
   if (!timestamp || !v1) return false
 
   const signedPayload   = `${timestamp}.${rawBody}`
-  const secretHex       = secret.startsWith('whsec_') ? secret.slice(6) : secret
+  const secretHex       = (secret.startsWith('whsec_') ? secret.slice(6) : secret).trim()
   const keyBuf          = Buffer.from(secretHex, 'hex')
 
   // If hex decode gave 0 bytes (not valid hex), fall back to raw string key
@@ -81,71 +81,104 @@ export const handler: Handler = async (event) => {
   // ─── Diagnostic: GET /?ping=1 returns env var status & DB sanity check ────
   if (event.httpMethod === 'GET') {
     const params = event.queryStringParameters ?? {}
-    if (params.ping === '1') {
-      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
-      let phoneSample: Array<{ phone_number: string | null }> = []
-      let phoneError: string | null = null
-      try {
+
+    // ── ?simulate=1&from=<phone>&text=<msg> — test the full inbound flow ──────
+    // Bypasses signature check; actually sends Blooio replies if BLOOIO_API_KEY is set.
+    if (params.simulate === '1') {
+      const fakeFrom = params.from ?? '+10000000000'
+      const fakeText = params.text ?? 'hello'
+      // Re-enter as a fake POST by building a synthetic event
+      console.log('[blooio-webhook] Simulate mode — from:', fakeFrom, 'text:', fakeText)
+      // Fall through: allow the POST logic to run by setting body + skipping sig check below
+      event.httpMethod = 'POST'
+      event.body = JSON.stringify({ from: fakeFrom, text: fakeText })
+      event.headers['x-blooio-simulate'] = '1'
+      // jump past GET check — fall through to POST logic
+    }
+
+    if (event.httpMethod === 'GET') { // still GET after possible simulate override
+      if (params.ping === '1') {
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+        let phoneSample: Array<{ phone_number: string | null }> = []
+        let phoneError: string | null = null
+        try {
+          const { data, error } = await supabase
+            .from('artist_profiles')
+            .select('phone_number')
+            .not('phone_number', 'is', null)
+            .limit(20)
+          phoneSample = data ?? []
+          phoneError  = error?.message ?? null
+        } catch (e) {
+          phoneError = String(e)
+        }
+        const { data: guests } = await supabase
+          .from('guest_profiles')
+          .select('phone_number, onboarding_step, message_count, created_at')
+          .order('created_at', { ascending: false })
+          .limit(10)
+        return {
+          statusCode: 200,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            env: {
+              BLOOIO_API_KEY:           !!BLOOIO_API_KEY,
+              BLOOIO_WEBHOOK_SECRET:    !!BLOOIO_WEBHOOK_SECRET,
+              ANTHROPIC_API_KEY:        !!ANTHROPIC_KEY,
+              STRIPE_SECRET_KEY:        !!STRIPE_SECRET_KEY,
+              STRIPE_PRICE_PRO:         !!STRIPE_PRICE_PRO,
+              VITE_SUPABASE_URL:        !!SUPABASE_URL,
+              SUPABASE_KEY:             !!SUPABASE_KEY,
+              keyType: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'service_role' : process.env.VITE_SUPABASE_ANON_KEY ? 'anon' : 'MISSING',
+            },
+            supabase: {
+              url: SUPABASE_URL ? SUPABASE_URL.replace(/^https?:\/\//, '').slice(0, 30) + '...' : null,
+              phonesInDb: phoneSample.length,
+              samplePhones: phoneSample.map(p => p.phone_number),
+              queryError: phoneError,
+              recentGuests: guests ?? [],
+            },
+          }, null, 2),
+        }
+      }
+      if (params.recent === '1') {
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
         const { data, error } = await supabase
-          .from('artist_profiles')
-          .select('phone_number')
-          .not('phone_number', 'is', null)
+          .from('up_conversations')
+          .select('role, content, channel, created_at')
+          .eq('channel', 'imessage')
+          .order('created_at', { ascending: false })
           .limit(20)
-        phoneSample = data ?? []
-        phoneError  = error?.message ?? null
-      } catch (e) {
-        phoneError = String(e)
+        return {
+          statusCode: 200,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data, error: error?.message }, null, 2),
+        }
       }
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          env: {
-            BLOOIO_API_KEY:           !!BLOOIO_API_KEY,
-            BLOOIO_WEBHOOK_SECRET:    !!BLOOIO_WEBHOOK_SECRET,
-            ANTHROPIC_API_KEY:        !!ANTHROPIC_KEY,
-            VITE_SUPABASE_URL:        !!SUPABASE_URL,
-            SUPABASE_KEY:             !!SUPABASE_KEY,
-            keyType: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'service_role' : process.env.VITE_SUPABASE_ANON_KEY ? 'anon' : 'MISSING',
-          },
-          supabase: {
-            url: SUPABASE_URL ? SUPABASE_URL.replace(/^https?:\/\//, '').slice(0, 30) + '...' : null,
-            phonesInDb: phoneSample.length,
-            samplePhones: phoneSample.map(p => p.phone_number),
-            queryError: phoneError,
-          },
-        }, null, 2),
+      if (params.hits === '1') {
+        // Show raw webhook events + guest profiles — proves whether Blooio is calling us at all
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+        const [eventsRes, guestsRes] = await Promise.all([
+          supabase.from('webhook_events')
+            .select('source, headers, payload, created_at')
+            .order('created_at', { ascending: false })
+            .limit(20),
+          supabase.from('guest_profiles')
+            .select('phone_number, onboarding_step, message_count, monthly_listeners, goal, created_at')
+            .order('created_at', { ascending: false })
+            .limit(10),
+        ])
+        return {
+          statusCode: 200,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            events: { count: eventsRes.data?.length ?? 0, data: eventsRes.data, error: eventsRes.error?.message },
+            guests: { count: guestsRes.data?.length ?? 0, data: guestsRes.data, error: guestsRes.error?.message },
+          }, null, 2),
+        }
       }
+      return { statusCode: 405, body: 'Use POST for inbound webhooks. GET ?ping=1, ?hits=1, ?recent=1, or ?simulate=1&from=+1XXX&text=hello for diagnostics.' }
     }
-    if (params.recent === '1') {
-      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
-      const { data, error } = await supabase
-        .from('up_conversations')
-        .select('role, content, channel, created_at')
-        .eq('channel', 'imessage')
-        .order('created_at', { ascending: false })
-        .limit(20)
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data, error: error?.message }, null, 2),
-      }
-    }
-    if (params.hits === '1') {
-      // Show raw webhook events — proves whether Blooio is calling us at all
-      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
-      const { data, error } = await supabase
-        .from('webhook_events')
-        .select('source, headers, payload, created_at')
-        .order('created_at', { ascending: false })
-        .limit(20)
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ count: data?.length ?? 0, data, error: error?.message }, null, 2),
-      }
-    }
-    return { statusCode: 405, body: 'Use POST for inbound webhooks. GET ?ping=1 or ?recent=1 for diagnostics.' }
   }
 
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method not allowed' }
@@ -178,8 +211,9 @@ export const handler: Handler = async (event) => {
     return { statusCode: 200, body: `Outbound event acknowledged: ${blooioEvent}` }
   }
 
-  // ─── HMAC-SHA256 signature verification ──────────────────────────────────
-  if (BLOOIO_WEBHOOK_SECRET) {
+  // ─── HMAC-SHA256 signature verification (skip for simulate mode) ─────────
+  const isSimulate = event.headers['x-blooio-simulate'] === '1'
+  if (BLOOIO_WEBHOOK_SECRET && !isSimulate) {
     const sigHeader = event.headers['x-blooio-signature'] ?? ''
     if (!sigHeader) {
       console.warn('[blooio-webhook] No x-blooio-signature header — rejecting')
@@ -187,7 +221,7 @@ export const handler: Handler = async (event) => {
     }
     const valid = verifyBlooioSignature(event.body ?? '', sigHeader, BLOOIO_WEBHOOK_SECRET)
     if (!valid) {
-      console.warn('[blooio-webhook] HMAC mismatch — rejecting. sig:', sigHeader)
+      console.warn('[blooio-webhook] HMAC mismatch — rejecting. sig:', sigHeader, 'body_len:', (event.body ?? '').length)
       return { statusCode: 401, body: 'Invalid signature' }
     }
     console.log('[blooio-webhook] Signature verified ✓')
@@ -285,88 +319,149 @@ export const handler: Handler = async (event) => {
 
   if (!profile) {
     // ── Guest / new-user onboarding flow ─────────────────────────────────────
-    // Requires a `guest_profiles` table (see supabase/migrations/guest_profiles.sql)
+    // 3-question onboarding: monthly listeners → goal → email → auto account creation
     const { data: guest } = await supabase
       .from('guest_profiles')
-      .select('phone_number, artist_name, genre, goal, onboarding_step, message_count')
+      .select('phone_number, artist_name, monthly_listeners, goal, onboarding_step, message_count')
       .eq('phone_number', fromPhone)
       .maybeSingle()
 
     const step     = guest?.onboarding_step ?? 0
     const msgCount = guest?.message_count   ?? 0
     const GUEST_FREE_LIMIT = 10
+    const now = new Date().toISOString()
 
-    // Hard gate — limit reached → send Stripe checkout for 7-day trial
+    // Hard gate for step 4+ — limit reached → Stripe checkout
     if (step >= 4 && msgCount >= GUEST_FREE_LIMIT) {
       const checkoutUrl = await createGuestCheckoutUrl(fromPhone)
       if (checkoutUrl) {
         await sendBlooio(fromPhone,
           `You've used all ${GUEST_FREE_LIMIT} free messages with uP 🎵\n\nStart your 7-day free trial to keep your career moving — Spotify pitching, Meta ads, rollout plans, and more. No charge until the trial ends.\n\n👉 ${checkoutUrl}`)
       } else {
-        // Fallback if Stripe isn't configured
         await sendBlooio(fromPhone,
           `You've used all ${GUEST_FREE_LIMIT} free messages with uP 🎵\n\nCreate your full account to keep going — release planning, Spotify curator pitching, Meta ads, and your career dashboard.\n\n👉 groundupapp.com/signup`)
       }
       return { statusCode: 200, body: 'Guest limit reached' }
     }
 
-    // Step 0 — brand new number, never seen before
+    // ── Step 0 — brand new number: welcome + ask monthly listeners ────────────
     if (step === 0) {
       await supabase.from('guest_profiles').upsert(
-        { phone_number: fromPhone, onboarding_step: 1, message_count: 1, updated_at: new Date().toISOString() },
+        { phone_number: fromPhone, onboarding_step: 1, message_count: 1, updated_at: now },
         { onConflict: 'phone_number' }
       )
       await sendBlooio(fromPhone,
-        `Hey 👋 I'm uP — your GrounduP AI music career assistant.\n\nI help artists with Spotify curator pitching, Meta ad campaigns, release rollouts, and career strategy — all over iMessage.\n\nWhat's your artist name? (Or create your full account at groundupapp.com/signup)`)
-      return { statusCode: 200, body: 'Guest step 1' }
+        `Hey 👋 I'm uP — your AI music career assistant.\n\nI handle Spotify curator pitching, Meta ads, release rollouts, and career strategy — all right here in iMessage.\n\nFirst question: how many monthly listeners do you have right now? (Spotify, SoundCloud, Apple Music — any platform)`)
+      return { statusCode: 200, body: 'Guest step 1 — asked listeners' }
     }
 
-    // Step 1 — asked for name, now have it
+    // ── Step 1 — have listeners → ask goal ────────────────────────────────────
     if (step === 1) {
-      const name = inboundText.trim().slice(0, 60)
+      const listeners = inboundText.trim().slice(0, 80)
       await supabase.from('guest_profiles').upsert(
-        { phone_number: fromPhone, artist_name: name, onboarding_step: 2, message_count: msgCount + 1, updated_at: new Date().toISOString() },
+        { phone_number: fromPhone, monthly_listeners: listeners, onboarding_step: 2, message_count: msgCount + 1, updated_at: now },
         { onConflict: 'phone_number' }
       )
       await sendBlooio(fromPhone,
-        `Nice to meet you, ${name} 🎵\n\nWhat genre or style is your music? (Hip-Hop, R&B, Pop, Afrobeats, Lo-Fi, etc.)`)
-      return { statusCode: 200, body: 'Guest step 2' }
+        `Got it 🎵 What's your #1 goal as an artist this year?\n\n1️⃣ Grow my streams & listeners\n2️⃣ Drop a major release\n3️⃣ Run paid ads & scale\n4️⃣ Build my fanbase / following\n\nReply with a number — or just tell me in your own words.`)
+      return { statusCode: 200, body: 'Guest step 2 — asked goal' }
     }
 
-    // Step 2 — asked for genre
+    // ── Step 2 — have goal → ask email ────────────────────────────────────────
     if (step === 2) {
-      const genre = inboundText.trim().slice(0, 60)
-      await supabase.from('guest_profiles').upsert(
-        { phone_number: fromPhone, genre, onboarding_step: 3, message_count: msgCount + 1, updated_at: new Date().toISOString() },
-        { onConflict: 'phone_number' }
-      )
-      await sendBlooio(fromPhone,
-        `${genre} — got it 🎵\n\nWhat's your biggest goal right now?\n\n1️⃣ Drop a new release\n2️⃣ Grow Spotify streams\n3️⃣ Run Meta ads & scale\n4️⃣ Build my fanbase\n\nReply with a number — or just tell me in your own words.`)
-      return { statusCode: 200, body: 'Guest step 3' }
-    }
-
-    // Step 3 — asked for goal, onboarding done → start chat
-    if (step === 3) {
       const GOAL_MAP: Record<string, string> = {
-        '1': 'Drop a new release', '2': 'Grow Spotify streams',
-        '3': 'Run Meta ads & scale', '4': 'Build my fanbase',
+        '1': 'Grow streams & listeners',
+        '2': 'Drop a major release',
+        '3': 'Run paid ads & scale',
+        '4': 'Build fanbase & following',
       }
-      const goal = GOAL_MAP[inboundText.trim()] ?? inboundText.trim().slice(0, 80)
-      const name = guest?.artist_name ?? 'there'
-      const remaining = GUEST_FREE_LIMIT - (msgCount + 1)
+      const goal = GOAL_MAP[inboundText.trim()] ?? inboundText.trim().slice(0, 100)
       await supabase.from('guest_profiles').upsert(
-        { phone_number: fromPhone, goal, onboarding_step: 4, message_count: msgCount + 1, updated_at: new Date().toISOString() },
+        { phone_number: fromPhone, goal, onboarding_step: 3, message_count: msgCount + 1, updated_at: now },
         { onConflict: 'phone_number' }
       )
       await sendBlooio(fromPhone,
-        `Let's build, ${name} 🔥\n\nGoal: ${goal}. Genre: ${guest?.genre ?? 'your sound'}.\n\nYou have ${remaining} free messages — ask me anything. Spotify pitches, Meta ad setup, rollout plans, whatever you need.\n\nWant the full dashboard? → groundupapp.com/signup`)
-      return { statusCode: 200, body: 'Guest onboarding complete' }
+        `${goal} — let's make it happen 🔥\n\nLast thing: what's your email? I'll create your GrounduP account so you have a full dashboard — release calendar, curator pitching, Meta ad builder — and we'll keep this conversation going.`)
+      return { statusCode: 200, body: 'Guest step 3 — asked email' }
     }
 
-    // Step 4+ — active guest chat, AI-powered with full conversation history
-    const newCount = msgCount + 1
+    // ── Step 3 — have email → create Supabase account + send temp password ────
+    if (step === 3) {
+      const rawEmail = inboundText.trim().toLowerCase()
 
-    // Fetch last 8 messages from guest conversation history
+      // Basic email validation
+      const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)
+      if (!emailValid) {
+        await sendBlooio(fromPhone,
+          `Hmm, that doesn't look like a valid email. Try again — what's your email address?`)
+        return { statusCode: 200, body: 'Invalid email — retry' }
+      }
+
+      // Generate a human-readable temp password
+      const tempPassword = generateTempPassword()
+
+      // Create the Supabase user
+      const { data: newUserData, error: createError } = await supabase.auth.admin.createUser({
+        email: rawEmail,
+        password: tempPassword,
+        email_confirm: true,
+        user_metadata: {
+          must_change_password: true,
+          monthly_listeners:    guest?.monthly_listeners ?? '',
+          goal:                 guest?.goal ?? '',
+        },
+      })
+
+      if (createError) {
+        const alreadyExists = createError.message.toLowerCase().includes('already')
+          || createError.message.toLowerCase().includes('duplicate')
+          || createError.message.toLowerCase().includes('unique')
+        if (alreadyExists) {
+          await sendBlooio(fromPhone,
+            `That email already has a GrounduP account. Log in at groundupapp.com/login — or use a different email address.`)
+          return { statusCode: 200, body: 'Email already exists' }
+        }
+        console.error('[blooio-webhook] createUser error:', createError.message)
+        await sendBlooio(fromPhone,
+          `Hit a snag setting up your account — try again in a moment or go to groundupapp.com/signup`)
+        return { statusCode: 200, body: 'createUser error' }
+      }
+
+      const newUserId = newUserData.user.id
+
+      // Link phone → account in artist_profiles (enables future iMessage routing)
+      // Also create artist_preferences with free plan
+      await Promise.all([
+        supabase.from('artist_profiles').upsert({
+          user_id:      newUserId,
+          artist_name:  '',
+          phone_number: fromPhone,
+          tone:         'Assistant Manager',
+        }, { onConflict: 'user_id' }),
+        supabase.from('artist_preferences').upsert({
+          user_id:             newUserId,
+          artist_name:         '',
+          plan_tier:           'free',
+          onboarding_complete: false,
+        }, { onConflict: 'user_id' }),
+        supabase.from('guest_profiles').upsert(
+          { phone_number: fromPhone, onboarding_step: 4, message_count: msgCount + 1, updated_at: now },
+          { onConflict: 'phone_number' }
+        ),
+      ])
+
+      // Text them the temp password + login link
+      await sendBlooio(fromPhone,
+        `You're set up! 🔥\n\nAccount: ${rawEmail}\nTemp password: ${tempPassword}\n\n👉 groundupapp.com/login\n\nYou'll be asked to create a new password when you first log in. Then come back here — I'm ready to work 🎵`)
+
+      return { statusCode: 200, body: 'Account created' }
+    }
+
+    // ── Step 4+ — active guest chat via AI ────────────────────────────────────
+    const newCount = msgCount + 1
+    const today    = new Date().toISOString().split('T')[0]
+
+    // Fetch last 8 messages of conversation history
     const { data: guestHistory } = await supabase
       .from('guest_conversations')
       .select('role, content')
@@ -378,10 +473,9 @@ export const handler: Handler = async (event) => {
       .reverse()
       .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }))
 
-    // Update count + store incoming message in parallel
     await Promise.all([
       supabase.from('guest_profiles')
-        .update({ message_count: newCount, updated_at: new Date().toISOString() })
+        .update({ message_count: newCount, updated_at: now })
         .eq('phone_number', fromPhone),
       supabase.from('guest_conversations').insert({
         phone_number: fromPhone,
@@ -391,48 +485,40 @@ export const handler: Handler = async (event) => {
     ])
 
     const remaining = GUEST_FREE_LIMIT - newCount
-    const today = new Date().toISOString().split('T')[0]
 
     let guestReply = "I'm on it — let me get back to you on that."
     try {
       const guestRes = await anthropic.messages.create({
         model: 'claude-haiku-4-5',
         max_tokens: 280,
-        system: `You are uP, GrounduP's AI music career assistant. You're texting with ${guest?.artist_name ?? 'an artist'}, a ${guest?.genre ?? 'music'} artist whose goal is: ${guest?.goal ?? 'grow their career'}.
+        system: `You are uP, GrounduP's AI music career assistant. You're texting with an artist whose goal is: ${guest?.goal ?? 'grow their career'} and who has ${guest?.monthly_listeners ?? 'some'} monthly listeners.
 
-Today's date: ${today}
+Today: ${today}
 
-Be direct, real, and conversational — like a knowledgeable manager in their corner. Keep replies under 140 words. Give specific, actionable advice based on what they're asking.
+Be direct, real, and conversational — like a manager in their corner. Keep replies under 130 words. Give specific, actionable advice.
 
-GrounduP features you can reference naturally (never list all at once):
+GrounduP features (reference naturally, don't list all at once):
 - Spotify playlist curator matching & direct pitching
 - Meta ad campaign builder targeting fans of similar artists
 - TikTok influencer network for promo content
-- Release rollout planning & release calendar
-- Apple Music + SoundCloud promotion tools
+- Release rollout planning & calendar
 - AI career strategy via iMessage
 
-When the artist seems ready to take action, guide them to create their full account: groundupapp.com`,
+Guide them to log into their dashboard: groundupapp.com/login`,
         messages: [...priorMsgs, { role: 'user', content: inboundText }],
       })
-      guestReply = guestRes.content[0].type === 'text'
-        ? guestRes.content[0].text
-        : guestReply
+      guestReply = guestRes.content[0].type === 'text' ? guestRes.content[0].text : guestReply
     } catch (err) {
       console.error('[blooio-webhook] Claude guest error:', err)
     }
 
+    // Low-message nudge
     if (remaining > 0 && remaining <= 3) {
-      guestReply += `\n\n_(${remaining} free message${remaining === 1 ? '' : 's'} left — unlock unlimited: groundupapp.com)_`
+      guestReply += `\n\n(${remaining} free message${remaining === 1 ? '' : 's'} left — log in at groundupapp.com to keep going)`
     }
 
-    // Store assistant reply + send
     await Promise.all([
-      supabase.from('guest_conversations').insert({
-        phone_number: fromPhone,
-        role: 'assistant',
-        content: guestReply,
-      }),
+      supabase.from('guest_conversations').insert({ phone_number: fromPhone, role: 'assistant', content: guestReply }),
       sendBlooio(fromPhone, guestReply),
     ])
     return { statusCode: 200, body: 'Guest message handled' }
@@ -675,6 +761,15 @@ function buildChecklist(platform: string): Array<{ label: string; done: boolean 
     { label: 'Reach out to curators and influencers in dashboard', done: false },
     { label: 'Post on all social platforms', done: false },
   ]
+}
+
+// ─── Generate a human-readable temp password like "uP-7X2K9M" ────────────────
+function generateTempPassword(): string {
+  // Excludes confusable characters: 0, O, I, 1, l
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+  let out = 'uP-'
+  for (let i = 0; i < 6; i++) out += chars[Math.floor(Math.random() * chars.length)]
+  return out
 }
 
 // ─── Create a Stripe Checkout session for a guest user (phone-keyed) ─────────

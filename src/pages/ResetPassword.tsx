@@ -20,11 +20,14 @@ export function ResetPasswordPage() {
     if (password !== confirm) { setError('Passwords do not match.'); return }
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
     setLoading(true)
-    const { error: err } = await supabase.auth.updateUser({ password })
+    const { error: err } = await supabase.auth.updateUser({
+      password,
+      data: { must_change_password: false },
+    })
     setLoading(false)
     if (err) { setError(err.message); return }
     setDone(true)
-    setTimeout(() => navigate('/login'), 2500)
+    setTimeout(() => navigate('/dashboard/home'), 2500)
   }
 
   const fields: { val: string; set: (v: string) => void; ph: string }[] = [
@@ -39,13 +42,13 @@ export function ResetPasswordPage() {
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
             <CheckCircle2 size={52} className="text-[#FFD700] mx-auto mb-6" />
             <h2 className="text-3xl font-black text-white tracking-tight mb-3">Password Updated</h2>
-            <p className="text-white/40 text-sm">Redirecting you to sign in...</p>
+            <p className="text-white/40 text-sm">Taking you to your dashboard...</p>
           </motion.div>
         ) : (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-            <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.35em] mb-3">Account Recovery</p>
-            <h2 className="text-4xl font-black text-white tracking-tighter uppercase mb-2">New Password</h2>
-            <p className="text-white/30 text-sm mb-8">Choose a strong password for your account.</p>
+            <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.35em] mb-3">One last step</p>
+            <h2 className="text-4xl font-black text-white tracking-tighter uppercase mb-2">Set Your Password</h2>
+            <p className="text-white/30 text-sm mb-8">Replace your temporary password with something you'll remember.</p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {fields.map(({ val, set, ph }, i) => (

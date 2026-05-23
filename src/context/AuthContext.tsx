@@ -121,8 +121,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signIn({ email, password }: SignInCredentials) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error ? error.message : null };
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    return {
+      error: error ? error.message : null,
+      // True when account was auto-created via iMessage onboarding with a temp password
+      mustChangePassword: !error && data?.user?.user_metadata?.must_change_password === true,
+    };
   }
 
   async function signOut() {

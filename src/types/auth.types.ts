@@ -47,7 +47,7 @@ export interface AuthContextValue {
   emailJustConfirmed: boolean;
   clearEmailConfirmed: () => void;
   signUp: (credentials: SignUpCredentials) => Promise<{ error: string | null }>;
-  signIn: (credentials: SignInCredentials) => Promise<{ error: string | null }>;
+  signIn: (credentials: SignInCredentials) => Promise<{ error: string | null; mustChangePassword?: boolean }>;
   signOut: () => Promise<void>;
   saveProfile: (profile: Omit<ArtistProfile, 'user_id' | 'created_at' | 'updated_at'>) => Promise<{ error: string | null }>;
   refreshProfile: () => Promise<void>;
