@@ -17,6 +17,35 @@
 import type { Handler } from '@netlify/functions'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
+import { createHmac, timingSafeEqual } from 'crypto'
+
+// ─── Blooio uses Stripe-style HMAC-SHA256 signatures ─────────────────────────
+// Header format: x-blooio-signature: t=<unix>,v1=<hex_hmac>
+// Signed payload: "<timestamp>.<rawBody>"
+// Key: hex-decode the part after "whsec_"
+function verifyBlooioSignature(rawBody: string, sigHeader: string, secret: string): boolean {
+  const parts: Record<string, string> = {}
+  sigHeader.split(',').forEach(p => {
+    const eq = p.indexOf('=')
+    if (eq > 0) parts[p.slice(0, eq).trim()] = p.slice(eq + 1).trim()
+  })
+  const { t: timestamp, v1 } = parts
+  if (!timestamp || !v1) return false
+
+  const signedPayload   = `${timestamp}.${rawBody}`
+  const secretHex       = secret.startsWith('whsec_') ? secret.slice(6) : secret
+  const keyBuf          = Buffer.from(secretHex, 'hex')
+
+  // If hex decode gave 0 bytes (not valid hex), fall back to raw string key
+  const key = keyBuf.length > 0 ? keyBuf : Buffer.from(secretHex)
+  const expected = createHmac('sha256', key).update(signedPayload).digest('hex')
+
+  try {
+    return timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(v1, 'hex'))
+  } catch {
+    return expected === v1
+  }
+}
 
 const BLOOIO_API_KEY        = process.env.BLOOIO_API_KEY            ?? ''
 const BLOOIO_WEBHOOK_SECRET = process.env.BLOOIO_WEBHOOK_SECRET     ?? ''
@@ -138,21 +167,24 @@ export const handler: Handler = async (event) => {
     })
   }
 
+  // ─── Skip outbound status events (queued / sent / delivered / failed) ───────
+  const blooioEvent = event.headers['x-blooio-event'] ?? ''
+  const OUTBOUND_EVENTS = ['message.queued', 'message.sent', 'message.delivered', 'message.failed']
+  if (OUTBOUND_EVENTS.includes(blooioEvent)) {
+    console.log('[blooio-webhook] Outbound status event — ignoring:', blooioEvent)
+    return { statusCode: 200, body: `Outbound event acknowledged: ${blooioEvent}` }
+  }
+
+  // ─── HMAC-SHA256 signature verification ──────────────────────────────────
   if (BLOOIO_WEBHOOK_SECRET) {
-    const sigHeader =
-      event.headers['x-blooio-signature'] ??
-      event.headers['x-blooio-secret']    ??
-      event.headers['x-webhook-secret']   ??
-      event.headers['x-signing-secret']   ??
-      event.headers['x-secret']           ??
-      event.headers['authorization']       ?? ''
-    const provided = sigHeader.replace(/^Bearer\s+/i, '')
-    if (!provided) {
-      console.warn('[blooio-webhook] No signature header — rejecting request')
+    const sigHeader = event.headers['x-blooio-signature'] ?? ''
+    if (!sigHeader) {
+      console.warn('[blooio-webhook] No x-blooio-signature header — rejecting')
       return { statusCode: 401, body: 'Missing signature' }
     }
-    if (provided !== BLOOIO_WEBHOOK_SECRET) {
-      console.warn('[blooio-webhook] Signature mismatch — rejecting request')
+    const valid = verifyBlooioSignature(event.body ?? '', sigHeader, BLOOIO_WEBHOOK_SECRET)
+    if (!valid) {
+      console.warn('[blooio-webhook] HMAC mismatch — rejecting. sig:', sigHeader)
       return { statusCode: 401, body: 'Invalid signature' }
     }
     console.log('[blooio-webhook] Signature verified ✓')
@@ -168,8 +200,20 @@ export const handler: Handler = async (event) => {
   console.log('[blooio-webhook] Inbound payload:', JSON.stringify(payload))
 
   const anyPayload = payload as Record<string, unknown>
-  const fromPhone   = (payload.from ?? (anyPayload.sender as string) ?? '') as string
-  const inboundText = (payload.text ?? payload.message ?? payload.body ?? (anyPayload.content as string) ?? '') as string
+  // external_id = the other party's phone (user); internal_id = our Blooio number
+  const fromPhone   = (
+    payload.from                          ??
+    (anyPayload.sender      as string)    ??
+    (anyPayload.external_id as string)    ??    // Blooio inbound field
+    ''
+  ) as string
+  const inboundText = (
+    payload.text                          ??
+    payload.message                       ??
+    payload.body                          ??
+    (anyPayload.content as string)        ??
+    ''
+  ) as string
 
   if (!fromPhone || !inboundText) {
     console.log('[blooio-webhook] Missing from/text — ignoring')
