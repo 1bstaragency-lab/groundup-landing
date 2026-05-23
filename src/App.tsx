@@ -51,7 +51,6 @@ function PageSplash({ onDone }: { onDone: () => void }) {
 import { UpChatMockup, UpOrbMascot } from './components/ui/UpChatMockup';
 import { SignUpPage } from './pages/SignUp';
 import { LoginPage } from './pages/Login';
-import AppPage from './pages/AppPage';
 import AppPageV1 from './pages/AppPageV1';
 import AppPageV2 from './pages/AppPageV2';
 import { CampaignsPage } from './pages/Campaigns';
