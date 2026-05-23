@@ -237,8 +237,11 @@ export const handler: Handler = async (event) => {
       .limit(20)
     console.log('[blooio-webhook] No match. All stored phones:', JSON.stringify(allPhones))
 
-    await sendBlooio(fromPhone, "Hey! I don't recognize this number. Log into your GrounduP account and connect your phone under Profile to chat with uP 🎵")
-    return { statusCode: 200, body: 'Unknown number' }
+    // New user texting in from /app page — warm intro + guide to sign up
+    await sendBlooio(fromPhone,
+      `Hey 👋 I'm uP — your GrounduP AI music career assistant.\n\nI help artists with release strategy, curator matching, and career planning — all through iMessage.\n\nCreate your free account at groundupapp.com to connect your number and get the full experience. Takes 2 minutes 🎵`
+    )
+    return { statusCode: 200, body: 'Unknown number — intro sent' }
   }
 
   const userId = profile.user_id
