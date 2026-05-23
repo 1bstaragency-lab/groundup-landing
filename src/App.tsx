@@ -52,6 +52,8 @@ import { UpChatMockup, UpOrbMascot } from './components/ui/UpChatMockup';
 import { SignUpPage } from './pages/SignUp';
 import { LoginPage } from './pages/Login';
 import AppPage from './pages/AppPage';
+import AppPageV1 from './pages/AppPageV1';
+import AppPageV2 from './pages/AppPageV2';
 import { CampaignsPage } from './pages/Campaigns';
 import { Dashboard } from './pages/Dashboard';
 import { JoinPage } from './pages/JoinPage';
@@ -600,6 +602,8 @@ function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/pricing" element={<PricingStandalonePage />} />
       <Route path="/app" element={<AppPage />} />
+      <Route path="/app-v1" element={<AppPageV1 />} />
+      <Route path="/app-v2" element={<AppPageV2 />} />
       <Route path="/get-app" element={<Navigate to="/app" replace />} />
       <Route path="/campaigns" element={<CampaignsPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />

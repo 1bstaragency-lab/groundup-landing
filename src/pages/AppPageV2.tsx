@@ -1,0 +1,281 @@
+/**
+ * /app-html — Version B: Animated HTML iMessage mock
+ * Custom-coded iPhone frame · messages animate in sequence · typing dots
+ */
+import { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
+
+const IMESSAGE_LINK = 'https://start.msg.new/EEHfxKYWDk';
+
+const CHIPS = ['💬 iMessage AI', '🎵 Release Planning', '🎯 Curator Matching', '📊 Meta Ads'];
+
+// The conversation to animate through
+const MESSAGES = [
+  {
+    from: 'up' as const,
+    text: 'You have 3 tracks ready to pitch. I found 8 Spotify playlist curators in your lane — combined 2.1M followers. Want me to send the pitches now?',
+  },
+  { from: 'user' as const, text: 'Yes, send them.' },
+  {
+    from: 'up' as const,
+    text: 'Done. Pitched to Chill R&B Vibes (480K), Late Night Feels (210K), and 6 more. I\'ll update you when they respond 🎯',
+  },
+];
+
+
+function TypingDots() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      transition={{ duration: 0.2 }}
+      className="flex items-center gap-1 px-4 py-3 rounded-2xl rounded-bl-sm w-fit"
+      style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.18)' }}
+    >
+      {[0, 1, 2].map((i) => (
+        <motion.span
+          key={i}
+          className="block w-1.5 h-1.5 rounded-full bg-[#FFD700]/60"
+          animate={{ y: [0, -4, 0] }}
+          transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15, ease: 'easeInOut' }}
+        />
+      ))}
+    </motion.div>
+  );
+}
+
+function IPhoneMock() {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-60px' });
+
+  const [visibleMsgs, setVisibleMsgs] = useState(0);
+  const [showTyping1, setShowTyping1] = useState(false);
+  const [showTyping2, setShowTyping2] = useState(false);
+
+  useEffect(() => {
+    if (!inView) return;
+    const timers = [
+      setTimeout(() => setShowTyping1(true),  900),
+      setTimeout(() => { setVisibleMsgs(1); setShowTyping1(false); }, 2200),
+      setTimeout(() => setVisibleMsgs(2), 3200),
+      setTimeout(() => setShowTyping2(true),  3900),
+      setTimeout(() => { setVisibleMsgs(3); setShowTyping2(false); }, 5200),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [inView]);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 40, rotateX: 8 }}
+      animate={inView ? { opacity: 1, y: 0, rotateX: 0 } : {}}
+      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ scale: 1.02, rotateY: 4, rotateX: -2, transition: { type: 'spring', stiffness: 200, damping: 22 } }}
+      className="cursor-default select-none"
+      style={{ perspective: '1000px', filter: 'drop-shadow(0 28px 56px rgba(0,0,0,0.18))' }}
+    >
+      {/* iPhone outer frame */}
+      <div className="relative w-[260px] rounded-[3rem] overflow-hidden"
+        style={{
+          background: 'linear-gradient(160deg, #2a2a2a 0%, #1a1a1a 50%, #111 100%)',
+          padding: '10px',
+          boxShadow: '0 0 0 1px rgba(255,255,255,0.08), inset 0 0 0 1px rgba(0,0,0,0.6)',
+        }}>
+
+        {/* Screen */}
+        <div className="rounded-[2.4rem] overflow-hidden bg-[#0A0A0A] w-full" style={{ minHeight: '520px' }}>
+          {/* Dynamic island */}
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="w-24 h-7 rounded-full bg-black" />
+          </div>
+
+          {/* iMessage header */}
+          <div className="flex items-center gap-2.5 px-4 py-2.5 border-b border-white/5">
+            <button className="text-[#0A84FF] text-[13px] font-medium">‹</button>
+            <div className="flex-1 flex flex-col items-center">
+              {/* Orb avatar */}
+              <div className="w-9 h-9 rounded-full overflow-hidden mb-0.5"
+                style={{ boxShadow: '0 0 10px rgba(255,215,0,0.4)' }}>
+                <img src="/up-avatar.png" alt="uP" className="w-full h-full object-cover" />
+              </div>
+              <p className="text-white text-[12px] font-semibold leading-none">uP</p>
+              <p className="text-white/40 text-[9px] leading-none mt-0.5">GrounduP AI · Active now</p>
+            </div>
+            <button className="text-[#0A84FF]">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>
+              </svg>
+            </button>
+          </div>
+
+          {/* Messages area */}
+          <div className="px-3 py-4 flex flex-col gap-2 min-h-[320px]">
+            <AnimatePresence>
+              {/* Message 0 — uP */}
+              {visibleMsgs >= 1 && (
+                <motion.div
+                  key="msg0"
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  className="flex justify-start"
+                >
+                  <div className="max-w-[82%] px-3 py-2.5 rounded-2xl rounded-bl-sm text-[12px] leading-[1.5] text-white"
+                    style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.2)' }}>
+                    {MESSAGES[0].text}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Typing dots 1 */}
+              {showTyping1 && !visibleMsgs && (
+                <div key="typing1" className="flex justify-start">
+                  <TypingDots />
+                </div>
+              )}
+              {showTyping1 && (
+                <div key="typing1b" className="flex justify-start">
+                  <TypingDots />
+                </div>
+              )}
+
+              {/* Message 1 — user */}
+              {visibleMsgs >= 2 && (
+                <motion.div
+                  key="msg1"
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                  className="flex justify-end"
+                >
+                  <div className="max-w-[72%] px-3 py-2.5 rounded-2xl rounded-br-sm text-[12px] leading-[1.5] text-white/80"
+                    style={{ background: '#1C1C1E', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    {MESSAGES[1].text}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Typing dots 2 */}
+              {showTyping2 && (
+                <div key="typing2" className="flex justify-start">
+                  <TypingDots />
+                </div>
+              )}
+
+              {/* Message 2 — uP */}
+              {visibleMsgs >= 3 && (
+                <motion.div
+                  key="msg2"
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  className="flex justify-start"
+                >
+                  <div className="max-w-[82%] px-3 py-2.5 rounded-2xl rounded-bl-sm text-[12px] leading-[1.5] text-white"
+                    style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.2)' }}>
+                    {MESSAGES[2].text}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* iMessage input bar */}
+          <div className="mx-3 mb-4 flex items-center gap-2 px-3 py-2 rounded-full border border-white/10"
+            style={{ background: '#1C1C1E' }}>
+            <div className="flex-1 text-white/20 text-[12px]">iMessage</div>
+            <div className="w-6 h-6 rounded-full bg-[#FFD700]/20 flex items-center justify-center">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="#FFD700">
+                <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+export function AppPageV2() {
+  return (
+    <div className="min-h-screen font-sans overflow-x-hidden" style={{ background: '#F4F3EF' }}>
+      {/* gold top glow */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[70%] h-64 bg-[#FFD700]/12 blur-[100px] rounded-full" />
+      </div>
+
+      {/* ── Nav ── */}
+      <nav className="relative z-10 flex items-center justify-between px-6 py-5 max-w-2xl mx-auto">
+        <a href="/"><img src="/logo.webp" alt="GrounduP" className="h-9" /></a>
+        <a href="/login" className="text-zinc-500 hover:text-zinc-900 text-[10px] font-black uppercase tracking-widest transition-colors">
+          Sign In
+        </a>
+      </nav>
+
+      {/* ── Main ── */}
+      <main className="relative z-10 flex flex-col items-center px-6 pt-2 pb-28 max-w-md mx-auto text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="flex flex-col items-center gap-5 w-full"
+        >
+          {/* Eyebrow */}
+          <div className="px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-[0.2em]"
+            style={{ background: 'rgba(255,215,0,0.15)', borderColor: 'rgba(184,134,11,0.3)', color: '#7A5C00' }}>
+            GrounduP Artist OS
+          </div>
+
+          {/* Headline */}
+          <h1 className="text-[2.75rem] md:text-5xl font-black tracking-tighter leading-[1.05] text-zinc-900">
+            Your career,<br />
+            <span className="text-zinc-500">in your messages.</span>
+          </h1>
+
+          {/* Sub-copy */}
+          <p className="text-zinc-600 text-[15px] leading-relaxed max-w-[280px]">
+            uP is your iMessage AI — Spotify curator pitching, Meta ads, release strategy, all in one conversation.
+          </p>
+
+          {/* ── Animated iPhone mock ── */}
+          <div className="mt-3 mb-1">
+            <IPhoneMock />
+          </div>
+
+          {/* Feature chips */}
+          <div className="flex flex-wrap justify-center gap-2">
+            {CHIPS.map((c) => (
+              <div key={c} className="px-3.5 py-1.5 rounded-full text-[12px] font-semibold text-zinc-600 border border-zinc-200 bg-white"
+                style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+                {c}
+              </div>
+            ))}
+          </div>
+
+          {/* ── CTA ── */}
+          <a href={IMESSAGE_LINK}
+            className="w-full h-14 rounded-2xl font-black text-[15px] tracking-wide flex items-center justify-center gap-2.5 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            style={{ background: '#FFD700', color: '#000', boxShadow: '0 4px 28px rgba(255,215,0,0.4), inset 0 1px 0 rgba(255,255,255,0.35)' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 12H6l-2 2V4h16v10z"/>
+            </svg>
+            Text uP — Start Free
+          </a>
+
+          <p className="text-zinc-400 text-[11px] font-medium -mt-3">
+            Opens iMessage · No app download needed
+          </p>
+
+          <a href={IMESSAGE_LINK} className="text-[12px] font-black uppercase tracking-widest transition-colors mt-1"
+            style={{ color: '#B8860B' }}>
+            10 free messages · No credit card →
+          </a>
+        </motion.div>
+      </main>
+    </div>
+  );
+}
+
+export default AppPageV2;
