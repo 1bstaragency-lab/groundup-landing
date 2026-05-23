@@ -601,7 +601,7 @@ function App() {
       <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/pricing" element={<PricingStandalonePage />} />
-      <Route path="/app" element={<AppPage />} />
+      <Route path="/app" element={<AppPageV2 />} />
       <Route path="/app-v1" element={<AppPageV1 />} />
       <Route path="/app-v2" element={<AppPageV2 />} />
       <Route path="/get-app" element={<Navigate to="/app" replace />} />

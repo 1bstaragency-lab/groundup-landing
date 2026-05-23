@@ -199,7 +199,7 @@ function IPhoneMock() {
 
 export function AppPageV2() {
   return (
-    <div className="min-h-screen font-sans overflow-x-hidden" style={{ background: '#F4F3EF' }}>
+    <div className="min-h-screen font-sans overflow-x-hidden" style={{ background: '#DDDBD4' }}>
       {/* gold top glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[70%] h-64 bg-[#FFD700]/12 blur-[100px] rounded-full" />
