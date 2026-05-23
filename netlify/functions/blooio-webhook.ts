@@ -147,9 +147,15 @@ export const handler: Handler = async (event) => {
       event.headers['x-secret']           ??
       event.headers['authorization']       ?? ''
     const provided = sigHeader.replace(/^Bearer\s+/i, '')
-    if (provided !== BLOOIO_WEBHOOK_SECRET) {
-      console.warn('[blooio-webhook] Signature mismatch — continuing anyway. Header value:', sigHeader || '(none)')
+    if (!provided) {
+      console.warn('[blooio-webhook] No signature header — rejecting request')
+      return { statusCode: 401, body: 'Missing signature' }
     }
+    if (provided !== BLOOIO_WEBHOOK_SECRET) {
+      console.warn('[blooio-webhook] Signature mismatch — rejecting request')
+      return { statusCode: 401, body: 'Invalid signature' }
+    }
+    console.log('[blooio-webhook] Signature verified ✓')
   }
 
   let payload: BlooioInbound
