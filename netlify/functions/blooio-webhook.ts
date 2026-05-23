@@ -181,7 +181,8 @@ export const handler: Handler = async (event) => {
     return { statusCode: 200, body: 'Supabase not configured' }
   }
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+  const supabase  = createClient(SUPABASE_URL, SUPABASE_KEY)
+  const anthropic = new Anthropic({ apiKey: ANTHROPIC_KEY })
 
   // ─── Bulletproof phone lookup: try multiple formats ───────────────────────
   const digits = fromPhone.replace(/\D/g, '')
@@ -230,18 +231,103 @@ export const handler: Handler = async (event) => {
   }
 
   if (!profile) {
-    const { data: allPhones } = await supabase
-      .from('artist_profiles')
-      .select('phone_number')
-      .not('phone_number', 'is', null)
-      .limit(20)
-    console.log('[blooio-webhook] No match. All stored phones:', JSON.stringify(allPhones))
+    // ── Guest / new-user onboarding flow ─────────────────────────────────────
+    // Requires a `guest_profiles` table (see supabase/migrations/guest_profiles.sql)
+    const { data: guest } = await supabase
+      .from('guest_profiles')
+      .select('phone_number, artist_name, genre, goal, onboarding_step, message_count')
+      .eq('phone_number', fromPhone)
+      .maybeSingle()
 
-    // New user texting in from /app page — warm intro + guide to sign up
-    await sendBlooio(fromPhone,
-      `Hey 👋 I'm uP — your GrounduP AI music career assistant.\n\nI help artists with release strategy, curator matching, and career planning — all through iMessage.\n\nCreate your free account at groundupapp.com to connect your number and get the full experience. Takes 2 minutes 🎵`
-    )
-    return { statusCode: 200, body: 'Unknown number — intro sent' }
+    const step     = guest?.onboarding_step ?? 0
+    const msgCount = guest?.message_count   ?? 0
+    const GUEST_FREE_LIMIT = 10
+
+    // Hard gate — limit reached
+    if (step >= 4 && msgCount >= GUEST_FREE_LIMIT) {
+      await sendBlooio(fromPhone,
+        `You've used all ${GUEST_FREE_LIMIT} free messages with uP 🎵\n\nCreate your free account to keep going — release planning, Spotify curator pitching, Meta ad setup, and your full career dashboard.\n\n👉 groundupapp.com`)
+      return { statusCode: 200, body: 'Guest limit reached' }
+    }
+
+    // Step 0 — brand new number, never seen before
+    if (step === 0) {
+      await supabase.from('guest_profiles').upsert(
+        { phone_number: fromPhone, onboarding_step: 1, message_count: 1, updated_at: new Date().toISOString() },
+        { onConflict: 'phone_number' }
+      )
+      await sendBlooio(fromPhone,
+        `Hey 👋 I'm uP — your GrounduP AI music career assistant.\n\nI help artists with Spotify curator pitching, Meta ad campaigns, release rollouts, and career strategy — all over iMessage.\n\nWhat's your artist name? (Or set up on the web: groundupapp.com)`)
+      return { statusCode: 200, body: 'Guest step 1' }
+    }
+
+    // Step 1 — asked for name, now have it
+    if (step === 1) {
+      const name = incomingText.trim().slice(0, 60)
+      await supabase.from('guest_profiles').upsert(
+        { phone_number: fromPhone, artist_name: name, onboarding_step: 2, message_count: msgCount + 1, updated_at: new Date().toISOString() },
+        { onConflict: 'phone_number' }
+      )
+      await sendBlooio(fromPhone,
+        `Nice to meet you, ${name} 🎵\n\nWhat genre or style is your music? (Hip-Hop, R&B, Pop, Afrobeats, Lo-Fi, etc.)`)
+      return { statusCode: 200, body: 'Guest step 2' }
+    }
+
+    // Step 2 — asked for genre
+    if (step === 2) {
+      const genre = incomingText.trim().slice(0, 60)
+      await supabase.from('guest_profiles').upsert(
+        { phone_number: fromPhone, genre, onboarding_step: 3, message_count: msgCount + 1, updated_at: new Date().toISOString() },
+        { onConflict: 'phone_number' }
+      )
+      await sendBlooio(fromPhone,
+        `${genre} — got it 🎵\n\nWhat's your biggest goal right now?\n\n1️⃣ Drop a new release\n2️⃣ Grow Spotify streams\n3️⃣ Run Meta ads & scale\n4️⃣ Build my fanbase\n\nReply with a number — or just tell me in your own words.`)
+      return { statusCode: 200, body: 'Guest step 3' }
+    }
+
+    // Step 3 — asked for goal, onboarding done → start chat
+    if (step === 3) {
+      const GOAL_MAP: Record<string, string> = {
+        '1': 'Drop a new release', '2': 'Grow Spotify streams',
+        '3': 'Run Meta ads & scale', '4': 'Build my fanbase',
+      }
+      const goal = GOAL_MAP[incomingText.trim()] ?? incomingText.trim().slice(0, 80)
+      const name = guest?.artist_name ?? 'there'
+      const remaining = GUEST_FREE_LIMIT - (msgCount + 1)
+      await supabase.from('guest_profiles').upsert(
+        { phone_number: fromPhone, goal, onboarding_step: 4, message_count: msgCount + 1, updated_at: new Date().toISOString() },
+        { onConflict: 'phone_number' }
+      )
+      await sendBlooio(fromPhone,
+        `Let's build, ${name} 🔥\n\nGoal: ${goal}. Genre: ${guest?.genre ?? 'your sound'}.\n\nYou have ${remaining} free messages — ask me anything. Spotify pitches, Meta ad setup, rollout plans, whatever you need.\n\nTo unlock unlimited + full dashboard: groundupapp.com`)
+      return { statusCode: 200, body: 'Guest onboarding complete' }
+    }
+
+    // Step 4+ — active guest chat, AI-powered with limit warnings
+    const newCount = msgCount + 1
+    await supabase.from('guest_profiles')
+      .update({ message_count: newCount, updated_at: new Date().toISOString() })
+      .eq('phone_number', fromPhone)
+
+    const remaining = GUEST_FREE_LIMIT - newCount
+    const guestRes = await anthropic.messages.create({
+      model: 'claude-haiku-4-5',
+      max_tokens: 250,
+      system: `You are uP, GrounduP's AI music career assistant texting with ${guest?.artist_name ?? 'an artist'}, a ${guest?.genre ?? 'music'} artist whose goal is: ${guest?.goal ?? 'grow their career'}.
+
+Be direct, real, and helpful. Keep replies under 130 words. Give specific actionable advice.
+
+GrounduP's key features: Spotify playlist curator matching (pitch directly from dashboard), Meta ad campaign builder for streaming growth, release rollout planning, influencer network, and AI career strategy. Reference these naturally when relevant — never list them all at once.`,
+      messages: [{ role: 'user', content: incomingText }],
+    })
+    let guestReply = guestRes.content[0].type === 'text'
+      ? guestRes.content[0].text
+      : "I'm on it — let me get back to you on that."
+    if (remaining > 0 && remaining <= 3) {
+      guestReply += `\n\n_(${remaining} free message${remaining === 1 ? '' : 's'} left — unlock unlimited at groundupapp.com)_`
+    }
+    await sendBlooio(fromPhone, guestReply)
+    return { statusCode: 200, body: 'Guest message handled' }
   }
 
   const userId = profile.user_id
@@ -351,7 +437,6 @@ TASK EXTRACTION: If you identify any action items for the artist, append them at
 Only if genuinely actionable. Omit entirely if no tasks.`
 
   // ─── Call Claude — use Haiku for speed (perfect for short iMessage replies) ─
-  const anthropic = new Anthropic({ apiKey: ANTHROPIC_KEY })
   let reply = ''
   try {
     const res = await anthropic.messages.create({
