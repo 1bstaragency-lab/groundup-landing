@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SignUpForm } from '../components/auth/SignUpForm'
 import { ArtistProfileForm } from '../components/onboarding/ArtistProfileForm'
@@ -7,6 +7,7 @@ import { PlanSelectionOnboarding } from '../components/onboarding/PlanSelectionO
 import { AuthOrbitPanel } from '../components/auth/AuthOrbitPanel'
 import { EarlyAccessPopup } from '../components/ui/early-access-popup'
 import { useAuth } from '../hooks/useAuth'
+import { createClient } from '@supabase/supabase-js'
 import type { ArtistTone } from '../types/auth.types'
 
 type Step = 'signup' | 'profile' | 'tone' | 'plan'
@@ -23,6 +24,17 @@ export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
   const [selectedTone, setSelectedTone] = useState<ArtistTone | null>(null)
   const [saving, setSaving] = useState(false)
   const [showEarlyAccess, setShowEarlyAccess] = useState(false)
+
+  // ── iMessage handoff: ?phone= param links this signup to a guest conversation ─
+  const [fromImessage, setFromImessage] = useState(false)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const phone  = params.get('phone')
+    if (phone) {
+      sessionStorage.setItem('up_guest_phone', decodeURIComponent(phone))
+      setFromImessage(true)
+    }
+  }, [])
 
   const STEP_NUM: Record<Step, number> = { signup: 1, profile: 2, tone: 3, plan: 4 }
 
@@ -42,6 +54,28 @@ export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
       onboarding_complete: true,
       plan_tier: tier === 'free' ? 'free' : tier, // pro/growth set to 'free' until Stripe webhook flips it
     })
+
+    // If user arrived via iMessage (?phone=…), link their phone to artist_profiles
+    // so future iMessages route directly to their registered account.
+    const storedPhone = sessionStorage.getItem('up_guest_phone')
+    if (storedPhone && user?.id) {
+      try {
+        const supabase = createClient(
+          import.meta.env.VITE_SUPABASE_URL as string,
+          import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+        )
+        await supabase.from('artist_profiles').upsert({
+          user_id:      user.id,
+          artist_name:  profileData.artistName,
+          phone_number: storedPhone,
+          tone:         selectedTone,
+        }, { onConflict: 'user_id' })
+        sessionStorage.removeItem('up_guest_phone')
+      } catch (err) {
+        console.warn('[SignUp] Phone link failed:', err)
+      }
+    }
+
     setSaving(false)
     onComplete?.()
   }
@@ -122,6 +156,25 @@ export function SignUpPage({ onComplete, onSwitchToLogin }: SignUpPageProps) {
       <div className="flex-1 flex flex-col items-center justify-center p-8 overflow-y-auto">
         <div className="absolute inset-0 lg:hidden bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.05)_0%,transparent_70%)] pointer-events-none" />
         <div className="relative z-10 w-full max-w-md">
+          {/* iMessage handoff banner */}
+          {fromImessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 flex items-start gap-3 px-4 py-3 rounded-2xl border"
+              style={{ background: 'rgba(255,215,0,0.08)', borderColor: 'rgba(255,215,0,0.2)' }}
+            >
+              <span className="text-lg leading-none mt-0.5">💬</span>
+              <div>
+                <p className="text-[#FFD700] text-[11px] font-black uppercase tracking-widest mb-0.5">
+                  Continuing from iMessage
+                </p>
+                <p className="text-white/50 text-[12px] leading-relaxed">
+                  Create your account to unlock unlimited access. Your conversation with uP carries over.
+                </p>
+              </div>
+            </motion.div>
+          )}
           <SignUpForm
             onSuccess={() => setShowEarlyAccess(true)}
             onSwitchToLogin={onSwitchToLogin ?? (() => {})}

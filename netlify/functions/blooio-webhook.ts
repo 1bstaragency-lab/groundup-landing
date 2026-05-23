@@ -16,6 +16,7 @@
  */
 import type { Handler } from '@netlify/functions'
 import Anthropic from '@anthropic-ai/sdk'
+import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { createHmac, timingSafeEqual } from 'crypto'
 
@@ -54,6 +55,8 @@ const SUPABASE_URL          = process.env.VITE_SUPABASE_URL          ?? ''
 // Service role bypasses RLS; fall back to anon key if not set
 const SUPABASE_KEY          = process.env.SUPABASE_SERVICE_ROLE_KEY  ??
                               process.env.VITE_SUPABASE_ANON_KEY     ?? ''
+const STRIPE_SECRET_KEY     = process.env.STRIPE_SECRET_KEY          ?? ''
+const STRIPE_PRICE_PRO      = process.env.STRIPE_PRICE_PRO           ?? ''
 
 const BLOOIO_URL = 'https://backend.blooio.com/v1/api/messages'
 
@@ -293,10 +296,17 @@ export const handler: Handler = async (event) => {
     const msgCount = guest?.message_count   ?? 0
     const GUEST_FREE_LIMIT = 10
 
-    // Hard gate — limit reached
+    // Hard gate — limit reached → send Stripe checkout for 7-day trial
     if (step >= 4 && msgCount >= GUEST_FREE_LIMIT) {
-      await sendBlooio(fromPhone,
-        `You've used all ${GUEST_FREE_LIMIT} free messages with uP 🎵\n\nCreate your free account to keep going — release planning, Spotify curator pitching, Meta ad setup, and your full career dashboard.\n\n👉 groundupapp.com`)
+      const checkoutUrl = await createGuestCheckoutUrl(fromPhone)
+      if (checkoutUrl) {
+        await sendBlooio(fromPhone,
+          `You've used all ${GUEST_FREE_LIMIT} free messages with uP 🎵\n\nStart your 7-day free trial to keep your career moving — Spotify pitching, Meta ads, rollout plans, and more. No charge until the trial ends.\n\n👉 ${checkoutUrl}`)
+      } else {
+        // Fallback if Stripe isn't configured
+        await sendBlooio(fromPhone,
+          `You've used all ${GUEST_FREE_LIMIT} free messages with uP 🎵\n\nCreate your full account to keep going — release planning, Spotify curator pitching, Meta ads, and your career dashboard.\n\n👉 groundupapp.com/signup`)
+      }
       return { statusCode: 200, body: 'Guest limit reached' }
     }
 
@@ -307,7 +317,7 @@ export const handler: Handler = async (event) => {
         { onConflict: 'phone_number' }
       )
       await sendBlooio(fromPhone,
-        `Hey 👋 I'm uP — your GrounduP AI music career assistant.\n\nI help artists with Spotify curator pitching, Meta ad campaigns, release rollouts, and career strategy — all over iMessage.\n\nWhat's your artist name? (Or set up on the web: groundupapp.com)`)
+        `Hey 👋 I'm uP — your GrounduP AI music career assistant.\n\nI help artists with Spotify curator pitching, Meta ad campaigns, release rollouts, and career strategy — all over iMessage.\n\nWhat's your artist name? (Or create your full account at groundupapp.com/signup)`)
       return { statusCode: 200, body: 'Guest step 1' }
     }
 
@@ -349,7 +359,7 @@ export const handler: Handler = async (event) => {
         { onConflict: 'phone_number' }
       )
       await sendBlooio(fromPhone,
-        `Let's build, ${name} 🔥\n\nGoal: ${goal}. Genre: ${guest?.genre ?? 'your sound'}.\n\nYou have ${remaining} free messages — ask me anything. Spotify pitches, Meta ad setup, rollout plans, whatever you need.\n\nTo unlock unlimited + full dashboard: groundupapp.com`)
+        `Let's build, ${name} 🔥\n\nGoal: ${goal}. Genre: ${guest?.genre ?? 'your sound'}.\n\nYou have ${remaining} free messages — ask me anything. Spotify pitches, Meta ad setup, rollout plans, whatever you need.\n\nWant the full dashboard? → groundupapp.com/signup`)
       return { statusCode: 200, body: 'Guest onboarding complete' }
     }
 
@@ -665,6 +675,38 @@ function buildChecklist(platform: string): Array<{ label: string; done: boolean 
     { label: 'Reach out to curators and influencers in dashboard', done: false },
     { label: 'Post on all social platforms', done: false },
   ]
+}
+
+// ─── Create a Stripe Checkout session for a guest user (phone-keyed) ─────────
+// client_reference_id is "guest_<phone>" so the stripe-webhook can bind the
+// new account to their existing guest profile when they pay.
+async function createGuestCheckoutUrl(phone: string): Promise<string | null> {
+  if (!STRIPE_SECRET_KEY || !STRIPE_PRICE_PRO) {
+    console.warn('[blooio-webhook] Stripe not configured — skipping guest checkout')
+    return null
+  }
+  try {
+    const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2025-04-30.basil' })
+    const encodedPhone = encodeURIComponent(phone)
+    const session = await stripe.checkout.sessions.create({
+      mode:                 'subscription',
+      payment_method_types: ['card'],
+      line_items:           [{ price: STRIPE_PRICE_PRO, quantity: 1 }],
+      client_reference_id:  `guest_${phone}`,
+      success_url:          `https://groundupapp.com/signup?phone=${encodedPhone}&from=checkout`,
+      cancel_url:           'https://groundupapp.com/app',
+      subscription_data: {
+        trial_period_days: 7,
+        metadata: { guest_phone: phone },
+      },
+      metadata: { guest_phone: phone },
+      allow_promotion_codes: true,
+    })
+    return session.url
+  } catch (err) {
+    console.error('[blooio-webhook] Stripe checkout session error:', err)
+    return null
+  }
 }
 
 function normalizePhone(phone: string): string {
