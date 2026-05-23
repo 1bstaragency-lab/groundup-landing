@@ -78,26 +78,22 @@ interface BlooioInbound {
 }
 
 export const handler: Handler = async (event) => {
-  // ─── Diagnostic: GET /?ping=1 returns env var status & DB sanity check ────
-  if (event.httpMethod === 'GET') {
-    const params = event.queryStringParameters ?? {}
+  const params = event.queryStringParameters ?? {}
 
-    // ── ?simulate=1&from=<phone>&text=<msg> — test the full inbound flow ──────
-    // Bypasses signature check; actually sends Blooio replies if BLOOIO_API_KEY is set.
-    if (params.simulate === '1') {
-      const fakeFrom = params.from ?? '+10000000000'
-      const fakeText = params.text ?? 'hello'
-      // Re-enter as a fake POST by building a synthetic event
-      console.log('[blooio-webhook] Simulate mode — from:', fakeFrom, 'text:', fakeText)
-      // Fall through: allow the POST logic to run by setting body + skipping sig check below
-      event.httpMethod = 'POST'
-      event.body = JSON.stringify({ from: fakeFrom, text: fakeText })
-      event.headers['x-blooio-simulate'] = '1'
-      // jump past GET check — fall through to POST logic
-    }
+  // ─── ?simulate=1 — inject a fake inbound message, bypass sig check ──────────
+  // Must be handled BEFORE the GET check since we want to fall into POST logic.
+  // We use a flag instead of mutating event (Netlify event objects are read-only).
+  let simulateBody: string | null = null
+  if (params.simulate === '1') {
+    const fakeFrom = params.from ?? '+10000000000'
+    const fakeText = params.text ?? 'hello'
+    simulateBody = JSON.stringify({ from: fakeFrom, text: fakeText })
+    console.log('[blooio-webhook] SIMULATE MODE — from:', fakeFrom, 'text:', fakeText)
+  }
 
-    if (event.httpMethod === 'GET') { // still GET after possible simulate override
-      if (params.ping === '1') {
+  // ─── Diagnostic GET endpoints (only when NOT simulating) ─────────────────────
+  if (event.httpMethod === 'GET' && !simulateBody) {
+    if (params.ping === '1') {
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
         let phoneSample: Array<{ phone_number: string | null }> = []
         let phoneError: string | null = null
@@ -178,10 +174,9 @@ export const handler: Handler = async (event) => {
         }
       }
       return { statusCode: 405, body: 'Use POST for inbound webhooks. GET ?ping=1, ?hits=1, ?recent=1, or ?simulate=1&from=+1XXX&text=hello for diagnostics.' }
-    }
-  }
+  } // end GET-only block
 
-  if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method not allowed' }
+  if (!simulateBody && event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method not allowed' }
 
   // ─── Log headers (still no strict auth until we identify Blooio's header) ──
   const safeHeaders = Object.fromEntries(
@@ -212,8 +207,7 @@ export const handler: Handler = async (event) => {
   }
 
   // ─── HMAC-SHA256 signature verification (skip for simulate mode) ─────────
-  const isSimulate = event.headers['x-blooio-simulate'] === '1'
-  if (BLOOIO_WEBHOOK_SECRET && !isSimulate) {
+  if (BLOOIO_WEBHOOK_SECRET && !simulateBody) {
     const sigHeader = event.headers['x-blooio-signature'] ?? ''
     if (!sigHeader) {
       console.warn('[blooio-webhook] No x-blooio-signature header — rejecting')
@@ -227,34 +221,55 @@ export const handler: Handler = async (event) => {
     console.log('[blooio-webhook] Signature verified ✓')
   }
 
+  // Use simulateBody if in simulate mode, otherwise parse the real body
+  const rawBodyStr = simulateBody ?? event.body ?? '{}'
   let payload: BlooioInbound
   try {
-    payload = JSON.parse(event.body ?? '{}')
+    payload = JSON.parse(rawBodyStr)
   } catch {
     return { statusCode: 400, body: 'Invalid JSON' }
   }
 
   console.log('[blooio-webhook] Inbound payload:', JSON.stringify(payload))
 
+  // ─── Robust phone + text extraction ──────────────────────────────────────
+  // Blooio may use different field names / nesting depending on the event type.
+  // We check flat fields first, then look inside nested "data" / "message" objects.
   const anyPayload = payload as Record<string, unknown>
-  // external_id = the other party's phone (user); internal_id = our Blooio number
-  const fromPhone   = (
-    payload.from                          ??
-    (anyPayload.sender      as string)    ??
-    (anyPayload.external_id as string)    ??    // Blooio inbound field
+  const nestedData = (anyPayload.data    as Record<string, unknown>) ?? {}
+  const nestedMsg  = (typeof anyPayload.message === 'object' && anyPayload.message !== null
+    ? anyPayload.message as Record<string, unknown>
+    : {})
+
+  const fromPhone = (
+    (typeof payload.from          === 'string' ? payload.from          : null) ??
+    (typeof anyPayload.sender     === 'string' ? anyPayload.sender     : null) ??
+    (typeof anyPayload.external_id=== 'string' ? anyPayload.external_id: null) ??
+    (typeof anyPayload.from_number=== 'string' ? anyPayload.from_number: null) ??
+    (typeof nestedData.from       === 'string' ? nestedData.from       : null) ??
+    (typeof nestedData.sender     === 'string' ? nestedData.sender     : null) ??
+    (typeof nestedMsg.from        === 'string' ? nestedMsg.from        : null) ??
     ''
-  ) as string
+  )
+
   const inboundText = (
-    payload.text                          ??
-    payload.message                       ??
-    payload.body                          ??
-    (anyPayload.content as string)        ??
+    (typeof payload.text    === 'string' ? payload.text    : null) ??
+    (typeof payload.body    === 'string' ? payload.body    : null) ??
+    // payload.message is string only (not nested object)
+    (typeof payload.message === 'string' ? payload.message : null) ??
+    (typeof anyPayload.content === 'string' ? anyPayload.content : null) ??
+    (typeof nestedData.text    === 'string' ? nestedData.text    : null) ??
+    (typeof nestedData.body    === 'string' ? nestedData.body    : null) ??
+    (typeof nestedMsg.text     === 'string' ? nestedMsg.text     : null) ??
+    (typeof nestedMsg.body     === 'string' ? nestedMsg.body     : null) ??
     ''
-  ) as string
+  )
+
+  console.log('[blooio-webhook] Extracted — fromPhone:', JSON.stringify(fromPhone), 'inboundText:', JSON.stringify(inboundText))
 
   if (!fromPhone || !inboundText) {
-    console.log('[blooio-webhook] Missing from/text — ignoring')
-    return { statusCode: 200, body: 'No sender/text' }
+    console.log('[blooio-webhook] Missing from/text — full payload was:', JSON.stringify(anyPayload))
+    return { statusCode: 200, body: JSON.stringify({ status: 'no_sender_text', keys: Object.keys(anyPayload) }) }
   }
 
   if (!BLOOIO_API_KEY || !ANTHROPIC_KEY) {
