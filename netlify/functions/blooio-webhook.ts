@@ -110,7 +110,7 @@ export const handler: Handler = async (event) => {
         }
         const { data: guests } = await supabase
           .from('guest_profiles')
-          .select('phone_number, onboarding_step, message_count, created_at')
+          .select('phone_number, onboarding_step, message_count, goal, created_at')
           .order('created_at', { ascending: false })
           .limit(10)
         return {
@@ -160,7 +160,7 @@ export const handler: Handler = async (event) => {
             .order('created_at', { ascending: false })
             .limit(20),
           supabase.from('guest_profiles')
-            .select('phone_number, onboarding_step, message_count, monthly_listeners, goal, created_at')
+            .select('phone_number, onboarding_step, message_count, goal, created_at')
             .order('created_at', { ascending: false })
             .limit(10),
         ])
@@ -335,11 +335,25 @@ export const handler: Handler = async (event) => {
   if (!profile) {
     // ── Guest / new-user onboarding flow ─────────────────────────────────────
     // 3-question onboarding: monthly listeners → goal → email → auto account creation
-    const { data: guest } = await supabase
+    // NOTE: monthly_listeners column may not exist yet — use a safe subset first,
+    // then attempt to read it separately so a missing column doesn't break the whole flow.
+    const { data: guest, error: guestErr } = await supabase
       .from('guest_profiles')
-      .select('phone_number, artist_name, monthly_listeners, goal, onboarding_step, message_count')
+      .select('phone_number, goal, onboarding_step, message_count')
       .eq('phone_number', fromPhone)
       .maybeSingle()
+    if (guestErr) console.warn('[blooio-webhook] guest_profiles select error:', guestErr.message)
+
+    // Try to fetch monthly_listeners separately (column may not exist yet)
+    let guestListeners: string | null = null
+    if (guest) {
+      const { data: lRow } = await supabase
+        .from('guest_profiles')
+        .select('monthly_listeners')
+        .eq('phone_number', fromPhone)
+        .maybeSingle()
+      guestListeners = (lRow as { monthly_listeners?: string } | null)?.monthly_listeners ?? null
+    }
 
     const step     = guest?.onboarding_step ?? 0
     const msgCount = guest?.message_count   ?? 0
@@ -373,10 +387,17 @@ export const handler: Handler = async (event) => {
     // ── Step 1 — have listeners → ask goal ────────────────────────────────────
     if (step === 1) {
       const listeners = inboundText.trim().slice(0, 80)
-      await supabase.from('guest_profiles').upsert(
-        { phone_number: fromPhone, monthly_listeners: listeners, onboarding_step: 2, message_count: msgCount + 1, updated_at: now },
+      // Try to save monthly_listeners (column may not exist yet — ignore error)
+      const baseUpsert = { phone_number: fromPhone, onboarding_step: 2, message_count: msgCount + 1, updated_at: now }
+      const { error: upsertErr } = await supabase.from('guest_profiles').upsert(
+        { ...baseUpsert, monthly_listeners: listeners },
         { onConflict: 'phone_number' }
       )
+      if (upsertErr) {
+        // Column might not exist yet — retry without it
+        console.warn('[blooio-webhook] monthly_listeners upsert failed, retrying without it:', upsertErr.message)
+        await supabase.from('guest_profiles').upsert(baseUpsert, { onConflict: 'phone_number' })
+      }
       await sendBlooio(fromPhone,
         `Got it 🎵 What's your #1 goal as an artist this year?\n\n1️⃣ Grow my streams & listeners\n2️⃣ Drop a major release\n3️⃣ Run paid ads & scale\n4️⃣ Build my fanbase / following\n\nReply with a number — or just tell me in your own words.`)
       return { statusCode: 200, body: 'Guest step 2 — asked goal' }
@@ -506,7 +527,7 @@ export const handler: Handler = async (event) => {
       const guestRes = await anthropic.messages.create({
         model: 'claude-haiku-4-5',
         max_tokens: 280,
-        system: `You are uP, GrounduP's AI music career assistant. You're texting with an artist whose goal is: ${guest?.goal ?? 'grow their career'} and who has ${guest?.monthly_listeners ?? 'some'} monthly listeners.
+        system: `You are uP, GrounduP's AI music career assistant. You're texting with an artist whose goal is: ${guest?.goal ?? 'grow their career'} and who has ${guestListeners ?? 'some'} monthly listeners.
 
 Today: ${today}
 
