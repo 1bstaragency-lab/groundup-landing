@@ -2,53 +2,7 @@ import { motion } from 'framer-motion';
 
 const IMESSAGE_LINK = 'https://start.msg.new/EEHfxKYWDk';
 
-const MESSAGES = [
-  {
-    from: 'up',
-    text: '"Drank In My Cup" drops in 3 days. Still need to pitch 2 DJs. Want me to find them?',
-  },
-  { from: 'user', text: 'Yes — who should I hit?' },
-  {
-    from: 'up',
-    text: 'DJ Smoov (92K) and DJ Kris (45K) — both active in your lane. I can draft the pitch right now.',
-  },
-];
-
 const CHIPS = ['💬 iMessage AI', '🎵 Release Planning', '🎯 Curator Matching'];
-
-function MockConversation() {
-  return (
-    <div className="w-full max-w-sm mx-auto bg-[#111] rounded-3xl border border-white/10 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/10 bg-[#0D0D0D]">
-        <div className="w-9 h-9 rounded-full bg-[#FFD700] flex items-center justify-center flex-shrink-0">
-          <span className="text-black text-[11px] font-black tracking-wide">uP</span>
-        </div>
-        <div>
-          <p className="text-white text-[14px] font-bold leading-tight">uP</p>
-          <p className="text-white/40 text-[11px] leading-tight">GrounduP AI · Active now</p>
-        </div>
-      </div>
-
-      {/* Messages */}
-      <div className="p-4 flex flex-col gap-2">
-        {MESSAGES.map((m, i) => (
-          <div key={i} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div
-              className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-[13px] leading-[1.45] ${
-                m.from === 'up'
-                  ? 'bg-[#FFD700]/10 border border-[#FFD700]/20 text-white rounded-bl-sm'
-                  : 'bg-[#1E1E1E] border border-white/10 text-white/60 rounded-br-sm'
-              }`}
-            >
-              {m.text}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export function AppPage() {
   return (
@@ -98,9 +52,14 @@ export function AppPage() {
             uP is your personal music career AI — strategy, releases, and curator connections, all through iMessage.
           </p>
 
-          {/* Mock conversation */}
-          <div className="w-full mt-2">
-            <MockConversation />
+          {/* Mock conversation — AI-generated iPhone screenshot */}
+          <div className="w-full mt-2 flex justify-center">
+            <img
+              src="/up-imessage-preview.png"
+              alt="uP iMessage conversation preview"
+              className="w-56 rounded-[2rem] shadow-[0_24px_80px_rgba(0,0,0,0.7)]"
+              draggable={false}
+            />
           </div>
 
           {/* Feature chips */}
