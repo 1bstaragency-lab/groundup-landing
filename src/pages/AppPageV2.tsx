@@ -27,7 +27,7 @@ const MESSAGES = [
   { from: 'user' as const, text: 'Do it.' },
   {
     from: 'up' as const,
-    text: 'Campaign live 🎯 Last thing — should I find TikTok influencers for promo content? I can match you with dance creators, reaction pages, or artists in your lane.',
+    text: 'Setting it up now 🔥 One more thing — should I find TikTok influencers for promo content? I can match you with dance creators, reaction pages, or artists in your lane.',
   },
 ];
 
