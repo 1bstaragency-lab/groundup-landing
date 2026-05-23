@@ -129,13 +129,8 @@ function IPhoneMock() {
               )}
 
               {/* Typing dots 1 */}
-              {showTyping1 && !visibleMsgs && (
-                <div key="typing1" className="flex justify-start">
-                  <TypingDots />
-                </div>
-              )}
               {showTyping1 && (
-                <div key="typing1b" className="flex justify-start">
+                <div key="typing1" className="flex justify-start">
                   <TypingDots />
                 </div>
               )}
