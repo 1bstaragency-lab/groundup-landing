@@ -414,7 +414,7 @@ export const handler: Handler = async (event) => {
         { onConflict: 'phone_number' }
       )
       await sendBlooio(fromPhone,
-        `Hey 👋 I'm uP — your AI music career assistant.\n\nI handle Spotify curator pitching, Meta ads, release rollouts, and career strategy — all right here in iMessage.\n\nFirst question: how many monthly listeners do you have right now? (Spotify, SoundCloud, Apple Music — any platform)`)
+        `Hey 👋 I'm uP — your daily music career assistant.\n\nEvery day I help artists grow streams, plan releases, run ads, and pitch to Spotify curators — all from right here in iMessage. No app switching, no fluff.\n\nQuick question to get started: how many monthly listeners do you have right now? (Spotify, SoundCloud, Apple Music — any platform)`)
       return { statusCode: 200, body: 'Guest step 1 — asked listeners' }
     }
 
