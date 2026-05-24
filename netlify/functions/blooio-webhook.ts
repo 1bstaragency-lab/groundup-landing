@@ -174,20 +174,16 @@ export const handler: Handler = async (event) => {
         }
       }
       if (params.blooio_probe === '1') {
-        // Probe Blooio REST API to find conversation/chat endpoints
-        const probeResults: Record<string, unknown> = {}
+        // Probe inbound messages endpoint shape
         const headers = { 'Authorization': `Bearer ${BLOOIO_API_KEY}`, 'Content-Type': 'application/json' }
-        const endpoints = [
-          'https://backend.blooio.com/v1/api/chats',
-          'https://backend.blooio.com/v2/api/chats',
-          'https://backend.blooio.com/v1/api/conversations',
-          'https://backend.blooio.com/v2/api/conversations',
-          'https://backend.blooio.com/v1/api/messages?limit=5',
-          'https://backend.blooio.com/v2/api/messages?limit=5',
-          'https://backend.blooio.com/v1/api/webhook-logs?limit=5',
-          'https://backend.blooio.com/v2/api/webhook-logs?limit=5',
+        const probeResults: Record<string, unknown> = {}
+        const urls = [
+          'https://backend.blooio.com/v1/api/messages?limit=3',
+          'https://backend.blooio.com/v1/api/messages?limit=3&direction=inbound',
+          'https://backend.blooio.com/v1/api/messages?limit=3&type=inbound',
+          'https://backend.blooio.com/v2/api/chats?limit=3',
         ]
-        await Promise.all(endpoints.map(async url => {
+        await Promise.all(urls.map(async url => {
           try {
             const r = await fetch(url, { headers })
             const text = await r.text()
