@@ -16,3 +16,7 @@
 # matches the current hour, so daily check-ins fire at the user's local time.
 [functions."up-checkin"]
   schedule = "0 * * * *"
+
+# Poll Blooio for inbound messages every minute — fallback for webhook delivery issues
+[functions."blooio-poller"]
+  schedule = "* * * * *"

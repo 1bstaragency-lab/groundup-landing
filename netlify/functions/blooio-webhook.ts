@@ -233,8 +233,15 @@ export const handler: Handler = async (event) => {
     return { statusCode: 200, body: `Outbound event acknowledged: ${blooioEvent}` }
   }
 
-  // ─── HMAC-SHA256 signature verification (skip for simulate mode) ─────────
-  if (BLOOIO_WEBHOOK_SECRET && !simulateBody) {
+  // ─── Allow internal poller calls authenticated with our own API key ─────────
+  const pollerAuth  = event.headers['x-poller-auth'] ?? ''
+  const isPollerCall = !!BLOOIO_API_KEY && pollerAuth === `Bearer ${BLOOIO_API_KEY}`
+  if (isPollerCall) {
+    console.log('[blooio-webhook] Internal poller call authenticated ✓')
+  }
+
+  // ─── HMAC-SHA256 signature verification (skip for simulate + poller) ──────
+  if (BLOOIO_WEBHOOK_SECRET && !simulateBody && !isPollerCall) {
     const sigHeader = event.headers['x-blooio-signature'] ?? ''
     if (!sigHeader) {
       console.warn('[blooio-webhook] No x-blooio-signature header — rejecting')
