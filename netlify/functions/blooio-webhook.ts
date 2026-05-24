@@ -173,7 +173,38 @@ export const handler: Handler = async (event) => {
           }, null, 2),
         }
       }
-      return { statusCode: 405, body: 'Use POST for inbound webhooks. GET ?ping=1, ?hits=1, ?recent=1, or ?simulate=1&from=+1XXX&text=hello for diagnostics.' }
+      if (params.blooio_probe === '1') {
+        // Probe Blooio REST API to find conversation/chat endpoints
+        const probeResults: Record<string, unknown> = {}
+        const headers = { 'Authorization': `Bearer ${BLOOIO_API_KEY}`, 'Content-Type': 'application/json' }
+        const endpoints = [
+          'https://backend.blooio.com/v1/api/chats',
+          'https://backend.blooio.com/v2/api/chats',
+          'https://backend.blooio.com/v1/api/conversations',
+          'https://backend.blooio.com/v2/api/conversations',
+          'https://backend.blooio.com/v1/api/messages?limit=5',
+          'https://backend.blooio.com/v2/api/messages?limit=5',
+          'https://backend.blooio.com/v1/api/webhook-logs?limit=5',
+          'https://backend.blooio.com/v2/api/webhook-logs?limit=5',
+        ]
+        await Promise.all(endpoints.map(async url => {
+          try {
+            const r = await fetch(url, { headers })
+            const text = await r.text()
+            let body: unknown = text
+            try { body = JSON.parse(text) } catch { /* keep as string */ }
+            probeResults[url] = { status: r.status, body }
+          } catch (e) {
+            probeResults[url] = { error: String(e) }
+          }
+        }))
+        return {
+          statusCode: 200,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(probeResults, null, 2),
+        }
+      }
+      return { statusCode: 405, body: 'Use POST for inbound webhooks. GET ?ping=1, ?hits=1, ?recent=1, ?blooio_probe=1, or ?simulate=1&from=+1XXX&text=hello for diagnostics.' }
   } // end GET-only block
 
   if (!simulateBody && event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method not allowed' }
