@@ -443,7 +443,7 @@ export const handler: Handler = async (event) => {
         email_confirm: true,
         user_metadata: {
           must_change_password: true,
-          monthly_listeners:    guest?.monthly_listeners ?? '',
+          monthly_listeners:    guestListeners ?? '',
           goal:                 guest?.goal ?? '',
         },
       })
