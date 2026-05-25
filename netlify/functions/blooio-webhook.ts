@@ -408,14 +408,17 @@ export const handler: Handler = async (event) => {
       return { statusCode: 200, body: 'Guest limit reached' }
     }
 
-    // ── Step 0 — brand new: welcome + ask artist name ─────────────────────────
+    // ── Step 0 — brand new: welcome + contact card + ask artist name ──────────
     if (step === 0) {
       await supabase.from('guest_profiles').upsert(
         { phone_number: fromPhone, onboarding_step: 1, message_count: 1, updated_at: now },
         { onConflict: 'phone_number' }
       )
+      const vcardUrl = `${process.env.URL ?? 'https://groundupapp.com'}/.netlify/functions/up-vcard`
       await sendBlooio(fromPhone,
-        `Hey 👋 I'm uP — your daily music career assistant.\n\nEvery day I help artists grow streams, plan releases, run ads, and pitch to Spotify curators — all from right here in iMessage. No app switching, no fluff.\n\nWhat's your artist name?`)
+        `Hey 👋 I'm uP — your daily music career assistant.\n\nEvery day I help artists grow streams, plan releases, run ads, and pitch to Spotify curators — all from iMessage. No app switching, no fluff.\n\nWhat's your artist name?`,
+        [vcardUrl]
+      )
       return { statusCode: 200, body: 'Guest step 1 — asked artist name' }
     }
 
@@ -933,16 +936,18 @@ function normalizePhone(phone: string): string {
   return `+${digits}`
 }
 
-async function sendBlooio(to: string, text: string) {
+async function sendBlooio(to: string, text: string, attachments?: string[]) {
   if (!BLOOIO_API_KEY) return
   try {
+    const body: Record<string, unknown> = { to, text }
+    if (attachments?.length) body.attachments = attachments
     const res = await fetch(BLOOIO_URL, {
       method:  'POST',
       headers: {
         'Content-Type':  'application/json',
         'Authorization': `Bearer ${BLOOIO_API_KEY}`,
       },
-      body: JSON.stringify({ to, text }),
+      body: JSON.stringify(body),
     })
     if (!res.ok) {
       const err = await res.text()
