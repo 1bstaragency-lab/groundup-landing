@@ -426,9 +426,22 @@ export const handler: Handler = async (event) => {
       return { statusCode: 200, body: 'Guest step 1 — asked artist name' }
     }
 
-    // ── Step 1 — have name → ask monthly listeners ────────────────────────────
+    // ── Step 1 — have name → ask monthly listeners (or roster size for managers) ─
     if (step === 1) {
       const artistName = inboundText.trim().slice(0, 80)
+      const isB2B = detectB2BSignal(inboundText)
+
+      if (isB2B) {
+        // Manager / B2B path — store __manager__ flag in goal field
+        await supabase.from('guest_profiles').upsert(
+          { phone_number: fromPhone, artist_name: artistName, goal: '__manager__', onboarding_step: 2, message_count: msgCount + 1, updated_at: now },
+          { onConflict: 'phone_number' }
+        )
+        await sendBlooio(fromPhone,
+          `${artistName} 🔥 Got it.\n\nSounds like you're representing artists — how many are on your roster right now?`)
+        return { statusCode: 200, body: 'Manager step 2 — asked roster size' }
+      }
+
       await supabase.from('guest_profiles').upsert(
         { phone_number: fromPhone, artist_name: artistName, onboarding_step: 2, message_count: msgCount + 1, updated_at: now },
         { onConflict: 'phone_number' }
@@ -438,12 +451,30 @@ export const handler: Handler = async (event) => {
       return { statusCode: 200, body: 'Guest step 2 — asked listeners' }
     }
 
-    // ── Step 2 — have listeners → ask goal ───────────────────────────────────
+    // ── Step 2 — have listeners (artist) or roster size (manager) → ask goal ───
     if (step === 2) {
-      const listeners = inboundText.trim().slice(0, 80)
+      const isManager = (guest?.goal ?? '').startsWith('__manager__') || detectB2BSignal(inboundText)
+      const inputValue = inboundText.trim().slice(0, 80)
+
+      if (isManager) {
+        // B2B path — treat input as roster info, store it, ask manager-specific goal
+        const baseUpsert = {
+          phone_number: fromPhone,
+          goal: `__manager__:roster=${inputValue}`,
+          onboarding_step: 3,
+          message_count: msgCount + 1,
+          updated_at: now,
+        }
+        await supabase.from('guest_profiles').upsert(baseUpsert, { onConflict: 'phone_number' })
+        await sendBlooio(fromPhone,
+          `Got it — managing ${inputValue} is a real operation 🎯\n\nWhat's the main focus for your roster right now?\n\n1️⃣ Dropping new music\n2️⃣ Growing streams & listeners\n3️⃣ Running paid ads & scaling\n4️⃣ Building fanbase & social presence\n\nReply with a number or tell me in your own words.`)
+        return { statusCode: 200, body: 'Manager step 3 — asked roster goal' }
+      }
+
+      // Artist path — normal listener count + goal question
       const baseUpsert = { phone_number: fromPhone, onboarding_step: 3, message_count: msgCount + 1, updated_at: now }
       const { error: upsertErr } = await supabase.from('guest_profiles').upsert(
-        { ...baseUpsert, monthly_listeners: listeners },
+        { ...baseUpsert, monthly_listeners: inputValue },
         { onConflict: 'phone_number' }
       )
       if (upsertErr) {
@@ -457,26 +488,46 @@ export const handler: Handler = async (event) => {
 
     // ── Step 3 — have goal → ask email ────────────────────────────────────────
     if (step === 3) {
-      const GOAL_MAP: Record<string, string> = {
+      const isManager = (guest?.goal ?? '').startsWith('__manager__')
+
+      const ARTIST_GOAL_MAP: Record<string, string> = {
         '1': 'Grow streams & listeners',
         '2': 'Drop a major release',
         '3': 'Run paid ads & scale',
         '4': 'Build fanbase & following',
       }
-      const goal = GOAL_MAP[inboundText.trim()] ?? inboundText.trim().slice(0, 100)
+      const MANAGER_GOAL_MAP: Record<string, string> = {
+        '1': 'Dropping new music',
+        '2': 'Growing streams & listeners',
+        '3': 'Running paid ads & scaling',
+        '4': 'Building fanbase & social presence',
+      }
+      const goalMap = isManager ? MANAGER_GOAL_MAP : ARTIST_GOAL_MAP
+      const goalText = goalMap[inboundText.trim()] ?? inboundText.trim().slice(0, 100)
+
+      // For managers, preserve the __manager__ prefix so step 4 knows
+      const storedGoal = isManager ? `__manager__:goal=${goalText}` : goalText
+
       await supabase.from('guest_profiles').upsert(
-        { phone_number: fromPhone, goal, onboarding_step: 4, message_count: msgCount + 1, updated_at: now },
+        { phone_number: fromPhone, goal: storedGoal, onboarding_step: 4, message_count: msgCount + 1, updated_at: now },
         { onConflict: 'phone_number' }
       )
-      const name = guestName || 'you'
-      await sendBlooio(fromPhone,
-        `${goal} — let's get to work 🔥\n\nLast thing: what's your email? I'll set up ${name}'s GrounduP account:\n\n• Spotify curator pitching\n• Meta & TikTok ad builder\n• Release rollout calendar\n• Daily AI strategy in iMessage`)
+
+      if (isManager) {
+        await sendBlooio(fromPhone,
+          `${goalText} — let's build that out 🔥\n\nLast thing: what's your email? I'll set up your GrounduP manager account:\n\n• Multi-artist release calendar\n• Spotify curator pitching for your whole roster\n• Meta & TikTok ad tools per artist\n• Daily AI strategy via iMessage`)
+      } else {
+        const name = guestName || 'you'
+        await sendBlooio(fromPhone,
+          `${goalText} — let's get to work 🔥\n\nLast thing: what's your email? I'll set up ${name}'s GrounduP account:\n\n• Spotify curator pitching\n• Meta & TikTok ad builder\n• Release rollout calendar\n• Daily AI strategy in iMessage`)
+      }
       return { statusCode: 200, body: 'Guest step 4 — asked email' }
     }
 
     // ── Step 4 — have email → create Supabase account + send temp password ────
     if (step === 4) {
       const rawEmail = inboundText.trim().toLowerCase()
+      const isManager = (guest?.goal ?? '').startsWith('__manager__')
 
       // Basic email validation
       const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)
@@ -500,6 +551,7 @@ export const handler: Handler = async (event) => {
           artist_name:          artistName,
           monthly_listeners:    guestListeners ?? '',
           goal:                 guest?.goal ?? '',
+          account_type:         isManager ? 'manager' : 'artist',
         },
       })
 
@@ -580,8 +632,13 @@ export const handler: Handler = async (event) => {
       }
 
       // Text them the temp password + login link
-      await sendBlooio(fromPhone,
-        `You're set up! 🔥\n\nAccount: ${rawEmail}\nTemp password: ${tempPassword}\n\n👉 groundupapp.com/login\n\nYou'll be asked to create a new password when you first log in. Then come back here — I'm ready to work 🎵`)
+      if (isManager) {
+        await sendBlooio(fromPhone,
+          `You're set up as a GrounduP manager! 🔥\n\nAccount: ${rawEmail}\nTemp password: ${tempPassword}\n\n👉 groundupapp.com/login\n\nChange your password on first login. Your dashboard lets you manage releases, run Spotify pitching, and build ad campaigns for your whole roster. Come back here anytime — I'm ready to work 🎵`)
+      } else {
+        await sendBlooio(fromPhone,
+          `You're set up! 🔥\n\nAccount: ${rawEmail}\nTemp password: ${tempPassword}\n\n👉 groundupapp.com/login\n\nYou'll be asked to create a new password when you first log in. Then come back here — I'm ready to work 🎵`)
+      }
 
       return { statusCode: 200, body: 'Account created' }
     }
@@ -615,12 +672,26 @@ export const handler: Handler = async (event) => {
 
     const remaining = GUEST_FREE_LIMIT - newCount
 
+    const isManagerGuest = (guest?.goal ?? '').startsWith('__manager__')
+
     let guestReply = "I'm on it — let me get back to you on that."
     try {
-      const guestRes = await anthropic.messages.create({
-        model: 'claude-haiku-4-5',
-        max_tokens: 280,
-        system: `You are uP, GrounduP's AI music career assistant. You're texting with an artist whose goal is: ${guest?.goal ?? 'grow their career'} and who has ${guestListeners ?? 'some'} monthly listeners.
+      const guestSystemPrompt = isManagerGuest
+        ? `You are uP, GrounduP's AI music career assistant. You're texting with a music manager or label rep named ${guestName || 'the manager'} who manages a roster of artists.
+
+Today: ${today}
+
+Speak to them in a B2B, professional tone — like a senior music industry advisor. They need help managing releases, pitching to Spotify curators, running Meta/TikTok ads, and scaling their artists. Keep replies under 130 words. Be specific and actionable.
+
+GrounduP features for managers (reference naturally):
+- Multi-artist release calendar & rollout planning
+- Spotify curator pitching for full rosters
+- Meta & TikTok ad campaign builder per artist
+- TikTok influencer network for promo
+- AI strategy via iMessage — no app switching
+
+Guide them to log into their manager dashboard: groundupapp.com/login`
+        : `You are uP, GrounduP's AI music career assistant. You're texting with an artist whose goal is: ${guest?.goal ?? 'grow their career'} and who has ${guestListeners ?? 'some'} monthly listeners.
 
 Today: ${today}
 
@@ -633,7 +704,12 @@ GrounduP features (reference naturally, don't list all at once):
 - Release rollout planning & calendar
 - AI career strategy via iMessage
 
-Guide them to log into their dashboard: groundupapp.com/login`,
+Guide them to log into their dashboard: groundupapp.com/login`
+
+      const guestRes = await anthropic.messages.create({
+        model: 'claude-haiku-4-5',
+        max_tokens: 280,
+        system: guestSystemPrompt,
         messages: [...priorMsgs, { role: 'user', content: inboundText }],
       })
       guestReply = guestRes.content[0].type === 'text' ? guestRes.content[0].text : guestReply
@@ -873,6 +949,19 @@ Only if genuinely actionable. Omit entirely if no tasks.`
   }
 
   return { statusCode: 200, body: 'OK' }
+}
+
+// ─── B2B / Manager Signal Detection ──────────────────────────────────────────
+function detectB2BSignal(text: string): boolean {
+  const lower = text.toLowerCase()
+  return [
+    'my client', 'my clients', 'i manage', 'i rep ', 'i represent',
+    'my artist', 'my artists', 'their music', 'millanote',
+    'roster', 'my roster', 'management company', 'artist data',
+    'artist date', 'on behalf', 'i work with', 'we manage',
+    'label rep', 'music manager', 'managing artists', 'all the artist',
+    "i'm a manager", 'im a manager', 'i am a manager',
+  ].some(kw => lower.includes(kw))
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
