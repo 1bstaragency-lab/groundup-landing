@@ -200,7 +200,13 @@ export const handler: Handler = async (event) => {
           body: JSON.stringify(probeResults, null, 2),
         }
       }
-      return { statusCode: 405, body: 'Use POST for inbound webhooks. GET ?ping=1, ?hits=1, ?recent=1, ?blooio_probe=1, or ?simulate=1&from=+1XXX&text=hello for diagnostics.' }
+      if (params.send_vcard_to) {
+        const to  = decodeURIComponent(params.send_vcard_to)
+        const url = `${process.env.URL ?? 'https://groundupapp.com'}/.netlify/functions/up-vcard`
+        await sendBlooio(to, 'Save uP as a contact 👇', [url])
+        return { statusCode: 200, body: `Sent vCard to ${to}` }
+      }
+      return { statusCode: 405, body: 'Use POST for inbound webhooks. GET ?ping=1, ?hits=1, ?recent=1, ?blooio_probe=1, ?send_vcard_to=+1XXX, or ?simulate=1&from=+1XXX&text=hello for diagnostics.' }
   } // end GET-only block
 
   if (!simulateBody && event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method not allowed' }
