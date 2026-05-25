@@ -637,6 +637,17 @@ Guide them to log into their dashboard: groundupapp.com/login`,
         messages: [...priorMsgs, { role: 'user', content: inboundText }],
       })
       guestReply = guestRes.content[0].type === 'text' ? guestRes.content[0].text : guestReply
+      // Log token usage for cost tracking
+      const gIn = guestRes.usage?.input_tokens ?? 0
+      const gOut = guestRes.usage?.output_tokens ?? 0
+      supabase.from('api_usage').insert({
+        phone_number: fromPhone,
+        model: 'claude-haiku-4-5',
+        input_tokens: gIn,
+        output_tokens: gOut,
+        cost_usd: (gIn * 0.0000008 + gOut * 0.000004).toFixed(6),
+        channel: 'imessage',
+      }).then(() => {})
     } catch (err) {
       console.error('[blooio-webhook] Claude guest error:', err)
     }
@@ -799,6 +810,18 @@ Only if genuinely actionable. Omit entirely if no tasks.`
       messages:   [...priorMessages, { role: 'user', content: inboundText }],
     })
     reply = res.content[0].type === 'text' ? res.content[0].text : "I'm on it — check the app for full details."
+    // Log token usage for cost tracking
+    const rIn = res.usage?.input_tokens ?? 0
+    const rOut = res.usage?.output_tokens ?? 0
+    supabase.from('api_usage').insert({
+      user_id: userId,
+      phone_number: fromPhone,
+      model: 'claude-haiku-4-5',
+      input_tokens: rIn,
+      output_tokens: rOut,
+      cost_usd: (rIn * 0.0000008 + rOut * 0.000004).toFixed(6),
+      channel: 'imessage',
+    }).then(() => {})
   } catch (err) {
     console.error('[blooio-webhook] Claude error:', err)
     reply = "Ran into something on my end — open the GrounduP app for now."

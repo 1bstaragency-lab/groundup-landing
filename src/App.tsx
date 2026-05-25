@@ -59,6 +59,7 @@ import { JoinPage } from './pages/JoinPage';
 import { ForgotPasswordPage } from './pages/ForgotPassword';
 import { ResetPasswordPage } from './pages/ResetPassword';
 import { ContactCardPage } from './pages/ContactCard';
+import { AdminDashboard } from './pages/AdminDashboard';
 import { MarkerHighlight } from './components/ui/marker-highlight';
 import { Loader } from './components/ui/loader';
 import { useAuth } from './hooks/useAuth';
@@ -655,6 +656,8 @@ function App() {
       <Route path="/join/:token" element={<JoinPage />} />
       {/* Contact card — one-tap Add to Contacts for iMessage users */}
       <Route path="/contact" element={<ContactCardPage />} />
+      {/* Internal admin dashboard — email-gated server-side */}
+      <Route path="/admin" element={<AdminDashboard />} />
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
