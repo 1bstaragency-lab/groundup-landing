@@ -93,10 +93,11 @@ export async function handlePricingClick(opts: {
     return
   }
 
-  // Not signed in → stash intent and route to signup
+  // Not signed in → stash intent and route to login
+  // (iMessage onboarding already created their account — they just need to log in)
   if (!userId) {
     savePlanIntent(tier)
-    navigate(`/signup?plan=${tier}`)
+    navigate(`/login?plan=${tier}`)
     return
   }
 

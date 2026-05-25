@@ -677,16 +677,35 @@ Guide them to log into their dashboard: groundupapp.com/login`,
   console.log('[blooio-webhook] Plan check —', JSON.stringify({ planTier, usedToday, max: dailyMax[planTier] }))
 
   if (usedToday >= dailyMax[planTier]) {
+    // Generate a magic link so tapping it auto-logs them into their account
+    // and lands them directly on the pricing page — no "create account" prompt.
+    const siteUrl = process.env.URL ?? 'https://groundupapp.com'
+    let upgradeUrl = `${siteUrl}/pricing`
+    try {
+      const { data: authUser } = await supabase.auth.admin.getUserById(userId)
+      const email = authUser?.user?.email
+      if (email) {
+        const { data: linkData } = await supabase.auth.admin.generateLink({
+          type: 'magiclink',
+          email,
+          options: { redirectTo: `${siteUrl}/pricing` },
+        })
+        if (linkData?.properties?.action_link) upgradeUrl = linkData.properties.action_link
+      }
+    } catch (e) {
+      console.warn('[blooio-webhook] Could not generate magic link:', e)
+    }
+
     const upgradeLine = planTier === 'free'
-      ? 'You hit your daily uP message limit on the Starter plan. Upgrade to Pro at groundupapp.com/pricing for 100/day. Resets at midnight.'
+      ? `You hit your daily uP limit on the Starter plan. Tap to upgrade to Pro (100 messages/day — free trial):\n\n👉 ${upgradeUrl}`
       : planTier === 'pro'
-      ? 'You hit today\'s 100-message Pro limit. Upgrade to Growth at groundupapp.com/pricing for 500/day. Resets at midnight.'
+      ? `You hit today's 100-message Pro limit. Tap to upgrade to Growth (500/day):\n\n👉 ${upgradeUrl}`
       : 'You hit today\'s 500-message limit. Wild. Reach out to support if you need more. Resets at midnight.'
+
     await sendBlooio(fromPhone, upgradeLine)
-    // Still log the inbound so we have a record of throttle hits
     await supabase.from('up_conversations').insert([
-      { user_id: userId, role: 'user',      content: inboundText, channel: 'imessage' },
-      { user_id: userId, role: 'assistant', content: upgradeLine, channel: 'imessage' },
+      { user_id: userId, role: 'user',      content: inboundText,  channel: 'imessage' },
+      { user_id: userId, role: 'assistant', content: upgradeLine,  channel: 'imessage' },
     ])
     return { statusCode: 200, body: 'Rate limited' }
   }
