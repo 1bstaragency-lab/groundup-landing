@@ -58,6 +58,7 @@ import { Dashboard } from './pages/Dashboard';
 import { JoinPage } from './pages/JoinPage';
 import { ForgotPasswordPage } from './pages/ForgotPassword';
 import { ResetPasswordPage } from './pages/ResetPassword';
+import { ContactCardPage } from './pages/ContactCard';
 import { MarkerHighlight } from './components/ui/marker-highlight';
 import { Loader } from './components/ui/loader';
 import { useAuth } from './hooks/useAuth';
@@ -652,6 +653,8 @@ function App() {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       {/* Team invite accept — public, no auth required */}
       <Route path="/join/:token" element={<JoinPage />} />
+      {/* Contact card — one-tap Add to Contacts for iMessage users */}
+      <Route path="/contact" element={<ContactCardPage />} />
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

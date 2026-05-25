@@ -420,10 +420,8 @@ export const handler: Handler = async (event) => {
         { phone_number: fromPhone, onboarding_step: 1, message_count: 1, updated_at: now },
         { onConflict: 'phone_number' }
       )
-      const vcardUrl = `${process.env.URL ?? 'https://groundupapp.com'}/up.vcf`
       await sendBlooio(fromPhone,
-        `Hey 👋 I'm uP — your daily music career assistant.\n\nEvery day I help artists grow streams, plan releases, run ads, and pitch to Spotify curators — all from iMessage. No app switching, no fluff.\n\nWhat's your artist name?`,
-        [vcardUrl]
+        `Hey 👋 I'm uP — your daily music career assistant.\n\nEvery day I help artists grow streams, plan releases, run ads, and pitch to Spotify curators — all from iMessage. No app switching, no fluff.\n\nSave my contact → groundupapp.com/contact\n\nWhat's your artist name?`
       )
       return { statusCode: 200, body: 'Guest step 1 — asked artist name' }
     }
