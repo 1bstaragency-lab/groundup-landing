@@ -14,6 +14,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Link2, Check, Loader2, Music2, ChevronRight } from 'lucide-react'
 import { supabase } from '../../lib/supabaseClient'
 
+// Dismiss key uses localStorage — persists across sessions (truly one-time)
+
+// Persists across sessions — prompt truly shows once
 const DISMISS_KEY = 'gup_platform_prompt_v1'
 
 interface Props {
@@ -36,12 +39,19 @@ export function PlatformLinkPrompt({ userId }: Props) {
   const [done,       setDone]       = useState(false)
   const [statuses,   setStatuses]   = useState<Record<string, FetchStatus>>({})
 
-  // ── On mount: check if any platform URL already exists ────────────────────
+  // ── On mount: only show for temp-password (iMessage-onboarded) users ────────
   useEffect(() => {
     if (!userId) return
-    if (sessionStorage.getItem(DISMISS_KEY)) return
+    // Permanently dismissed?
+    if (localStorage.getItem(DISMISS_KEY)) return
 
     ;(async () => {
+      // Only trigger for accounts created via iMessage onboarding (temp password)
+      const { data: { session } } = await supabase.auth.getSession()
+      const isTempPasswordUser = session?.user?.user_metadata?.must_change_password === true
+      if (!isTempPasswordUser) return
+
+      // Check if any platform is already linked
       const { data } = await supabase
         .from('artist_preferences')
         .select('spotify_url, soundcloud_url, youtube_url')
@@ -61,7 +71,7 @@ export function PlatformLinkPrompt({ userId }: Props) {
   }, [userId])
 
   function dismiss() {
-    sessionStorage.setItem(DISMISS_KEY, '1')
+    localStorage.setItem(DISMISS_KEY, '1')
     setVisible(false)
   }
 
@@ -117,7 +127,7 @@ export function PlatformLinkPrompt({ userId }: Props) {
     setDone(true)
     // Auto-dismiss after a beat so user sees the success state
     setTimeout(() => {
-      sessionStorage.setItem(DISMISS_KEY, '1')
+      localStorage.setItem(DISMISS_KEY, '1')
       setVisible(false)
     }, 2800)
   }
