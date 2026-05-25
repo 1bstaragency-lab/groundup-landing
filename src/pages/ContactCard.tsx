@@ -1,11 +1,6 @@
-import { useState } from 'react'
 
 export function ContactCardPage() {
-  const [tapped, setTapped] = useState(false)
-
   function handleAdd() {
-    setTapped(true)
-    // Trigger vCard download — iOS Safari opens the native "Add Contact" sheet
     const a = document.createElement('a')
     a.href = '/up.vcf'
     a.download = 'uP.vcf'
@@ -56,14 +51,9 @@ export function ContactCardPage() {
         {/* CTA */}
         <button
           onClick={handleAdd}
-          disabled={tapped}
-          className={`w-full py-4 rounded-2xl font-bold text-base transition-all duration-200 ${
-            tapped
-              ? 'bg-white/10 text-white/40 cursor-default'
-              : 'bg-[#FFD700] text-black active:scale-95 hover:bg-[#f0c800]'
-          }`}
+          className="w-full py-4 rounded-2xl font-bold text-base bg-[#FFD700] text-black active:scale-95 hover:bg-[#f0c800] transition-all duration-200"
         >
-          {tapped ? 'Opening contacts…' : 'Add uP to Contacts'}
+          Add uP to Contacts
         </button>
 
         <p className="text-white/20 text-xs">
