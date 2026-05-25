@@ -20,3 +20,9 @@
 # Poll Blooio for inbound messages every minute — fallback for webhook delivery issues
 [functions."blooio-poller"]
   schedule = "* * * * *"
+
+# Serve vCard at a .vcf URL so iOS recognizes it as a contact
+[[redirects]]
+  from   = "/up.vcf"
+  to     = "/.netlify/functions/up-vcard"
+  status = 200
