@@ -1,8 +1,4 @@
 import { useEffect, useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { supabase } from '../supabaseClient'
-
-const ADMIN_EMAILS = ['1bstaragency@gmail.com', 'josephbarnes@groundupapp.com']
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface AdminUser {
@@ -82,32 +78,19 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string 
 
 // ── Main Component ───────────────────────────────────────────────────────────
 export function AdminDashboard() {
-  const navigate   = useNavigate()
-  const [data, setData]       = useState<AdminData | null>(null)
+  const [data, setData]     = useState<AdminData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState('')
-  const [search, setSearch]   = useState('')
-  const [tab, setTab]         = useState<'users' | 'guests'>('users')
-  const [sort, setSort]       = useState<{ col: keyof AdminUser; dir: 1 | -1 }>({ col: 'joined_at', dir: -1 })
+  const [error, setError]   = useState('')
+  const [search, setSearch] = useState('')
+  const [tab, setTab]       = useState<'users' | 'guests'>('users')
+  const [sort, setSort]     = useState<{ col: keyof AdminUser; dir: 1 | -1 }>({ col: 'joined_at', dir: -1 })
 
   useEffect(() => {
-    async function load() {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { navigate('/login'); return }
-      if (!ADMIN_EMAILS.includes(session.user.email ?? '')) {
-        navigate('/dashboard'); return
-      }
-
-      const res = await fetch('/.netlify/functions/admin-data', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      })
-      if (!res.ok) { setError(`Error ${res.status}`); setLoading(false); return }
-      const json = await res.json()
-      setData(json)
-      setLoading(false)
-    }
-    load()
-  }, [navigate])
+    fetch('/.netlify/functions/admin-data')
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(json => { setData(json); setLoading(false) })
+      .catch(e => { setError(`Error ${e}`); setLoading(false) })
+  }, [])
 
   const filteredUsers = useMemo(() => {
     if (!data) return []

@@ -10,26 +10,14 @@ import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL         ?? ''
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
-const ANON_KEY     = process.env.VITE_SUPABASE_ANON_KEY   ?? ''
-
-const ADMIN_EMAILS = ['1bstaragency@gmail.com', 'josephbarnes@groundupapp.com']
 
 export const handler: Handler = async (event) => {
   const cors = {
     'Access-Control-Allow-Origin':  '*',
-    'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type',
   }
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: cors, body: '' }
-
-  // ── Verify caller is an admin ────────────────────────────────────────────────
-  const token = (event.headers['authorization'] ?? '').replace('Bearer ', '').trim()
-  if (!token) return { statusCode: 401, headers: cors, body: JSON.stringify({ error: 'No token' }) }
-
-  const anonClient = createClient(SUPABASE_URL, ANON_KEY)
-  const { data: { user }, error: authErr } = await anonClient.auth.getUser(token)
-  if (authErr || !user?.email) return { statusCode: 401, headers: cors, body: JSON.stringify({ error: 'Invalid token' }) }
-  if (!ADMIN_EMAILS.includes(user.email)) return { statusCode: 403, headers: cors, body: JSON.stringify({ error: 'Forbidden' }) }
 
   // ── Service-role client (bypasses RLS) ───────────────────────────────────────
   const db = createClient(SUPABASE_URL, SERVICE_KEY)
