@@ -217,18 +217,18 @@ export const handler: Handler = async (event) => {
   )
   console.log('[blooio-webhook] Headers:', JSON.stringify(safeHeaders))
 
-  // ─── Unconditional hit log to webhook_events (proves Blooio is calling us) ──
+  // ─── Fire-and-forget hit log (non-blocking — don't await debug logging) ──────
   const sourceIp = event.headers['x-forwarded-for'] ?? event.headers['x-nf-client-connection-ip'] ?? ''
   let rawPayload: unknown = null
   try { rawPayload = JSON.parse(event.body ?? 'null') } catch { rawPayload = event.body }
   if (SUPABASE_URL && SUPABASE_KEY) {
     const supabaseHit = createClient(SUPABASE_URL, SUPABASE_KEY)
-    await supabaseHit.from('webhook_events').insert({
+    supabaseHit.from('webhook_events').insert({
       source:  'blooio',
       headers: safeHeaders,
       payload: rawPayload as object,
       ip:      sourceIp,
-    })
+    }).then(() => {}).catch(() => {}) // fire-and-forget — never block on debug logs
   }
 
   // ─── Skip outbound status events (queued / sent / delivered / failed) ───────
@@ -640,7 +640,7 @@ export const handler: Handler = async (event) => {
       .select('role, content')
       .eq('phone_number', fromPhone)
       .order('created_at', { ascending: false })
-      .limit(8)
+      .limit(4)
 
     const priorMsgs = (guestHistory ?? [])
       .reverse()
@@ -695,7 +695,7 @@ Guide them to log into their dashboard: groundupapp.com/login`
 
       const guestRes = await anthropic.messages.create({
         model: 'claude-haiku-4-5',
-        max_tokens: 280,
+        max_tokens: 200,
         system: guestSystemPrompt,
         messages: [...priorMsgs, { role: 'user', content: inboundText }],
       })
@@ -736,12 +736,12 @@ Guide them to log into their dashboard: groundupapp.com/login`
   const [releasesRes, eventsRes, historyRes, prefsRes, countRes, snapsRes] = await Promise.all([
     supabase.from('releases').select('title, type, release_date, checklist').eq('user_id', userId).order('release_date', { ascending: true }).limit(5),
     supabase.from('calendar_events').select('title, event_type, event_date').eq('user_id', userId).gte('event_date', today).order('event_date', { ascending: true }).limit(5),
-    supabase.from('up_conversations').select('role, content').eq('user_id', userId).eq('channel', 'imessage').order('created_at', { ascending: false }).limit(6),
+    supabase.from('up_conversations').select('role, content').eq('user_id', userId).eq('channel', 'imessage').order('created_at', { ascending: false }).limit(4),
     supabase.from('artist_preferences').select('plan_tier').eq('user_id', userId).maybeSingle(),
     supabase.from('up_conversations').select('id', { count: 'exact', head: true })
       .eq('user_id', userId).eq('channel', 'imessage').eq('role', 'user')
       .gte('created_at', startOfDay),
-    supabase.from('platform_snapshots').select('platform, stats, fetched_at').eq('user_id', userId).order('fetched_at', { ascending: false }).limit(15),
+    supabase.from('platform_snapshots').select('platform, stats, fetched_at').eq('user_id', userId).order('fetched_at', { ascending: false }).limit(5),
   ])
 
   // ─── Enforce plan-based daily iMessage limit ───────────────────────────────
@@ -868,7 +868,7 @@ Only if genuinely actionable. Omit entirely if no tasks.`
   try {
     const res = await anthropic.messages.create({
       model:      'claude-haiku-4-5',
-      max_tokens: 300,
+      max_tokens: 220,
       system:     systemPrompt,
       messages:   [...priorMessages, { role: 'user', content: inboundText }],
     })
@@ -917,23 +917,20 @@ Only if genuinely actionable. Omit entirely if no tasks.`
       })
   }
 
-  // ─── Send reply + log in parallel; await both so Lambda doesn't freeze logging ──
-  const sendP = sendBlooio(fromPhone, cleanReply)
-  const logP  = supabase.from('up_conversations').insert([
-    { user_id: userId, role: 'user',      content: inboundText, channel: 'imessage' },
-    { user_id: userId, role: 'assistant', content: cleanReply,  channel: 'imessage' },
-  ])
-  const tasksP = tasks.length > 0
-    ? supabase.from('up_tasks').insert(tasks.map(content => ({ user_id: userId, content, source: 'imessage' })))
-    : Promise.resolve()
+  // ─── Send reply first (user gets the message ASAP), log to DB in background ──
+  await sendBlooio(fromPhone, cleanReply)
 
-  const [, logRes, tasksRes] = await Promise.all([sendP, logP, tasksP, releaseP])
-  if (logRes && (logRes as { error?: unknown }).error) {
-    console.error('[blooio-webhook] Conversation log error:', (logRes as { error: unknown }).error)
-  }
-  if (tasksRes && (tasksRes as { error?: unknown }).error) {
-    console.error('[blooio-webhook] Task log error:', (tasksRes as { error: unknown }).error)
-  }
+  // Fire-and-forget DB writes — don't block the response on logging
+  Promise.all([
+    supabase.from('up_conversations').insert([
+      { user_id: userId, role: 'user',      content: inboundText, channel: 'imessage' },
+      { user_id: userId, role: 'assistant', content: cleanReply,  channel: 'imessage' },
+    ]),
+    tasks.length > 0
+      ? supabase.from('up_tasks').insert(tasks.map(content => ({ user_id: userId, content, source: 'imessage' })))
+      : Promise.resolve(),
+    releaseP,
+  ]).catch(e => console.error('[blooio-webhook] Background log error:', e))
 
   return { statusCode: 200, body: 'OK' }
 }
