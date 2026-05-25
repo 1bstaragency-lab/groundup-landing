@@ -426,22 +426,9 @@ export const handler: Handler = async (event) => {
       return { statusCode: 200, body: 'Guest step 1 — asked artist name' }
     }
 
-    // ── Step 1 — have name → ask monthly listeners (or roster size for managers) ─
+    // ── Step 1 — have name → ask monthly listeners ────────────────────────────
     if (step === 1) {
       const artistName = inboundText.trim().slice(0, 80)
-      const isB2B = detectB2BSignal(inboundText)
-
-      if (isB2B) {
-        // Manager / B2B path — store __manager__ flag in goal field
-        await supabase.from('guest_profiles').upsert(
-          { phone_number: fromPhone, artist_name: artistName, goal: '__manager__', onboarding_step: 2, message_count: msgCount + 1, updated_at: now },
-          { onConflict: 'phone_number' }
-        )
-        await sendBlooio(fromPhone,
-          `${artistName} 🔥 Got it.\n\nSounds like you're representing artists — how many are on your roster right now?`)
-        return { statusCode: 200, body: 'Manager step 2 — asked roster size' }
-      }
-
       await supabase.from('guest_profiles').upsert(
         { phone_number: fromPhone, artist_name: artistName, onboarding_step: 2, message_count: msgCount + 1, updated_at: now },
         { onConflict: 'phone_number' }
