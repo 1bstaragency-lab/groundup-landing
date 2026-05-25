@@ -498,27 +498,65 @@ export const handler: Handler = async (event) => {
       }
 
       const newUserId = newUserData.user.id
+      const goalText  = guest?.goal ?? ''
+      const listeners = guestListeners ?? ''
 
-      // Link phone → account in artist_profiles (enables future iMessage routing)
-      // Also create artist_preferences with free plan
+      // Sync all iMessage onboarding data into the artist's dashboard profile
       await Promise.all([
+        // artist_profiles: phone link + tone so iMessage routing works immediately
         supabase.from('artist_profiles').upsert({
           user_id:      newUserId,
           artist_name:  '',
           phone_number: fromPhone,
           tone:         'Assistant Manager',
         }, { onConflict: 'user_id' }),
+
+        // artist_preferences: goal → bio, listeners stored, tone set
+        // onboarding_complete stays false so web onboarding prompts artist name/genre
         supabase.from('artist_preferences').upsert({
           user_id:             newUserId,
           artist_name:         '',
+          bio:                 goalText,   // their goal becomes their bio context
+          tone:                'Assistant Manager',
           plan_tier:           'free',
           onboarding_complete: false,
+          genre:               '',
         }, { onConflict: 'user_id' }),
+
+        // Migrate guest conversation history to up_conversations so AI has full context
+        supabase.from('guest_conversations')
+          .select('role, content, created_at')
+          .eq('phone_number', fromPhone)
+          .order('created_at', { ascending: true })
+          .then(({ data: history }) => {
+            if (!history?.length) return
+            return supabase.from('up_conversations').insert(
+              history.map(h => ({
+                user_id:    newUserId,
+                role:       h.role,
+                content:    h.content,
+                channel:    'imessage',
+                created_at: h.created_at,
+              }))
+            )
+          }),
+
+        // Mark guest profile complete
         supabase.from('guest_profiles').upsert(
           { phone_number: fromPhone, onboarding_step: 4, message_count: msgCount + 1, updated_at: now },
           { onConflict: 'phone_number' }
         ),
       ])
+
+      // Store self-reported listener count as a platform snapshot so it shows in dashboard
+      if (listeners) {
+        await supabase.from('platform_snapshots').upsert({
+          user_id:    newUserId,
+          platform:   'self_reported',
+          stats:      { monthlyListeners: listeners, goal: goalText },
+          fetched_at: now,
+        }, { onConflict: 'user_id, platform' })
+      }
 
       // Text them the temp password + login link
       await sendBlooio(fromPhone,
