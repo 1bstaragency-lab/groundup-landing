@@ -677,8 +677,9 @@ Guide them to log into their dashboard: groundupapp.com/login`,
   console.log('[blooio-webhook] Plan check —', JSON.stringify({ planTier, usedToday, max: dailyMax[planTier] }))
 
   if (usedToday >= dailyMax[planTier]) {
-    // Generate a magic link so tapping it auto-logs them into their account
-    // and lands them directly on the pricing page — no "create account" prompt.
+    // Generate a magic link so tapping it auto-logs them into their existing
+    // account and lands them directly on the pricing page — no "create account" prompt.
+    // Wrap it in a short groundupapp.com/go/:code URL so iMessage shows a clean link.
     const siteUrl = process.env.URL ?? 'https://groundupapp.com'
     let upgradeUrl = `${siteUrl}/pricing`
     try {
@@ -690,7 +691,17 @@ Guide them to log into their dashboard: groundupapp.com/login`,
           email,
           options: { redirectTo: `${siteUrl}/pricing` },
         })
-        if (linkData?.properties?.action_link) upgradeUrl = linkData.properties.action_link
+        const magicLink = linkData?.properties?.action_link
+        if (magicLink) {
+          // Store under a short code — expires in 24 hours
+          const code = Math.random().toString(36).slice(2, 10)
+          await supabase.from('short_links').insert({
+            code,
+            url: magicLink,
+            expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          })
+          upgradeUrl = `${siteUrl}/go/${code}`
+        }
       }
     } catch (e) {
       console.warn('[blooio-webhook] Could not generate magic link:', e)

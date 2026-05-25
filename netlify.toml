@@ -21,6 +21,12 @@
 [functions."blooio-poller"]
   schedule = "* * * * *"
 
+# Short-link redirector — groundupapp.com/go/:code → function handles redirect
+[[redirects]]
+  from   = "/go/:code"
+  to     = "/.netlify/functions/go/:code"
+  status = 200
+
 # Serve vCard at a .vcf URL so iOS recognizes it as a contact
 [[redirects]]
   from   = "/up.vcf"
