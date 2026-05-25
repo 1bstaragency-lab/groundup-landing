@@ -373,7 +373,7 @@ export const handler: Handler = async (event) => {
     // then attempt to read it separately so a missing column doesn't break the whole flow.
     const { data: guest, error: guestErr } = await supabase
       .from('guest_profiles')
-      .select('phone_number, goal, onboarding_step, message_count')
+      .select('phone_number, artist_name, goal, onboarding_step, message_count')
       .eq('phone_number', fromPhone)
       .maybeSingle()
     if (guestErr) console.warn('[blooio-webhook] guest_profiles select error:', guestErr.message)
@@ -389,13 +389,14 @@ export const handler: Handler = async (event) => {
       guestListeners = (lRow as { monthly_listeners?: string } | null)?.monthly_listeners ?? null
     }
 
-    const step     = guest?.onboarding_step ?? 0
-    const msgCount = guest?.message_count   ?? 0
+    const step       = guest?.onboarding_step ?? 0
+    const msgCount   = guest?.message_count   ?? 0
+    const guestName  = guest?.artist_name ?? ''
     const GUEST_FREE_LIMIT = 10
     const now = new Date().toISOString()
 
-    // Hard gate for step 4+ — limit reached → Stripe checkout
-    if (step >= 4 && msgCount >= GUEST_FREE_LIMIT) {
+    // Hard gate for step 5+ — limit reached → Stripe checkout
+    if (step >= 5 && msgCount >= GUEST_FREE_LIMIT) {
       const checkoutUrl = await createGuestCheckoutUrl(fromPhone)
       if (checkoutUrl) {
         await sendBlooio(fromPhone,
@@ -407,38 +408,48 @@ export const handler: Handler = async (event) => {
       return { statusCode: 200, body: 'Guest limit reached' }
     }
 
-    // ── Step 0 — brand new number: welcome + ask monthly listeners ────────────
+    // ── Step 0 — brand new: welcome + ask artist name ─────────────────────────
     if (step === 0) {
       await supabase.from('guest_profiles').upsert(
         { phone_number: fromPhone, onboarding_step: 1, message_count: 1, updated_at: now },
         { onConflict: 'phone_number' }
       )
       await sendBlooio(fromPhone,
-        `Hey 👋 I'm uP — your daily music career assistant.\n\nEvery day I help artists grow streams, plan releases, run ads, and pitch to Spotify curators — all from right here in iMessage. No app switching, no fluff.\n\nQuick question to get started: how many monthly listeners do you have right now? (Spotify, SoundCloud, Apple Music — any platform)`)
-      return { statusCode: 200, body: 'Guest step 1 — asked listeners' }
+        `Hey 👋 I'm uP — your daily music career assistant.\n\nEvery day I help artists grow streams, plan releases, run ads, and pitch to Spotify curators — all from right here in iMessage. No app switching, no fluff.\n\nWhat's your artist name?`)
+      return { statusCode: 200, body: 'Guest step 1 — asked artist name' }
     }
 
-    // ── Step 1 — have listeners → ask goal ────────────────────────────────────
+    // ── Step 1 — have name → ask monthly listeners ────────────────────────────
     if (step === 1) {
+      const artistName = inboundText.trim().slice(0, 80)
+      await supabase.from('guest_profiles').upsert(
+        { phone_number: fromPhone, artist_name: artistName, onboarding_step: 2, message_count: msgCount + 1, updated_at: now },
+        { onConflict: 'phone_number' }
+      )
+      await sendBlooio(fromPhone,
+        `${artistName} 🔥 Love it.\n\nHow many monthly listeners do you have right now? (Spotify, SoundCloud, Apple Music — any platform)`)
+      return { statusCode: 200, body: 'Guest step 2 — asked listeners' }
+    }
+
+    // ── Step 2 — have listeners → ask goal ───────────────────────────────────
+    if (step === 2) {
       const listeners = inboundText.trim().slice(0, 80)
-      // Try to save monthly_listeners (column may not exist yet — ignore error)
-      const baseUpsert = { phone_number: fromPhone, onboarding_step: 2, message_count: msgCount + 1, updated_at: now }
+      const baseUpsert = { phone_number: fromPhone, onboarding_step: 3, message_count: msgCount + 1, updated_at: now }
       const { error: upsertErr } = await supabase.from('guest_profiles').upsert(
         { ...baseUpsert, monthly_listeners: listeners },
         { onConflict: 'phone_number' }
       )
       if (upsertErr) {
-        // Column might not exist yet — retry without it
         console.warn('[blooio-webhook] monthly_listeners upsert failed, retrying without it:', upsertErr.message)
         await supabase.from('guest_profiles').upsert(baseUpsert, { onConflict: 'phone_number' })
       }
       await sendBlooio(fromPhone,
         `Got it 🎵 What's your #1 goal as an artist this year?\n\n1️⃣ Grow my streams & listeners\n2️⃣ Drop a major release\n3️⃣ Run paid ads & scale\n4️⃣ Build my fanbase / following\n\nReply with a number — or just tell me in your own words.`)
-      return { statusCode: 200, body: 'Guest step 2 — asked goal' }
+      return { statusCode: 200, body: 'Guest step 3 — asked goal' }
     }
 
-    // ── Step 2 — have goal → ask email ────────────────────────────────────────
-    if (step === 2) {
+    // ── Step 3 — have goal → ask email ────────────────────────────────────────
+    if (step === 3) {
       const GOAL_MAP: Record<string, string> = {
         '1': 'Grow streams & listeners',
         '2': 'Drop a major release',
@@ -447,16 +458,17 @@ export const handler: Handler = async (event) => {
       }
       const goal = GOAL_MAP[inboundText.trim()] ?? inboundText.trim().slice(0, 100)
       await supabase.from('guest_profiles').upsert(
-        { phone_number: fromPhone, goal, onboarding_step: 3, message_count: msgCount + 1, updated_at: now },
+        { phone_number: fromPhone, goal, onboarding_step: 4, message_count: msgCount + 1, updated_at: now },
         { onConflict: 'phone_number' }
       )
+      const name = guestName || 'you'
       await sendBlooio(fromPhone,
-        `${goal} — let's make it happen 🔥\n\nLast thing: what's your email? I'll create your GrounduP account so you have a full dashboard — release calendar, curator pitching, Meta ad builder — and we'll keep this conversation going.`)
-      return { statusCode: 200, body: 'Guest step 3 — asked email' }
+        `${goal} — let's make it happen 🔥\n\nLast thing: what's your email? I'll set up ${name}'s GrounduP account — release calendar, curator pitching, Meta ad builder — and we'll keep this conversation going.`)
+      return { statusCode: 200, body: 'Guest step 4 — asked email' }
     }
 
-    // ── Step 3 — have email → create Supabase account + send temp password ────
-    if (step === 3) {
+    // ── Step 4 — have email → create Supabase account + send temp password ────
+    if (step === 4) {
       const rawEmail = inboundText.trim().toLowerCase()
 
       // Basic email validation
@@ -469,6 +481,7 @@ export const handler: Handler = async (event) => {
 
       // Generate a human-readable temp password
       const tempPassword = generateTempPassword()
+      const artistName   = guestName || ''
 
       // Create the Supabase user
       const { data: newUserData, error: createError } = await supabase.auth.admin.createUser({
@@ -477,6 +490,7 @@ export const handler: Handler = async (event) => {
         email_confirm: true,
         user_metadata: {
           must_change_password: true,
+          artist_name:          artistName,
           monthly_listeners:    guestListeners ?? '',
           goal:                 guest?.goal ?? '',
         },
@@ -503,20 +517,20 @@ export const handler: Handler = async (event) => {
 
       // Sync all iMessage onboarding data into the artist's dashboard profile
       await Promise.all([
-        // artist_profiles: phone link + tone so iMessage routing works immediately
+        // artist_profiles: phone link + artist name + tone
         supabase.from('artist_profiles').upsert({
           user_id:      newUserId,
-          artist_name:  '',
+          artist_name:  artistName,
           phone_number: fromPhone,
           tone:         'Assistant Manager',
         }, { onConflict: 'user_id' }),
 
-        // artist_preferences: goal → bio, listeners stored, tone set
-        // onboarding_complete stays false so web onboarding prompts artist name/genre
+        // artist_preferences: artist name + goal → bio + tone
+        // onboarding_complete stays false so web onboarding prompts genre
         supabase.from('artist_preferences').upsert({
           user_id:             newUserId,
-          artist_name:         '',
-          bio:                 goalText,   // their goal becomes their bio context
+          artist_name:         artistName,
+          bio:                 goalText,
           tone:                'Assistant Manager',
           plan_tier:           'free',
           onboarding_complete: false,
@@ -543,7 +557,7 @@ export const handler: Handler = async (event) => {
 
         // Mark guest profile complete
         supabase.from('guest_profiles').upsert(
-          { phone_number: fromPhone, onboarding_step: 4, message_count: msgCount + 1, updated_at: now },
+          { phone_number: fromPhone, onboarding_step: 5, message_count: msgCount + 1, updated_at: now },
           { onConflict: 'phone_number' }
         ),
       ])
@@ -565,7 +579,7 @@ export const handler: Handler = async (event) => {
       return { statusCode: 200, body: 'Account created' }
     }
 
-    // ── Step 4+ — active guest chat via AI ────────────────────────────────────
+    // ── Step 5+ — active guest chat via AI ────────────────────────────────────
     const newCount = msgCount + 1
     const today    = new Date().toISOString().split('T')[0]
 
