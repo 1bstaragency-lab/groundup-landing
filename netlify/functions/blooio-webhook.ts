@@ -463,7 +463,7 @@ export const handler: Handler = async (event) => {
       )
       const name = guestName || 'you'
       await sendBlooio(fromPhone,
-        `${goal} — let's get to work 🔥\n\nLast thing: what's your email? I'll set up ${name}'s GrounduP account:\n\n• Spotify curator pitching\n• Meta & TikTok ad builder\n• Release rollout calendar\n• Daily AI strategy right here in iMessage`)
+        `${goal} — let's get to work 🔥\n\nLast thing: what's your email? I'll set up ${name}'s GrounduP account:\n\n• Spotify curator pitching\n• Meta & TikTok ad builder\n• Release rollout calendar\n• Daily AI strategy in iMessage`)
       return { statusCode: 200, body: 'Guest step 4 — asked email' }
     }
 
