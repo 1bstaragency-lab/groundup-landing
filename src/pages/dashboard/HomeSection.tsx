@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { HomeDashboard } from '../../components/dashboard/HomeDashboard';
 import { GmailConnectButton } from '../../components/ui/GmailCompose';
 import { readPlanIntent, clearPlanIntent, openCheckout } from '../../lib/pricingCheckout';
+import { PlatformLinkPrompt } from '../../components/dashboard/PlatformLinkPrompt';
 
 const INDUSTRY_NEWS = [
   {
@@ -138,6 +139,9 @@ export function HomeSection() {
           ))}
         </div>
       </div>
+
+      {/* Platform link prompt — slides up if no platforms are connected */}
+      {user?.id && <PlatformLinkPrompt userId={user.id} />}
     </motion.div>
   );
 }
