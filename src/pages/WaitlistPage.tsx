@@ -340,45 +340,49 @@ export function WaitlistPage() {
               </p>
             </motion.div>
           ) : (
-            <form onSubmit={handleJoin} className="w-full mt-3 flex flex-col gap-2.5">
-              <input
-                type="text"
-                placeholder="Your artist name (optional)"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full h-14 px-5 rounded-2xl text-[15px] font-semibold text-zinc-900 placeholder:text-zinc-400 border border-zinc-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#FFD700] focus:border-transparent transition"
-              />
-              <input
-                type="email"
-                placeholder="you@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full h-14 px-5 rounded-2xl text-[15px] font-semibold text-zinc-900 placeholder:text-zinc-400 border border-zinc-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#FFD700] focus:border-transparent transition"
-              />
-              {error && <p className="text-red-600 text-[12px] font-semibold -mt-1">{error}</p>}
-
-              <button
-                type="submit"
-                disabled={loading || !email}
-                className="w-full h-14 rounded-2xl font-black text-[15px] tracking-wide flex items-center justify-center gap-2.5 transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+            <form onSubmit={handleJoin} className="w-full mt-3 flex flex-col gap-2">
+              {/* Pill input — email left, CTA right, in one container */}
+              <div
+                className="w-full h-14 flex items-center rounded-full bg-white pl-1 pr-1 transition-all focus-within:ring-2 focus-within:ring-[#FFD700]"
                 style={{
-                  background: '#FFD700',
-                  color:      '#000',
-                  boxShadow:  '0 4px 28px rgba(255,215,0,0.4), inset 0 1px 0 rgba(255,255,255,0.35)',
+                  border:    '1px solid rgba(0,0,0,0.08)',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(255,215,0,0.12)',
                 }}
               >
-                {loading ? 'Joining…' : (
-                  <>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
-                    </svg>
-                    Join the waitlist
-                  </>
-                )}
-              </button>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="flex-1 h-full bg-transparent px-5 text-[15px] font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={loading || !email}
+                  className="h-12 px-5 rounded-full font-black text-[14px] tracking-wide flex items-center justify-center gap-2 transition-transform hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50 disabled:hover:scale-100 whitespace-nowrap"
+                  style={{
+                    background: '#FFD700',
+                    color:      '#000',
+                    boxShadow:  '0 2px 12px rgba(255,215,0,0.4), inset 0 1px 0 rgba(255,255,255,0.35)',
+                  }}
+                >
+                  {loading ? 'Joining…' : 'Join waitlist'}
+                </button>
+              </div>
 
-              <p className="text-zinc-400 text-[11px] font-medium -mt-1">
+              {/* Optional artist name — collapsed below as a smaller secondary field */}
+              <input
+                type="text"
+                placeholder="Artist name (optional)"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full h-11 px-5 rounded-full text-[13px] font-medium text-zinc-700 placeholder:text-zinc-400 border border-zinc-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[#FFD700]/40 focus:border-transparent transition"
+              />
+
+              {error && <p className="text-red-600 text-[12px] font-semibold mt-0.5">{error}</p>}
+
+              <p className="text-zinc-400 text-[11px] font-medium mt-1">
                 We'll email you the moment your invite is ready · No spam
               </p>
             </form>
