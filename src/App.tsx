@@ -61,6 +61,7 @@ import { ResetPasswordPage } from './pages/ResetPassword';
 import { ContactCardPage } from './pages/ContactCard';
 import { AdminDashboard } from './pages/AdminDashboard';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import { WaitlistPage } from './pages/WaitlistPage';
 import { MarkerHighlight } from './components/ui/marker-highlight';
 import { Loader } from './components/ui/loader';
 import { useAuth } from './hooks/useAuth';
@@ -661,6 +662,9 @@ function App() {
       <Route path="/admin" element={<AdminDashboard />} />
       {/* Legal */}
       <Route path="/privacy" element={<PrivacyPolicy />} />
+
+      {/* Email waitlist — same iMessage mock visual, captures email */}
+      <Route path="/waitlist" element={<WaitlistPage />} />
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
