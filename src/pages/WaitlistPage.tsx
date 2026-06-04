@@ -107,28 +107,43 @@ function IPhoneMock() {
           boxShadow:   '0 0 0 1px rgba(255,255,255,0.08), inset 0 0 0 1px rgba(0,0,0,0.6)',
         }}
       >
-        <div className="rounded-[2.4rem] overflow-hidden bg-[#0A0A0A] w-full" style={{ minHeight: '520px' }}>
+        <div className="rounded-[2.4rem] overflow-hidden bg-[#0A0A0A] w-full" style={{ minHeight: '548px' }}>
           <div className="flex justify-center pt-3 pb-1">
             <div className="w-24 h-7 rounded-full bg-black" />
           </div>
 
-          <div className="flex items-center gap-2.5 px-4 py-2.5 border-b border-white/5">
-            <button className="text-[#0A84FF] text-[13px] font-medium">‹</button>
-            <div className="flex-1 flex flex-col items-center">
-              <div
-                className="w-9 h-9 rounded-full overflow-hidden mb-0.5"
-                style={{ boxShadow: '0 0 10px rgba(255,215,0,0.4)' }}
-              >
-                <img src="/up-avatar.png" alt="uP" className="w-full h-full object-cover" />
-              </div>
-              <p className="text-white text-[12px] font-semibold leading-none">uP</p>
-              <p className="text-white/40 text-[9px] leading-none mt-0.5">GrounduP AI · Active now</p>
-            </div>
-            <button className="text-[#0A84FF]">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          {/* iOS-style contact header — back/action buttons sit on the outer
+              edges, avatar + name + subtitle stack vertically in the center
+              with breathing room between each element. */}
+          <div className="relative px-4 pt-3 pb-4 border-b border-white/5">
+            {/* Back chevron — pinned top-left */}
+            <button
+              className="absolute left-4 top-3 text-[#0A84FF] leading-none font-light"
+              style={{ fontSize: '22px' }}
+            >
+              ‹
+            </button>
+
+            {/* Action button — pinned top-right */}
+            <button className="absolute right-4 top-4 text-[#0A84FF]">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
               </svg>
             </button>
+
+            {/* Centered avatar + identity stack */}
+            <div className="flex flex-col items-center gap-1.5">
+              <div
+                className="w-11 h-11 rounded-full overflow-hidden"
+                style={{ boxShadow: '0 0 12px rgba(255,215,0,0.45)' }}
+              >
+                <img src="/up-avatar.png" alt="uP" className="w-full h-full object-cover" />
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <p className="text-white text-[13px] font-semibold leading-none tracking-tight">uP</p>
+                <p className="text-white/45 text-[10px] leading-none">GrounduP AI · Active now</p>
+              </div>
+            </div>
           </div>
 
           <div
