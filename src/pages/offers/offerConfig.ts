@@ -23,6 +23,13 @@ export interface OfferConfig {
   eyebrow:     string
   /** Use \n in the string for forced line breaks (rendered with whitespace-pre-line). */
   headline:    string
+  /**
+   * Rendering treatment for the headline.
+   *  - 'default'    → one H1 with line breaks
+   *  - 'colorBlock' → 3-line editorial statement: gold block / flowing text /
+   *                   black block. Pass exactly 3 lines via \n.
+   */
+  headlineStyle?: 'default' | 'colorBlock'
   subline:     string
   chips:       string[]
   messages:    DemoMessage[]
@@ -117,7 +124,8 @@ export const OFFERS: Record<string, OfferConfig> = {
   manager: {
     slug:     'manager',
     eyebrow:  'Manager Bundle · $300 Value',
-    headline: '$300 of music\nmanagement. Free.',
+    headline: '$300\nof music management.\nFree.',
+    headlineStyle: 'colorBlock',
     subline:  "uP is your AI music manager — runs through iMessage. Sign up and get $300 in services on us: 100 Spotify curator pitches ($150), $50 Meta ad credit, a custom 8-week release plan ($100), plus full Pro access for 60 days.",
     chips:    ['💵 100 Curator Pitches', '📊 $50 Ad Credit', '📅 Release Plan', '⚡ 60 Days Pro'],
     messages: [

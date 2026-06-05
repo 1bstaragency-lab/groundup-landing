@@ -182,6 +182,69 @@ function IPhoneMock({ messages }: { messages: DemoMessage[] }) {
   )
 }
 
+// ─── Headline renderers ──────────────────────────────────────────────────────
+
+/**
+ * Color-blocked editorial statement headline. Expects exactly 3 lines:
+ *   line 1 → gold block  (e.g. "$300")
+ *   line 2 → flowing dark text  (e.g. "of music management.")
+ *   line 3 → black block with gold text  (e.g. "Free.")
+ *
+ * Looks like a bold magazine-cover statement instead of a normal H1.
+ */
+function ColorBlockHeadline({ text }: { text: string }) {
+  const [topLine, midLine, bottomLine] = text.split('\n')
+
+  return (
+    <div className="w-full flex flex-col items-center gap-2.5">
+      {topLine && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          className="inline-block px-7 py-2 rounded-2xl"
+          style={{
+            background: '#FFD700',
+            boxShadow:  '0 10px 32px rgba(255,215,0,0.45), inset 0 1px 0 rgba(255,255,255,0.4)',
+          }}
+        >
+          <span className="block text-[4.5rem] md:text-[5.5rem] font-black tracking-tighter leading-none text-black">
+            {topLine}
+          </span>
+        </motion.div>
+      )}
+
+      {midLine && (
+        <motion.h1
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.08, ease: 'easeOut' }}
+          className="text-[1.85rem] md:text-[2.15rem] font-black tracking-tight leading-[1.15] text-zinc-900"
+        >
+          {midLine}
+        </motion.h1>
+      )}
+
+      {bottomLine && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.45, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
+          className="inline-block px-6 py-1.5 rounded-2xl bg-zinc-900"
+          style={{ boxShadow: '0 10px 32px rgba(0,0,0,0.25)' }}
+        >
+          <span
+            className="block text-[2.6rem] md:text-[3rem] font-black tracking-tighter leading-none uppercase"
+            style={{ color: '#FFD700' }}
+          >
+            {bottomLine}
+          </span>
+        </motion.div>
+      )}
+    </div>
+  )
+}
+
 // ─── CTA Icons ────────────────────────────────────────────────────────────────
 
 function CtaIcon({ name }: { name: OfferConfig['ctaIcon'] }) {
@@ -258,10 +321,14 @@ export function OfferPage({ offerId }: { offerId: string }) {
             {offer.eyebrow}
           </div>
 
-          {/* Headline */}
-          <h1 className="text-[2.6rem] md:text-5xl font-black tracking-tighter leading-[1.05] text-zinc-900 whitespace-pre-line">
-            {offer.headline}
-          </h1>
+          {/* Headline — color-block statement OR default H1 based on offer style */}
+          {offer.headlineStyle === 'colorBlock' ? (
+            <ColorBlockHeadline text={offer.headline} />
+          ) : (
+            <h1 className="text-[2.6rem] md:text-5xl font-black tracking-tighter leading-[1.05] text-zinc-900 whitespace-pre-line">
+              {offer.headline}
+            </h1>
+          )}
 
           {/* Persistent product identity — shows on every offer page so the
               forefront is always "uP is an iMessage AI manager" before the
