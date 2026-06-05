@@ -113,24 +113,44 @@ export const OFFERS: Record<string, OfferConfig> = {
     successLine: 'Check your iMessage — uP is asking for your release date.',
   },
 
-  // ─── 5. Pre-Save Boost ──────────────────────────────────────────────────
-  presave: {
-    slug:     'presave',
-    eyebrow:  'Pre-Save Boost',
-    headline: '3x your pre-saves.\nBy launch day.',
-    subline:  'uP generates your smart link, runs the pre-save campaign across socials, and DMs curators on release day. All managed from iMessage — no dashboards.',
-    chips:    ['🔗 Smart Pre-Save Link', '📣 Auto Promo', '🎯 Curator Day-Of DM', '📊 Live Tracking'],
+  // ─── 5. AI Manager · 60 Days Free ───────────────────────────────────────
+  manager: {
+    slug:     'manager',
+    eyebrow:  'AI Manager · 60 Days Free',
+    headline: 'Your AI manager.\n$0/mo for 60 days.',
+    subline:  'uP does what a $500/mo manager does — Spotify pitching, ad campaigns, release strategy, daily check-ins, curator outreach — through iMessage. Free for 60 days.',
+    chips:    ['👤 Replaces Human Manager', '💬 24/7 via iMessage', '📊 Weekly Strategy Calls', '🎯 Goal Tracking'],
     messages: [
-      { from: 'up',   text: 'Drop the release info — title, date, distributor (DistroKid, UnitedMasters, etc.)?' },
-      { from: 'user', text: 'Track is "Nights" · drops July 18 · DistroKid' },
-      { from: 'up',   text: 'Generated your pre-save link: groundup.fm/nights\n\nI\'ll:\n• Push it to your IG / TikTok bio links\n• Run 7-day pre-save campaign\n• DM 30 curators on release day\n\nExpected: 1k+ pre-saves. Run it?' },
-      { from: 'user', text: 'Run it 🔥' },
-      { from: 'up',   text: 'Locked. I\'ll text you a pre-save count every morning until release.' },
+      { from: 'up',   text: "I'm uP — your AI manager. I'll handle the things a human manager does (pitches, ads, strategy, scheduling) but text-only and 24/7. What are you working on right now?" },
+      { from: 'user', text: 'Trying to grow on Spotify and lock in features.' },
+      { from: 'up',   text: 'Got it. Game plan for this month:\n• Weekly curator pitches (50/week)\n• Outreach to 10 producers + 5 artists in your tier for features\n• Daily check-ins on streams + a Friday strategy text\n\nStart Monday — sound good?' },
+      { from: 'user', text: 'Yes start it.' },
+      { from: 'up',   text: '🤝 Locked. 60 days on me. I\'ll text you Monday morning with your first week\'s tasks.' },
     ],
-    ctaText:     'Boost My Pre-Save',
-    ctaIcon:     'message',
-    trustLine:   'Avg artist hits 1k+ pre-saves · Built into iMessage',
-    successLine: 'Check your iMessage — uP is asking for your release info.',
+    ctaText:     'Get My AI Manager',
+    ctaIcon:     'spark',
+    trustLine:   'Replaces the $500/mo human manager · 60 days free · No card',
+    successLine: 'Check your iMessage — uP is texting you now.',
+  },
+
+  // ─── 6. Comeback · Re-launch your last single ───────────────────────────
+  comeback: {
+    slug:     'comeback',
+    eyebrow:  'Comeback Pack · $50 in Ads',
+    headline: 'Re-launch your last single.\n$50 on us.',
+    subline:  "Got a track that didn't pop the first time? uP runs a targeted re-launch — fresh Meta ads, curator re-pitches, TikTok seeding. $50 in ad credit to spark it.",
+    chips:    ['🔥 Fresh Meta Ads', '🎯 Curator Re-Pitch', '📱 TikTok Seeding', '📈 5x Stream Lift'],
+    messages: [
+      { from: 'up',   text: "Which past release do you want to re-launch? Drop the Spotify or Apple Music link." },
+      { from: 'user', text: 'open.spotify.com/track/3HFm… · dropped 8 months ago, stalled at 12k streams' },
+      { from: 'up',   text: 'Pulled it. Building your comeback play:\n• 3 fresh Meta ad creatives ($50 credit)\n• Re-pitch to 30 curators ("rediscover" angle)\n• 10 TikTok creators to seed the hook\n• Repackage as part of an EP teaser\n\nLaunch this week?' },
+      { from: 'user', text: 'Let\'s run it.' },
+      { from: 'up',   text: '🚀 Comeback live in 48h. I\'ll text you stream lift every morning — most re-launches hit 5x in 30 days.' },
+    ],
+    ctaText:     'Re-launch My Track',
+    ctaIcon:     'spark',
+    trustLine:   'Avg 5x stream lift on re-launches · $50 ad credit included',
+    successLine: 'Check your iMessage — uP is asking which track to re-launch.',
   },
 }
 

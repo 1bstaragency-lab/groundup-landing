@@ -672,7 +672,8 @@ function App() {
       <Route path="/curators"  element={<OfferPage offerId="curators" />} />
       <Route path="/ads"       element={<OfferPage offerId="ads" />} />
       <Route path="/rollout"   element={<OfferPage offerId="rollout" />} />
-      <Route path="/presave"   element={<OfferPage offerId="presave" />} />
+      <Route path="/manager"   element={<OfferPage offerId="manager" />} />
+      <Route path="/comeback"  element={<OfferPage offerId="comeback" />} />
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
