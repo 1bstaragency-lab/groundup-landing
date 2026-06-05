@@ -133,23 +133,23 @@ export const OFFERS: Record<string, OfferConfig> = {
     successLine: 'Check your iMessage — uP is unlocking your $300 bundle.',
   },
 
-  // ─── 6. Comeback · $250 Re-launch Bundle ────────────────────────────────
+  // ─── 6. Comeback · Re-launch Pack ───────────────────────────────────────
   comeback: {
     slug:     'comeback',
-    eyebrow:  'Comeback Bundle · $250 Value',
-    headline: '$250 to re-launch\nyour last single.',
-    subline:  "uP is your AI music manager — runs through iMessage. Pick a past track that didn't pop. Get a $250 re-launch bundle on us: $100 Meta ad credit, 30 curator re-pitches ($90), 5 TikTok creator seeds ($60). All run by uP.",
-    chips:    ['💵 $100 Ad Credit', '🎯 30 Curator Re-pitches', '📱 5 TikTok Seeds', '📈 5x Avg Stream Lift'],
+    eyebrow:  'Comeback Pack · Free',
+    headline: 'Re-launch your\nlast single. On us.',
+    subline:  "uP is your AI music manager — runs through iMessage. Pick a past track that didn't pop. Get a $20 Meta ad credit and 30 personalized curator re-pitches. All run by uP, no dashboards.",
+    chips:    ['💵 $20 Ad Credit', '🎯 30 Curator Re-pitches', '🔥 Fresh Ad Creatives', '📊 Daily Tracking'],
     messages: [
-      { from: 'up',   text: "Which past release do you want to re-launch? Drop the Spotify or Apple Music link and I'll spin up your $250 comeback pack." },
+      { from: 'up',   text: "Which past release do you want to re-launch? Drop the Spotify or Apple Music link and I'll spin up your comeback pack." },
       { from: 'user', text: 'open.spotify.com/track/3HFm… · dropped 8 months ago, stalled at 12k streams' },
-      { from: 'up',   text: 'Pulled it. Comeback pack ready:\n• $100 Meta ad credit (3 fresh creatives)\n• 30 curator re-pitches ("rediscover" angle)\n• 5 TikTok creators to seed the hook\n• I\'ll repackage it as an EP teaser too\n\nLaunch this week?' },
-      { from: 'user', text: 'Let\'s run it.' },
-      { from: 'up',   text: '🚀 $250 pack deployed. Live in 48h. I\'ll text you stream lift every morning — most re-launches hit 5x in 30 days.' },
+      { from: 'up',   text: 'Pulled it. Comeback pack ready:\n• $20 Meta ad credit\n• 3 fresh ad creatives from your assets\n• 30 curator re-pitches ("rediscover" angle)\n\nLaunch this week?' },
+      { from: 'user', text: "Let's run it." },
+      { from: 'up',   text: "🚀 Pack deployed. Live in 48h. I'll text you stream + curator updates every morning." },
     ],
-    ctaText:     'Claim $250 Re-launch',
+    ctaText:     'Claim My Comeback Pack',
     ctaIcon:     'spark',
-    trustLine:   '$250 bundle · Avg 5x stream lift in 30 days · No card',
+    trustLine:   '$20 ad credit + 30 curator re-pitches · No card',
     successLine: 'Check your iMessage — uP is asking which track to re-launch.',
   },
 }
