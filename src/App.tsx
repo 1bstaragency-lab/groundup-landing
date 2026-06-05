@@ -62,6 +62,7 @@ import { ContactCardPage } from './pages/ContactCard';
 import { AdminDashboard } from './pages/AdminDashboard';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import { WaitlistPage } from './pages/WaitlistPage';
+import { OfferPage } from './pages/offers/OfferPage';
 import { MarkerHighlight } from './components/ui/marker-highlight';
 import { Loader } from './components/ui/loader';
 import { useAuth } from './hooks/useAuth';
@@ -665,6 +666,13 @@ function App() {
 
       {/* Email waitlist — same iMessage mock visual, captures email */}
       <Route path="/waitlist" element={<WaitlistPage />} />
+
+      {/* Offer landing pages — all funnel to iMessage onboarding */}
+      <Route path="/free"      element={<OfferPage offerId="free" />} />
+      <Route path="/curators"  element={<OfferPage offerId="curators" />} />
+      <Route path="/ads"       element={<OfferPage offerId="ads" />} />
+      <Route path="/rollout"   element={<OfferPage offerId="rollout" />} />
+      <Route path="/presave"   element={<OfferPage offerId="presave" />} />
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
