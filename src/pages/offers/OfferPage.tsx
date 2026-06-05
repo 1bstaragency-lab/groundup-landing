@@ -263,8 +263,18 @@ export function OfferPage({ offerId }: { offerId: string }) {
             {offer.headline}
           </h1>
 
+          {/* Persistent product identity — shows on every offer page so the
+              forefront is always "uP is an iMessage AI manager" before the
+              offer-specific value prop. */}
+          <div className="flex items-center gap-2 -mt-1">
+            <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: '#FFD700', boxShadow: '0 0 8px rgba(255,215,0,0.6)' }} />
+            <p className="text-zinc-700 text-[11px] font-black uppercase tracking-[0.18em]">
+              uP · Your AI Music Manager · In iMessage
+            </p>
+          </div>
+
           {/* Sub-copy */}
-          <p className="text-zinc-600 text-[15px] leading-relaxed max-w-[320px]">
+          <p className="text-zinc-600 text-[15px] leading-relaxed max-w-[340px]">
             {offer.subline}
           </p>
 

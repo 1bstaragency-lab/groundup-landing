@@ -304,10 +304,21 @@ export function WaitlistPage() {
             <span className="text-zinc-500">in your messages.</span>
           </h1>
 
+          {/* Persistent product identity */}
+          <div className="flex items-center gap-2 -mt-1">
+            <span
+              className="inline-block w-1.5 h-1.5 rounded-full"
+              style={{ background: '#FFD700', boxShadow: '0 0 8px rgba(255,215,0,0.6)' }}
+            />
+            <p className="text-zinc-700 text-[11px] font-black uppercase tracking-[0.18em]">
+              uP · Your AI Music Manager · In iMessage
+            </p>
+          </div>
+
           {/* Sub-copy */}
-          <p className="text-zinc-600 text-[15px] leading-relaxed max-w-[300px]">
-            uP is the iMessage AI for music careers — Spotify curator pitching, Meta ads, release strategy, all in one
-            conversation. Get notified the moment we open your invite slot.
+          <p className="text-zinc-600 text-[15px] leading-relaxed max-w-[320px]">
+            uP is your AI music manager — runs through iMessage to handle Spotify curator pitching, Meta ad
+            campaigns, and release strategy. Get notified the moment we open your invite slot.
           </p>
 
           {/* Animated iPhone mock */}

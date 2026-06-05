@@ -38,7 +38,7 @@ export const OFFERS: Record<string, OfferConfig> = {
     slug:     'free',
     eyebrow:  '30 Days Free Pro · Limited',
     headline: '30 days of uP.\nOn us.',
-    subline:  'Full Pro access — Spotify curator pitching, Meta ad management, and AI release strategy. Free for 30 days. No credit card required.',
+    subline:  'uP is your AI music manager — texts you through iMessage to run Spotify curator pitches, Meta ad campaigns, and release strategy. Full Pro free for 30 days. No card.',
     chips:    ['💬 iMessage AI', '🎵 Release Planning', '🎯 Curator Matching', '📊 Meta Ads'],
     messages: [
       { from: 'up',   text: "Welcome to uP. I'm your AI music manager — I run rollouts, pitch curators, and build ad campaigns through iMessage. Got a track in mind?" },
@@ -58,7 +58,7 @@ export const OFFERS: Record<string, OfferConfig> = {
     slug:     'curators',
     eyebrow:  'Free Curator Pitch Pack',
     headline: '50 Spotify curators.\nPitched for you.',
-    subline:  'uP matches your sound to 50 active editorial + indie playlist curators and writes a personalized pitch for each. Yours free for your next release.',
+    subline:  'uP is your AI music manager — runs through iMessage. Drop your Spotify link and your next release date, and it pitches 50 active editorial + indie playlist curators on your behalf. Free.',
     chips:    ['🎵 Sound Matching', '✉️ Personalized Pitches', '📈 Response Tracking', '🎯 Editorial + Indie'],
     messages: [
       { from: 'up',   text: 'Drop your Spotify artist link and your next release date — I\'ll pull a curator list tonight.' },
@@ -78,7 +78,7 @@ export const OFFERS: Record<string, OfferConfig> = {
     slug:     'ads',
     eyebrow:  '$50 Meta Ad Credit',
     headline: '$50 in Meta ads.\nOn us.',
-    subline:  'uP builds the creative, targets fans of similar artists, and runs the campaign — pushing streams to Spotify and Apple Music. $50 credit to start.',
+    subline:  "uP is your AI music manager — texts you through iMessage. Tell it the track you want to push and it builds the Meta ad creative, picks the audience, and runs the campaign. $50 ad credit included.",
     chips:    ['🎨 Auto Creative', '🎯 Lookalike Targeting', '📊 Daily Reporting', '⚡ Same-Day Launch'],
     messages: [
       { from: 'up',   text: 'Drop the track you want to push — Spotify or Apple Music link works.' },
@@ -98,7 +98,7 @@ export const OFFERS: Record<string, OfferConfig> = {
     slug:     'rollout',
     eyebrow:  'Free Release Rollout Plan',
     headline: 'Your next release.\nMapped week by week.',
-    subline:  'Tell uP your release date. Get a custom 8-week rollout — Spotify pitches, content drops, ad timing, curator outreach — all scheduled and run automatically.',
+    subline:  'uP is your AI music manager — runs through iMessage. Tell it your release date and get a custom 8-week rollout: Spotify pitches, content drops, ad timing, curator outreach — all scheduled and managed by text.',
     chips:    ['📅 8-Week Plan', '🎯 Curator Pitching', '📱 Content Calendar', '💰 Ad Scheduling'],
     messages: [
       { from: 'up',   text: 'What\'s the release date and what type of drop — single, EP, album?' },
@@ -118,7 +118,7 @@ export const OFFERS: Record<string, OfferConfig> = {
     slug:     'manager',
     eyebrow:  'AI Manager · 60 Days Free',
     headline: 'Your AI manager.\n$0/mo for 60 days.',
-    subline:  'uP does what a $500/mo manager does — Spotify pitching, ad campaigns, release strategy, daily check-ins, curator outreach — through iMessage. Free for 60 days.',
+    subline:  "uP is your AI music manager — lives in iMessage and does what a $500/mo human manager does: Spotify pitching, ad campaigns, release strategy, daily check-ins, curator outreach. Free for 60 days.",
     chips:    ['👤 Replaces Human Manager', '💬 24/7 via iMessage', '📊 Weekly Strategy Calls', '🎯 Goal Tracking'],
     messages: [
       { from: 'up',   text: "I'm uP — your AI manager. I'll handle the things a human manager does (pitches, ads, strategy, scheduling) but text-only and 24/7. What are you working on right now?" },
@@ -138,7 +138,7 @@ export const OFFERS: Record<string, OfferConfig> = {
     slug:     'comeback',
     eyebrow:  'Comeback Pack · $50 in Ads',
     headline: 'Re-launch your last single.\n$50 on us.',
-    subline:  "Got a track that didn't pop the first time? uP runs a targeted re-launch — fresh Meta ads, curator re-pitches, TikTok seeding. $50 in ad credit to spark it.",
+    subline:  "uP is your AI music manager — runs through iMessage. Got a track that didn't pop? Text uP and it runs a targeted re-launch: fresh Meta ads, curator re-pitches, TikTok seeding. $50 ad credit included.",
     chips:    ['🔥 Fresh Meta Ads', '🎯 Curator Re-Pitch', '📱 TikTok Seeding', '📈 5x Stream Lift'],
     messages: [
       { from: 'up',   text: "Which past release do you want to re-launch? Drop the Spotify or Apple Music link." },
