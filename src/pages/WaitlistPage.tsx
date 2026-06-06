@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { supabase } from '../supabaseClient' // src/supabaseClient.ts
+import { usePaywallTracking } from '../hooks/usePaywallTracking'
 
 const CHIPS = ['💬 iMessage AI', '🎵 Release Planning', '🎯 Curator Matching', '📊 Meta Ads']
 
@@ -214,6 +215,8 @@ export function WaitlistPage() {
   const [error,       setError]       = useState<string | null>(null)
   const [position,    setPosition]    = useState<number | null>(null)
 
+  const { trackCta, trackConverted } = usePaywallTracking('waitlist')
+
   useEffect(() => {
     document.title = 'Join the waitlist · GrounduP'
   }, [])
@@ -230,6 +233,7 @@ export function WaitlistPage() {
     }
 
     setLoading(true)
+    trackCta({ email: trimmed.slice(0, 80) })
     try {
       // Generate a referral code (same convention as the homepage)
       const refCode = btoa(trimmed).replace(/[^a-zA-Z0-9]/g, '').slice(0, 8)
@@ -254,6 +258,7 @@ export function WaitlistPage() {
         .select('*', { count: 'exact', head: true })
       if (typeof count === 'number') setPosition(count + 200) // base offset
 
+      trackConverted({ position: typeof count === 'number' ? count + 200 : null })
       setSubmitted(true)
     } catch (err) {
       console.error(err)

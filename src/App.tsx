@@ -22,6 +22,7 @@ import { InfiniteBentoPan } from './components/ui/infinite-bento-pan';
 import { GlobeLive } from './components/ui/cobe-globe-live';
 import { SupportBot } from './components/ui/support-bot';
 import { CinematicFooter } from './components/ui/motion-footer';
+import { SuccessVision } from './components/ui/success-vision';
 import { DemoModal } from './components/ui/DemoModal';
 import { AwardBadge } from './components/ui/award-badge';
 import { OnboardingFlow } from './components/ui/OnboardingFlow';
@@ -183,7 +184,8 @@ function LandingPage() {
       const { error } = await supabase.from('waitlist').insert([{
         email: formData.email, phone: formData.phone, artist_name: formData.name,
         role: formData.role, social_handle: formData.socialHandle,
-        referral_code: newRefCode, referred_by: referredBy
+        referral_code: newRefCode, referred_by: referredBy,
+        source: 'homepage',
       }]);
       if (error) console.warn('Waitlist insert failed, proceeding anyway:', error);
 
@@ -427,6 +429,9 @@ function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Success Vision — the graduated artist */}
+      <SuccessVision ctaHref="#signup" ctaLabel="Start the plan" />
 
       {/* MagnifiedBento — intelligent workflows */}
       <section className="py-24 px-6 bg-black overflow-hidden">

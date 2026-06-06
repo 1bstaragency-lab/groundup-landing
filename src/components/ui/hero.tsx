@@ -98,8 +98,9 @@ export default function ShaderShowcase() {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <div className="absolute top-0 left-1 right-1 h-px bg-gradient-to-r from-transparent via-[#FFD700]/30 to-transparent rounded-full" />
-            <span className="text-white/90 text-[10px] font-black uppercase tracking-[0.2em] relative z-10">
-              ✨ The Artist OS has arrived
+            <span className="text-white/90 text-[10px] font-black uppercase tracking-[0.2em] relative z-10 flex items-center gap-2">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#FFD700] shadow-[0_0_8px_rgba(255,215,0,0.6)]" />
+              uP · Your AI Music Manager · In iMessage
             </span>
           </motion.div>
 
@@ -138,7 +139,7 @@ export default function ShaderShowcase() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
           >
-            Built for how music gets made. GrounduP brings together intelligence, planning, and collaboration in one seamless experience.
+            The AI music manager that runs through iMessage — Spotify curator pitching, Meta ad campaigns, weekly career strategy. Built for indie artists who want a real career, not a hobby.
           </motion.p>
 
           <motion.div

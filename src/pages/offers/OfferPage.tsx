@@ -15,6 +15,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { IMESSAGE_LINK, OFFERS, type DemoMessage, type OfferConfig } from './offerConfig'
+import { usePaywallTracking } from '../../hooks/usePaywallTracking'
 
 // ─── Animated iPhone mock (matches WaitlistPage) ──────────────────────────────
 
@@ -274,6 +275,7 @@ function CtaIcon({ name }: { name: OfferConfig['ctaIcon'] }) {
 
 export function OfferPage({ offerId }: { offerId: string }) {
   const offer = OFFERS[offerId]
+  const { trackCta } = usePaywallTracking(offer ? `offer:${offerId}` : '')
 
   useEffect(() => {
     if (offer) document.title = `${offer.eyebrow} · GrounduP`
@@ -366,6 +368,7 @@ export function OfferPage({ offerId }: { offerId: string }) {
           {/* Primary CTA → iMessage */}
           <a
             href={IMESSAGE_LINK}
+            onClick={() => trackCta({ position: 'primary' })}
             className="w-full h-14 rounded-2xl font-black text-[15px] tracking-wide flex items-center justify-center gap-2.5 transition-transform hover:scale-[1.02] active:scale-[0.98] mt-2"
             style={{
               background: '#FFD700',
@@ -383,6 +386,7 @@ export function OfferPage({ offerId }: { offerId: string }) {
 
           <a
             href={IMESSAGE_LINK}
+            onClick={() => trackCta({ position: 'secondary' })}
             className="text-[12px] font-black uppercase tracking-widest transition-colors mt-1"
             style={{ color: '#B8860B' }}
           >
