@@ -16,11 +16,19 @@ const PLAN_PRICES: Record<PlanTier, string> = {
   growth: '$55/mo',
 }
 
+// Storage tiers — bytes. Powers the Content Studio → Asset Bank quota bar.
+const GB = 1024 * 1024 * 1024
+export const STORAGE_BYTES_BY_TIER = {
+  free:   1  * GB,
+  pro:    10 * GB,
+  growth: 50 * GB,
+} as const satisfies Record<PlanTier, number>
+
 // Hard limits per plan — keep in sync with marketing pages
 export const PLAN_LIMITS = {
-  free:   { releases: 1,  teamSeats: 1, imessageDailyMax: 5,   influencerNetwork: false, prioritySupport: false },
-  pro:    { releases: -1, teamSeats: 1, imessageDailyMax: 100, influencerNetwork: false, prioritySupport: false },
-  growth: { releases: -1, teamSeats: 3, imessageDailyMax: 500, influencerNetwork: true,  prioritySupport: true  },
+  free:   { releases: 1,  teamSeats: 1, imessageDailyMax: 5,   storageBytes: STORAGE_BYTES_BY_TIER.free,   influencerNetwork: false, prioritySupport: false },
+  pro:    { releases: -1, teamSeats: 1, imessageDailyMax: 100, storageBytes: STORAGE_BYTES_BY_TIER.pro,    influencerNetwork: false, prioritySupport: false },
+  growth: { releases: -1, teamSeats: 3, imessageDailyMax: 500, storageBytes: STORAGE_BYTES_BY_TIER.growth, influencerNetwork: true,  prioritySupport: true  },
 } as const satisfies Record<PlanTier, Record<string, number | boolean>>
 
 export interface PlanInfo {

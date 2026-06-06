@@ -23,6 +23,7 @@ import {
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "../../hooks/useAuth"
+import { usePlan } from "../../hooks/usePlan"
 import { supabase } from "../../lib/supabaseClient"
 
 // NOTE: Image + Video Studio tabs show "Coming Soon" placeholders until
@@ -42,7 +43,10 @@ interface StudioAsset {
 }
 
 const STORAGE_BUCKET = "studio-assets"
-const STORAGE_QUOTA_BYTES = 5 * 1024 * 1024 * 1024 // 5 GB default per user
+// Storage quota is read per-user from usePlan().limits.storageBytes:
+//   free   →  1 GB
+//   pro    → 10 GB
+//   growth → 50 GB
 
 // Pretty-format byte counts: 0 B → 1.4 MB → 2.3 GB
 function fmtBytes(bytes: number): string {
@@ -83,6 +87,8 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 
 export function StudioSection() {
   const { user } = useAuth()
+  const plan = usePlan()
+  const STORAGE_QUOTA_BYTES = plan.limits.storageBytes
   const [activeTab, setActiveTab] = useState<Tab>("assets")
 
   // Asset Bank state
@@ -171,6 +177,18 @@ export function StudioSection() {
     const files = Array.from(e.target.files ?? [])
     e.target.value = "" // allow same file re-pick
     if (files.length === 0) return
+
+    // Quota check — sum total incoming + already-stored vs the plan cap
+    const incomingBytes = files.reduce((s, f) => s + f.size, 0)
+    if (totalBytes + incomingBytes > STORAGE_QUOTA_BYTES) {
+      const remaining = Math.max(0, STORAGE_QUOTA_BYTES - totalBytes)
+      setUploadError(
+        `These files would exceed your ${fmtBytes(STORAGE_QUOTA_BYTES)} ${plan.label} plan limit. ` +
+        `You have ${fmtBytes(remaining)} remaining — ` +
+        `${plan.tier === "growth" ? "delete some assets to free up space." : "upgrade for more storage."}`
+      )
+      return
+    }
 
     setUploading(true)
     setUploadError(null)
@@ -362,7 +380,7 @@ export function StudioSection() {
               )}
             </AnimatePresence>
 
-            {/* Storage bar — real totals from uploaded assets */}
+            {/* Storage bar — real totals + plan-tier quota */}
             <div className="flex flex-wrap items-center gap-4 py-3 px-6 bg-zinc-900/40 rounded-2xl border border-white/5">
               <div className="flex items-center gap-3 text-[#FFD700] font-black text-[10px] uppercase tracking-widest">
                 <span className="opacity-40">Path:</span>
@@ -374,11 +392,35 @@ export function StudioSection() {
                 <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">
                   {fmtBytes(totalBytes)} / {fmtBytes(STORAGE_QUOTA_BYTES)}
                 </span>
+                <span className="text-[#FFD700]/60 text-[10px] font-black uppercase tracking-widest">
+                  · {plan.label}
+                </span>
                 <div className="w-24 bg-white/5 h-1 rounded-full overflow-hidden">
-                  <div className="bg-[#FFD700] h-full transition-all" style={{ width: `${quotaPct}%` }} />
+                  <div
+                    className="h-full transition-all"
+                    style={{
+                      width:      `${quotaPct}%`,
+                      background: quotaPct > 90 ? "#EF4444" : quotaPct > 75 ? "#F59E0B" : "#FFD700",
+                    }}
+                  />
                 </div>
               </div>
             </div>
+
+            {/* Near-full warning — show at 80%+ for non-growth tiers */}
+            {quotaPct >= 80 && plan.tier !== "growth" && (
+              <div className="flex items-center justify-between gap-4 px-5 py-3 rounded-2xl bg-[#FFD700]/8 border border-[#FFD700]/20">
+                <p className="text-[#FFD700] text-xs font-black uppercase tracking-wide">
+                  {Math.round(quotaPct)}% of {plan.label} storage used
+                </p>
+                <a
+                  href="/pricing"
+                  className="text-black bg-[#FFD700] px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform"
+                >
+                  Upgrade
+                </a>
+              </div>
+            )}
 
             {/* Assets — real grid/list OR empty state */}
             {loading ? (
