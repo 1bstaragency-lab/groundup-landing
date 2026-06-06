@@ -23,6 +23,8 @@ import { GlobeLive } from './components/ui/cobe-globe-live';
 import { SupportBot } from './components/ui/support-bot';
 import { CinematicFooter } from './components/ui/motion-footer';
 import { SuccessVision } from './components/ui/success-vision';
+import { ArtistTestimonials } from './components/ui/artist-testimonials';
+import { GetStartedModal, GET_STARTED_EVENT } from './components/ui/GetStartedModal';
 import { DemoModal } from './components/ui/DemoModal';
 import { AwardBadge } from './components/ui/award-badge';
 import { OnboardingFlow } from './components/ui/OnboardingFlow';
@@ -129,6 +131,17 @@ function LandingPage() {
   const [showDemo, setShowDemo] = useState(false);
   const [navVisible, setNavVisible] = useState(true);
   const [pricingError, setPricingError] = useState<string | null>(null);
+  const [getStartedOpen, setGetStartedOpen] = useState(false);
+
+  // Listen for the global "open the Get Started modal" event — any CTA can
+  // trigger it via window.dispatchEvent(new CustomEvent('gup:get-started')).
+  useEffect(() => {
+    const h = () => setGetStartedOpen(true);
+    window.addEventListener(GET_STARTED_EVENT, h);
+    return () => window.removeEventListener(GET_STARTED_EVENT, h);
+  }, []);
+
+  const openGetStarted = () => setGetStartedOpen(true);
 
   async function onPlanSelect(planName: string) {
     setPricingError(null);
@@ -282,7 +295,7 @@ function LandingPage() {
         <div className="flex items-center gap-3">
           {/* Desktop CTAs */}
           <button className="nav-cta hidden md:block" onClick={() => navigate('/login')}>Sign In</button>
-          <button className="nav-cta hidden md:block" style={{ background: '#FFD700', color: '#000' }} onClick={() => navigate('/signup')}>Join Now</button>
+          <button className="nav-cta hidden md:block" style={{ background: '#FFD700', color: '#000' }} onClick={openGetStarted}>Join Now</button>
 
           {/* Mobile hamburger */}
           <button
@@ -325,7 +338,7 @@ function LandingPage() {
               <button
                 className="flex-1 py-3.5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(255,215,0,0.2)]"
                 style={{ background: '#FFD700', color: '#000' }}
-                onClick={() => { navigate('/signup'); setMobileNavOpen(false) }}
+                onClick={() => { setMobileNavOpen(false); openGetStarted(); }}
               >
                 Join Now
               </button>
@@ -418,7 +431,7 @@ function LandingPage() {
                 ))}
               </ul>
               <div className="flex gap-4 pt-10">
-                <LiquidButton onClick={() => navigate('/signup')}>Start Chatting</LiquidButton>
+                <LiquidButton onClick={openGetStarted}>Start Chatting</LiquidButton>
               </div>
             </div>
 
@@ -432,6 +445,9 @@ function LandingPage() {
 
       {/* Success Vision — the graduated artist */}
       <SuccessVision ctaHref="#signup" ctaLabel="Start the plan" />
+
+      {/* Artist testimonials — social proof under the success vision */}
+      <ArtistTestimonials />
 
       {/* MagnifiedBento — intelligent workflows */}
       <section className="py-24 px-6 bg-black overflow-hidden">
@@ -537,6 +553,9 @@ function LandingPage() {
       </section>
 
       <CinematicFooter onViewDemo={() => setShowDemo(true)} />
+
+      {/* Get Started modal — routed from every primary homepage CTA */}
+      <GetStartedModal open={getStartedOpen} onClose={() => setGetStartedOpen(false)} />
       <UpBot onViewDemo={() => setShowDemo(true)} />
       <AnimatePresence>
         {showDemo && <DemoModal onClose={() => setShowDemo(false)} />}

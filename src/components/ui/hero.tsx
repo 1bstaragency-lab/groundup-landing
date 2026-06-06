@@ -149,7 +149,7 @@ export default function ShaderShowcase() {
             transition={{ duration: 0.6, delay: 1.0 }}
           >
             <LiquidButton
-              onClick={() => document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => window.dispatchEvent(new CustomEvent('gup:get-started'))}
             >
               Get Started
             </LiquidButton>

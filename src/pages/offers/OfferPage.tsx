@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { IMESSAGE_LINK, OFFERS, type DemoMessage, type OfferConfig } from './offerConfig'
 import { usePaywallTracking } from '../../hooks/usePaywallTracking'
+import { OfferCrossLinks } from './OfferCrossLinks'
 
 // ─── Animated iPhone mock (matches WaitlistPage) ──────────────────────────────
 
@@ -400,6 +401,9 @@ export function OfferPage({ offerId }: { offerId: string }) {
           >
             Not ready? Join the waitlist instead
           </a>
+
+          {/* Cross-links — surface 3 sibling offers so the page never dead-ends */}
+          <OfferCrossLinks currentOfferId={offerId} />
         </motion.div>
       </main>
     </div>
