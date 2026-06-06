@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState } from "react"
 import {
   Plus,
   Upload,
@@ -16,34 +16,12 @@ import {
   ExternalLink,
   ChevronRight,
   Sparkles,
-  Wand2,
   Folder,
   X,
   Check,
   Layers,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { useAuth } from "../../hooks/useAuth"
-import ImageGenerationForm from "./ImageGenerationForm"
-import ImageGallery from "./ImageGallery"
-import VideoGenerationForm from "./VideoGenerationForm"
-import VideoGallery from "./VideoGallery"
-import {
-  generateImage,
-  fetchUserImages,
-  deleteImage,
-  imageGenConfigured,
-} from "../../lib/services/imageGenerationService"
-import {
-  generateVideo,
-  fetchUserVideos,
-  deleteVideo,
-  videoGenConfigured,
-} from "../../lib/services/videoGenerationService"
-import type { GeneratedImage } from "../../types/imageGeneration.types"
-import type { GeneratedVideo } from "../../types/videoGeneration.types"
-import type { GenerateImageParams } from "../../types/imageGeneration.types"
-import type { GenerateVideoParams } from "../../types/videoGeneration.types"
 
 const ASSETS = [
   { name: "Midnight_Sun_Master.wav", type: "audio", size: "45.2 MB", date: "May 12, 2026", icon: <MusicIcon className="text-blue-400" /> },
@@ -65,7 +43,6 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 ]
 
 export function StudioSection() {
-  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<Tab>("assets")
 
   // Asset Bank state
@@ -73,68 +50,6 @@ export function StudioSection() {
   const [folders, setFolders] = useState<StudioFolder[]>([])
   const [showFolderInput, setShowFolderInput] = useState(false)
   const [folderName, setFolderName] = useState("")
-
-  // Image Studio state
-  const [images, setImages] = useState<GeneratedImage[]>([])
-  const [imgLoading, setImgLoading] = useState(false)
-  const imageInputRef = useRef<HTMLInputElement>(null)
-  const [, setImageRef] = useState<string | null>(null)
-
-  // Video Studio state
-  const [videos, setVideos] = useState<GeneratedVideo[]>([])
-  const [vidLoading, setVidLoading] = useState(false)
-  const videoInputRef = useRef<HTMLInputElement>(null)
-  const [, setVideoRef] = useState<string | null>(null)
-
-  // Load images/videos lazily when tab is first opened
-  const [imgLoaded, setImgLoaded] = useState(false)
-  const [vidLoaded, setVidLoaded] = useState(false)
-
-  async function handleTabChange(tab: Tab) {
-    setActiveTab(tab)
-    if (tab === "image" && !imgLoaded && user) {
-      setImgLoaded(true)
-      const existing = await fetchUserImages(user.id)
-      setImages(existing)
-    }
-    if (tab === "video" && !vidLoaded && user) {
-      setVidLoaded(true)
-      const existing = await fetchUserVideos(user.id)
-      setVideos(existing)
-    }
-  }
-
-  async function handleGenerateImage(params: GenerateImageParams) {
-    if (!user) return
-    setImgLoading(true)
-    try {
-      const img = await generateImage(params, user.id)
-      setImages(prev => [img, ...prev])
-    } finally {
-      setImgLoading(false)
-    }
-  }
-
-  async function handleDeleteImage(id: string) {
-    await deleteImage(id)
-    setImages(prev => prev.filter(i => i.id !== id))
-  }
-
-  async function handleGenerateVideo(params: GenerateVideoParams) {
-    if (!user) return
-    setVidLoading(true)
-    try {
-      const vid = await generateVideo(params, user.id)
-      setVideos(prev => [vid, ...prev])
-    } finally {
-      setVidLoading(false)
-    }
-  }
-
-  async function handleDeleteVideo(id: string) {
-    await deleteVideo(id)
-    setVideos(prev => prev.filter(v => v.id !== id))
-  }
 
   function createFolder() {
     if (!folderName.trim()) return
@@ -145,16 +60,6 @@ export function StudioSection() {
 
   function removeFolder(id: string) {
     setFolders(prev => prev.filter(f => f.id !== id))
-  }
-
-  function handleImageRef(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) setImageRef(file.name)
-  }
-
-  function handleVideoRef(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) setVideoRef(file.name)
   }
 
   return (
@@ -172,7 +77,7 @@ export function StudioSection() {
         {TABS.map(tab => (
           <button
             key={tab.id}
-            onClick={() => handleTabChange(tab.id)}
+            onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
               activeTab === tab.id
                 ? "bg-[#FFD700] text-black"
@@ -317,15 +222,6 @@ export function StudioSection() {
               ))}
             </div>
           </motion.div>
-        )}
-
-        {/* eslint-disable-next-line @typescript-eslint/no-unused-expressions */}
-        {/* Hidden legacy file refs — kept so existing handlers don't error out */}
-        {false && (
-          <>
-            <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageRef} />
-            <input ref={videoInputRef} type="file" accept="video/*,image/*" className="hidden" onChange={handleVideoRef} />
-          </>
         )}
 
         {activeTab === "image" && (
