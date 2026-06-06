@@ -319,47 +319,28 @@ export function StudioSection() {
           </motion.div>
         )}
 
+        {/* eslint-disable-next-line @typescript-eslint/no-unused-expressions */}
+        {/* Hidden legacy file refs — kept so existing handlers don't error out */}
+        {false && (
+          <>
+            <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageRef} />
+            <input ref={videoInputRef} type="file" accept="video/*,image/*" className="hidden" onChange={handleVideoRef} />
+          </>
+        )}
+
         {activeTab === "image" && (
           <motion.div
             key="image"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="space-y-8"
           >
-            {/* Hidden legacy ref input */}
-            <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageRef} />
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Form */}
-              <div className="bg-zinc-900/40 border border-[#FFD700]/20 rounded-3xl p-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-6 opacity-5 text-[#FFD700] pointer-events-none">
-                  <Wand2 size={100} />
-                </div>
-                <div className="relative">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-[#FFD700]/10 rounded-xl flex items-center justify-center border border-[#FFD700]/20">
-                      <Sparkles size={16} className="text-[#FFD700]" />
-                    </div>
-                    <div>
-                      <h3 className="font-black text-white uppercase tracking-tight">Image Studio</h3>
-                      <p className="text-gray-500 text-xs">Album art, press photos, social assets</p>
-                    </div>
-                  </div>
-                  <ImageGenerationForm
-                    onGenerate={handleGenerateImage}
-                    loading={imgLoading}
-                    configured={imageGenConfigured}
-                  />
-                </div>
-              </div>
-
-              {/* Gallery */}
-              <div>
-                <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Generated Images</h3>
-                <ImageGallery images={images} onDelete={handleDeleteImage} />
-              </div>
-            </div>
+            <ComingSoonPanel
+              icon={<Sparkles size={28} className="text-[#FFD700]" />}
+              title="Image Studio"
+              subtitle="AI-generated album art, press photos, social assets"
+              accentColor="#FFD700"
+            />
           </motion.div>
         )}
 
@@ -369,43 +350,85 @@ export function StudioSection() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="space-y-8"
           >
-            <input ref={videoInputRef} type="file" accept="video/*,image/*" className="hidden" onChange={handleVideoRef} />
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Form */}
-              <div className="bg-zinc-900/40 border border-white/8 rounded-3xl p-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-6 opacity-5 text-white pointer-events-none">
-                  <Video size={100} />
-                </div>
-                <div className="relative">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center border border-white/10">
-                      <Video size={16} className="text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-black text-white uppercase tracking-tight">Video Studio</h3>
-                      <p className="text-gray-500 text-xs">Visualizers, lyric videos, teasers</p>
-                    </div>
-                  </div>
-                  <VideoGenerationForm
-                    onGenerate={handleGenerateVideo}
-                    loading={vidLoading}
-                    configured={videoGenConfigured}
-                  />
-                </div>
-              </div>
-
-              {/* Gallery */}
-              <div>
-                <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Generated Videos</h3>
-                <VideoGallery videos={videos} onDelete={handleDeleteVideo} />
-              </div>
-            </div>
+            <ComingSoonPanel
+              icon={<Video size={28} className="text-white" />}
+              title="Video Studio"
+              subtitle="AI-generated visualizers, lyric videos, teasers"
+              accentColor="#FFFFFF"
+            />
           </motion.div>
         )}
       </AnimatePresence>
     </div>
+  )
+}
+
+// ─── Coming Soon placeholder for Image / Video studio tabs ────────────────────
+
+function ComingSoonPanel({
+  icon,
+  title,
+  subtitle,
+  accentColor,
+}: {
+  icon:        React.ReactNode
+  title:       string
+  subtitle:    string
+  accentColor: string
+}) {
+  const isGold = accentColor === "#FFD700"
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      className="relative overflow-hidden rounded-3xl border bg-zinc-900/40 px-8 py-16 sm:py-24 flex flex-col items-center text-center"
+      style={{ borderColor: isGold ? "rgba(255,215,0,0.2)" : "rgba(255,255,255,0.08)" }}
+    >
+      {/* soft accent glow */}
+      <div
+        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[60%] h-64 blur-[100px] rounded-full pointer-events-none"
+        style={{ background: isGold ? "rgba(255,215,0,0.15)" : "rgba(255,255,255,0.06)" }}
+      />
+
+      {/* Icon block */}
+      <div
+        className="relative w-16 h-16 rounded-2xl flex items-center justify-center border mb-5"
+        style={{
+          background:  isGold ? "rgba(255,215,0,0.08)" : "rgba(255,255,255,0.04)",
+          borderColor: isGold ? "rgba(255,215,0,0.25)" : "rgba(255,255,255,0.12)",
+        }}
+      >
+        {icon}
+      </div>
+
+      {/* Coming Soon badge */}
+      <div
+        className="relative px-3 py-1 rounded-full border text-[10px] font-black uppercase tracking-[0.25em] mb-4"
+        style={{
+          background:  isGold ? "rgba(255,215,0,0.12)" : "rgba(255,255,255,0.06)",
+          borderColor: isGold ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.15)",
+          color:       isGold ? "#FFD700" : "#FFFFFF",
+        }}
+      >
+        Coming Soon
+      </div>
+
+      {/* Title */}
+      <h3 className="relative text-2xl sm:text-3xl font-black text-white tracking-tight mb-2">
+        {title}
+      </h3>
+
+      {/* Subtitle */}
+      <p className="relative text-gray-400 text-sm max-w-md">
+        {subtitle}
+      </p>
+
+      {/* uP iMessage prompt */}
+      <p className="relative text-gray-500 text-xs mt-6 max-w-md leading-relaxed">
+        Text uP to be notified when this drops — it'll ping you the moment it's live.
+      </p>
+    </motion.div>
   )
 }
