@@ -12,20 +12,20 @@
 import { motion } from 'framer-motion'
 
 const OUTCOMES: { label: string; before: string; after: string; unit?: string }[] = [
-  { label: 'Monthly Spotify listeners', before: '< 2k',      after: '50k – 200k+' },
-  { label: 'Music revenue / month',     before: '$0 – $50',  after: '$800 – $3k' },
-  { label: 'Releases per year',         before: '1 – 2',     after: '6 – 10' },
-  { label: 'Active curator network',    before: '0',         after: '30+ relationships' },
-  { label: 'Editorial placements',      before: '0',         after: '3 – 6 per release' },
-  { label: 'Sync / brand deals',        before: '0',         after: '1 – 3 closed' },
+  { label: 'Monthly Spotify listeners',  before: '< 2k',      after: '10k – 40k' },
+  { label: 'Music revenue / month',      before: '$0 – $50',  after: '$800 – $3k' },
+  { label: 'Releases per year',          before: '1 – 2',     after: '4 – 8' },
+  { label: 'Active curator network',     before: '0',         after: '15+ relationships' },
+  { label: 'Spotify playlist placements',before: '0',         after: '1 – 3 per release' },
+  { label: 'Sync / brand deals',         before: '0',         after: '1 closed' },
 ]
 
 const ACCOLADES: { icon: string; title: string; sub: string }[] = [
-  { icon: '★', title: 'Spotify Editorial',  sub: 'First playlist placement' },
+  { icon: '★', title: 'Playlist Placement', sub: 'First Spotify pickup' },
   { icon: '🎯', title: '10k Stream Month',  sub: 'First milestone unlocked' },
   { icon: '💰', title: '$1k Revenue Month', sub: 'Music starts paying you' },
   { icon: '📺', title: 'Sync Placement',    sub: 'TV, film, or ad license' },
-  { icon: '🎫', title: 'Sold-Out Show',     sub: 'First room you packed' },
+  { icon: '🎫', title: 'First Headline Show', sub: 'Room you packed yourself' },
   { icon: '✓', title: 'Verified Artist',    sub: 'Spotify badge unlocked' },
 ]
 
