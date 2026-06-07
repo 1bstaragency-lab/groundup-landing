@@ -1143,8 +1143,9 @@ function PaywallStep({ onBack, onPick }: { onBack: () => void; onPick: (planId: 
       {(() => {
         const cards = [
           {
-            id: 'solo',     eyebrow: '1-month free trial',  title: 'Solo',     tagline: 'Indie artist starter',
-            price: '$4.99', per: '/ month', afterTrial: 'Then $4.99 every month',
+            id: 'solo',     eyebrow: '1-month free trial',  title: 'Solo',     tagline: 'Limited entry tier',
+            price: '$4.99', per: '/ mo', afterTrial: 'Then $4.99 every month',
+            compact: true,
             features: [
               { kind: 'in' as const,  label: 'Release Scheduler' },
               { kind: 'in' as const,  label: 'Video playlist library' },
@@ -1277,16 +1278,19 @@ function PlanCard({
   onPick:       () => void
   features?:    PlanFeature[]
 }) {
-  // Padding tightens for compact tier, expands when revealed
-  const padCls = compact && !expanded && !picked ? 'p-3' : 'p-3.5'
-  const marginCls = compact && !expanded && !picked ? 'mb-2' : 'mb-2'
+  // Compact (Solo + Strategic) tiers are visually muted in their default
+  // resting state so the eye lands on Weekly + Monthly. Tapping any tier
+  // restores full color + style.
+  const isMuted = !!compact && !expanded && !picked
+  const padCls = isMuted ? 'p-3' : 'p-3.5'
+  const marginCls = 'mb-2'
 
   return (
     <motion.button
       onClick={onPick}
       whileTap={{ scale: 0.98 }}
       animate={{
-        opacity: dimmed ? 0.45 : 1,
+        opacity: dimmed ? 0.4 : isMuted ? 0.7 : 1,
         scale:   expanded && !picked ? 1.01 : 1,
       }}
       transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
@@ -1295,9 +1299,11 @@ function PlanCard({
           ? 'bg-[#FFD700] border-[#FFD700]'
           : expanded
             ? 'bg-zinc-900 border-[#FFD700]'
-            : highlighted
-              ? 'bg-zinc-900 border-[#FFD700]/60 hover:border-[#FFD700]'
-              : 'bg-zinc-900/60 border-white/10 hover:border-[#FFD700]/40'
+            : isMuted
+              ? 'bg-zinc-900/40 border-white/8 hover:border-white/20'
+              : highlighted
+                ? 'bg-zinc-900 border-[#FFD700]/60 hover:border-[#FFD700]'
+                : 'bg-zinc-900/60 border-white/10 hover:border-[#FFD700]/40'
       }`}
       style={(highlighted || expanded) && !picked ? {
         boxShadow: expanded ? '0 0 40px rgba(255,215,0,0.28)' : '0 0 28px rgba(255,215,0,0.16)',
@@ -1312,18 +1318,22 @@ function PlanCard({
         </div>
       )}
 
-      <p className={`text-[8.5px] font-black uppercase tracking-[0.22em] ${compact && !expanded && !picked ? 'mb-1' : 'mb-1.5'} ${
-        picked ? 'text-black/70' : 'text-[#FFD700]'
+      <p className={`text-[8.5px] font-black uppercase tracking-[0.22em] ${isMuted ? 'mb-1' : 'mb-1.5'} ${
+        picked
+          ? 'text-black/70'
+          : isMuted
+            ? 'text-white/35'
+            : 'text-[#FFD700]'
       }`}>
         {eyebrow}
       </p>
 
-      {/* Compact (collapsed) layout — single tight row */}
-      {compact && !expanded && !picked ? (
+      {/* Compact (collapsed) layout — single tight row, muted styling */}
+      {isMuted ? (
         <div className="flex items-baseline gap-2">
-          <p className="text-white text-base font-black tracking-tight">{title}</p>
-          <p className="text-white/35 text-[9.5px] font-bold flex-1">{tagline}</p>
-          <p className="text-white text-base font-black tracking-tight">{price}<span className="text-white/40 text-[10px] font-bold">{per}</span></p>
+          <p className="text-white/80 text-base font-black tracking-tight">{title}</p>
+          <p className="text-white/25 text-[9.5px] font-bold flex-1">{tagline}</p>
+          <p className="text-white/85 text-base font-black tracking-tight">{price}<span className="text-white/30 text-[10px] font-bold">{per}</span></p>
         </div>
       ) : (
         <>
