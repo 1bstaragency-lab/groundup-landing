@@ -45,6 +45,59 @@ export interface OnboardingCtx {
   pains?:     string[]
 }
 
+// ─── Default checklists for new releases — type-specific so a fresh
+// "Add release" lands with a meaningful task list, not an empty card.
+const DEFAULT_TASKS_BY_TYPE: Record<'Single' | 'EP' | 'Album', ReleaseTask[]> = {
+  Single: [
+    { label: 'Final master locked',          done: false },
+    { label: 'Album art uploaded',           done: false },
+    { label: 'Distributor scheduled',        done: false },
+    { label: 'Spotify for Artists pitch',    done: false },
+    { label: 'Pre-save link generated',      done: false },
+    { label: 'TikTok teaser posted',         done: false },
+    { label: 'Curator pitches sent (50)',    done: false },
+    { label: 'Release day post + DMs',       done: false },
+  ],
+  EP: [
+    { label: 'All tracks mastered',          done: false },
+    { label: 'Album art uploaded',           done: false },
+    { label: 'Distributor scheduled',        done: false },
+    { label: 'Lead single chosen',           done: false },
+    { label: 'Spotify for Artists pitch',    done: false },
+    { label: 'Pre-save link generated',      done: false },
+    { label: 'Press release drafted',        done: false },
+    { label: '3+ TikTok teasers posted',     done: false },
+    { label: 'Curator pitches sent (100)',   done: false },
+    { label: 'Meta ad creative approved',    done: false },
+    { label: 'Release day post + DMs',       done: false },
+  ],
+  Album: [
+    { label: 'All tracks mastered',          done: false },
+    { label: 'Album art + tracklist final',  done: false },
+    { label: 'Distributor scheduled',        done: false },
+    { label: 'Waterfall release plan set',   done: false },
+    { label: 'Lead single picked',           done: false },
+    { label: 'Spotify for Artists pitch',    done: false },
+    { label: 'Pre-save link generated',      done: false },
+    { label: 'Full press release drafted',   done: false },
+    { label: 'Music video shoot booked',     done: false },
+    { label: '5+ TikTok teasers posted',     done: false },
+    { label: 'Curator pitches sent (200)',   done: false },
+    { label: 'Meta + TikTok ad campaigns',   done: false },
+    { label: 'Listening party planned',      done: false },
+    { label: 'Release day post + DMs',       done: false },
+  ],
+}
+
+const ART_PALETTE: { accent: string; art: string }[] = [
+  { accent: '#FFD700', art: 'linear-gradient(140deg, #2A1F0F 0%, #4A3416 40%, #FFD700 100%)' },
+  { accent: '#A78BFA', art: 'linear-gradient(140deg, #1A1633 0%, #3D2966 50%, #A78BFA 100%)' },
+  { accent: '#34D399', art: 'linear-gradient(140deg, #0F2A22 0%, #1A4A33 50%, #34D399 100%)' },
+  { accent: '#F472B6', art: 'linear-gradient(140deg, #2A0F22 0%, #4A1A3A 50%, #F472B6 100%)' },
+  { accent: '#60A5FA', art: 'linear-gradient(140deg, #0F1F33 0%, #1A3A66 50%, #60A5FA 100%)' },
+  { accent: '#FB923C', art: 'linear-gradient(140deg, #2A1A0F 0%, #4A2D1A 50%, #FB923C 100%)' },
+]
+
 interface PersistedState {
   releases:        Release[]
   chat:            ChatMsg[]
@@ -53,6 +106,8 @@ interface PersistedState {
   outreachThreads?: Record<string, OutreachThreadMsg[]>
   referralCode?:   string
   referralCount?:  number
+  profileName?:    string
+  profileGenre?:   string | null
 }
 
 // Build a stable referral code from the artist name. Stored once per
@@ -206,6 +261,11 @@ export function useMvpAppState(onboarding: OnboardingCtx, initialPlanId: string 
   // when the user successfully shares.
   const [referralCode, setReferralCode] = useState<string>(() => buildReferralCode(onboarding.artistName))
   const [referralCount, setReferralCount] = useState(0)
+  // Editable profile — separate from onboarding so user can rename freely
+  const [profileName, setProfileName] = useState<string>(onboarding.artistName)
+  const [profileGenre, setProfileGenre] = useState<string | null>(onboarding.genre ?? null)
+  // Confetti — short-lived flag the UI watches and fires a confetti burst
+  const [celebrate, setCelebrate] = useState<{ id: string; releaseTitle: string } | null>(null)
 
   const persistTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -223,6 +283,8 @@ export function useMvpAppState(onboarding: OnboardingCtx, initialPlanId: string 
       if (persisted.outreachThreads) setOutreachThreads(persisted.outreachThreads)
       if (persisted.referralCode)    setReferralCode(persisted.referralCode)
       if (typeof persisted.referralCount === 'number') setReferralCount(persisted.referralCount)
+      if (persisted.profileName)     setProfileName(persisted.profileName)
+      if (persisted.profileGenre !== undefined) setProfileGenre(persisted.profileGenre)
     } catch (err) {
       console.warn('[mvp-state] localStorage parse error:', err)
     }
@@ -236,6 +298,7 @@ export function useMvpAppState(onboarding: OnboardingCtx, initialPlanId: string 
       try {
         const payload: PersistedState = {
           releases, chat, planId, outreach, outreachThreads, referralCode, referralCount,
+          profileName, profileGenre,
         }
         localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
       } catch (err) {
@@ -245,18 +308,63 @@ export function useMvpAppState(onboarding: OnboardingCtx, initialPlanId: string 
     return () => {
       if (persistTimer.current) clearTimeout(persistTimer.current)
     }
-  }, [releases, chat, planId, outreach, outreachThreads, referralCode, referralCount])
+  }, [releases, chat, planId, outreach, outreachThreads, referralCode, referralCount, profileName, profileGenre])
 
   // ─── Release task toggle ────────────────────────────────────────────────
+  // Also fires a celebrate flag when toggling the LAST incomplete task done.
   const toggleTask = useCallback((releaseId: string, taskIndex: number) => {
     setReleases(prev =>
       prev.map(r => {
         if (r.id !== releaseId) return r
         const tasks = r.tasks.map((t, i) => i === taskIndex ? { ...t, done: !t.done } : t)
+        const allDone = tasks.every(t => t.done)
+        const wasNotAllDoneBefore = r.tasks.some(t => !t.done)
+        if (allDone && wasNotAllDoneBefore) {
+          // Fire confetti — UI watches `celebrate` and clears it after ~2.5s
+          setCelebrate({ id: `${releaseId}-${Date.now()}`, releaseTitle: r.title })
+        }
         return { ...r, tasks }
       })
     )
   }, [])
+
+  // ─── Add a new release (from the + flow on Releases tab) ────────────────
+  const addRelease = useCallback((draft: {
+    title:    string
+    type:     'Single' | 'EP' | 'Album'
+    dropDate: string  // YYYY-MM-DD
+  }) => {
+    const today    = new Date()
+    const drop     = new Date(draft.dropDate + 'T00:00:00')
+    const daysOut  = Math.max(0, Math.ceil((drop.getTime() - today.getTime()) / 86_400_000))
+    const palette  = ART_PALETTE[Math.floor(Math.random() * ART_PALETTE.length)]
+    const newRel: Release = {
+      id:       `r-${Date.now()}`,
+      title:    draft.title.trim(),
+      type:     draft.type,
+      dropDate: draft.dropDate,
+      daysOut,
+      accent:   palette.accent,
+      art:      palette.art,
+      tasks:    DEFAULT_TASKS_BY_TYPE[draft.type],
+    }
+    setReleases(prev => [newRel, ...prev])
+    return newRel.id
+  }, [])
+
+  // ─── Edit profile (artist name + genre) ─────────────────────────────────
+  const updateProfile = useCallback((next: { artistName?: string; genre?: string | null }) => {
+    if (typeof next.artistName === 'string') setProfileName(next.artistName.trim() || 'Artist')
+    if (next.genre !== undefined)            setProfileGenre(next.genre)
+  }, [])
+
+  // ─── Cancel subscription — for MVP demo, drops to Solo ─────────────────
+  const cancelSubscription = useCallback(() => {
+    setPlanId('solo')
+  }, [])
+
+  // ─── Clear the celebrate flag (UI calls this after the animation) ──────
+  const clearCelebrate = useCallback(() => setCelebrate(null), [])
 
   // ─── Chat: send a message + fetch uP's reply ────────────────────────────
   const sendChat = useCallback(async (text: string) => {
@@ -388,7 +496,10 @@ export function useMvpAppState(onboarding: OnboardingCtx, initialPlanId: string 
     setOutreachThreads(SEED_THREADS)
     setReferralCode(buildReferralCode(onboarding.artistName))
     setReferralCount(0)
-  }, [onboarding.artistName])
+    setProfileName(onboarding.artistName)
+    setProfileGenre(onboarding.genre ?? null)
+    setCelebrate(null)
+  }, [onboarding.artistName, onboarding.genre])
 
   // ─── Derived: latest uP message for Home banner ─────────────────────────
   const latestUpMessage = chat.slice().reverse().find(m => m.from === 'up' && m.text) ?? null
@@ -430,6 +541,9 @@ export function useMvpAppState(onboarding: OnboardingCtx, initialPlanId: string 
     outreachThreads,
     referralCode,
     referralCount,
+    profileName,
+    profileGenre,
+    celebrate,
     // Derived
     latestUpMessage,
     pendingActionMessage,
@@ -445,6 +559,10 @@ export function useMvpAppState(onboarding: OnboardingCtx, initialPlanId: string 
     acceptDraft,
     dismissDraft,
     bumpReferralCount,
+    addRelease,
+    updateProfile,
+    cancelSubscription,
+    clearCelebrate,
     resetAll,
   }
 }

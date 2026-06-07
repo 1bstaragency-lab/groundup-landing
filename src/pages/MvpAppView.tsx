@@ -1474,8 +1474,13 @@ function AppShell({ artistName, initialPlanId, onboardingCtx, onSignOut }: AppSh
     pains:      onboardingCtx.pains,
   }, initialPlanId)
   const planId = state.planId
+  const displayName = state.profileName || artistName
   const [upgradeSheet, setUpgradeSheet] = useState(false)
   const [openOutreachId, setOpenOutreachId] = useState<string | null>(null)
+  const [newReleaseSheet, setNewReleaseSheet] = useState(false)
+  const [billingSheet, setBillingSheet] = useState(false)
+  const [editProfileSheet, setEditProfileSheet] = useState(false)
+  const [openPastReleaseId, setOpenPastReleaseId] = useState<string | null>(null)
 
   // When switching INTO the uP tab, clear the unread badge.
   function switchTab(next: TabId) {
@@ -1498,11 +1503,14 @@ function AppShell({ artistName, initialPlanId, onboardingCtx, onSignOut }: AppSh
       {/* Status bar already mounted by parent */}
       <div className="flex-1 overflow-y-auto pt-12 pb-24">
         <AnimatePresence mode="wait">
-          {tab === 'home'     && <HomeTab     key="home"     artistName={artistName} onJumpTo={switchTab} state={state} />}
-          {tab === 'releases' && <ReleasesTab key="releases" state={state} />}
-          {tab === 'up'       && <UpTab       key="up"       artistName={artistName} planId={planId} state={state} onUpgrade={() => setUpgradeSheet(true)} />}
+          {tab === 'home'     && <HomeTab     key="home"     artistName={displayName} onJumpTo={switchTab} state={state} />}
+          {tab === 'releases' && <ReleasesTab key="releases" state={state} onAdd={() => setNewReleaseSheet(true)} onOpenPast={setOpenPastReleaseId} />}
+          {tab === 'up'       && <UpTab       key="up"       artistName={displayName} planId={planId} state={state} onUpgrade={() => setUpgradeSheet(true)} />}
           {tab === 'network'  && <NetworkTab  key="network"  planId={planId} state={state} onUpgrade={() => setUpgradeSheet(true)} onOpenThread={setOpenOutreachId} />}
-          {tab === 'you'      && <YouTab      key="you"      artistName={artistName} planId={planId} state={state} onSignOut={handleSignOut} onUpgrade={() => setUpgradeSheet(true)} />}
+          {tab === 'you'      && <YouTab      key="you"      artistName={displayName} planId={planId} state={state}
+                                              onSignOut={handleSignOut}
+                                              onOpenBilling={() => setBillingSheet(true)}
+                                              onEditProfile={() => setEditProfileSheet(true)} />}
         </AnimatePresence>
       </div>
 
@@ -1574,7 +1582,7 @@ function AppShell({ artistName, initialPlanId, onboardingCtx, onSignOut }: AppSh
         })}
       </nav>
 
-      {/* Modal sheets — upgrade flow + outreach thread drawer */}
+      {/* Modal sheets */}
       <AnimatePresence>
         {upgradeSheet && (
           <UpgradeSheet
@@ -1590,6 +1598,41 @@ function AppShell({ artistName, initialPlanId, onboardingCtx, onSignOut }: AppSh
             onAccept={() => { state.acceptDraft(openOutreachId); setOpenOutreachId(null) }}
             onDismiss={() => { state.dismissDraft(openOutreachId); setOpenOutreachId(null) }}
             onClose={() => setOpenOutreachId(null)}
+          />
+        )}
+        {newReleaseSheet && (
+          <NewReleaseSheet
+            onClose={() => setNewReleaseSheet(false)}
+            onAdd={(draft) => { state.addRelease(draft); setNewReleaseSheet(false) }}
+          />
+        )}
+        {billingSheet && (
+          <BillingSheet
+            currentPlan={planId}
+            onClose={() => setBillingSheet(false)}
+            onUpgrade={() => { setBillingSheet(false); setUpgradeSheet(true) }}
+            onCancel={() => { state.cancelSubscription(); setBillingSheet(false) }}
+          />
+        )}
+        {editProfileSheet && (
+          <EditProfileSheet
+            initialName={state.profileName}
+            initialGenre={state.profileGenre}
+            onClose={() => setEditProfileSheet(false)}
+            onSave={(next) => { state.updateProfile(next); setEditProfileSheet(false) }}
+          />
+        )}
+        {openPastReleaseId && (
+          <PastReleaseStatsSheet
+            release={state.pastReleases.find(p => p.id === openPastReleaseId)!}
+            onClose={() => setOpenPastReleaseId(null)}
+          />
+        )}
+        {state.celebrate && (
+          <ConfettiBurst
+            key={state.celebrate.id}
+            releaseTitle={state.celebrate.releaseTitle}
+            onDone={state.clearCelebrate}
           />
         )}
       </AnimatePresence>
@@ -1788,7 +1831,13 @@ const PLAN_META: Record<string, { label: string; color: string; outreachCap: num
 // ─── Releases — calendar + task list (releases live in MvpAppState) ────────
 // (Release / ReleaseTask types now re-exported from useMvpAppState.ts)
 
-function ReleasesTab({ state }: { state: MvpAppStateAPI }) {
+function ReleasesTab({
+  state, onAdd, onOpenPast,
+}: {
+  state:      MvpAppStateAPI
+  onAdd:      () => void
+  onOpenPast: (id: string) => void
+}) {
   const releases = state.releases
   const [openId, setOpenId] = useState<string>(releases[0]?.id ?? '')
 
@@ -1804,7 +1853,11 @@ function ReleasesTab({ state }: { state: MvpAppStateAPI }) {
           <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-1">Releases</p>
           <h2 className="text-white text-2xl font-black tracking-tighter">Your drop calendar.</h2>
         </div>
-        <button className="w-9 h-9 rounded-full border border-[#FFD700]/30 bg-[#FFD700]/10 text-[#FFD700] flex items-center justify-center text-lg font-black">
+        <button
+          onClick={onAdd}
+          className="w-9 h-9 rounded-full border border-[#FFD700]/30 bg-[#FFD700]/10 text-[#FFD700] flex items-center justify-center text-lg font-black hover:bg-[#FFD700]/20 hover:scale-105 transition-all"
+          aria-label="Add new release"
+        >
           +
         </button>
       </div>
@@ -1951,6 +2004,7 @@ function ReleasesTab({ state }: { state: MvpAppStateAPI }) {
             {state.pastReleases.map(p => (
               <button
                 key={p.id}
+                onClick={() => onOpenPast(p.id)}
                 className="w-full p-3 rounded-2xl border border-white/8 bg-zinc-900/40 flex items-center gap-3 text-left hover:border-white/20 hover:bg-zinc-900/70 transition-colors"
               >
                 <div
@@ -2388,13 +2442,14 @@ function OutreachCard({ row, hasDraft }: { row: OutreachRow; hasDraft?: boolean 
 
 // ─── You — profile / plan / analytics / settings ────────────────────────────
 function YouTab({
-  artistName, planId, state, onSignOut, onUpgrade,
+  artistName, planId, state, onSignOut, onOpenBilling, onEditProfile,
 }: {
-  artistName: string
-  planId:     string
-  state:      MvpAppStateAPI
-  onSignOut:  () => void
-  onUpgrade:  () => void
+  artistName:    string
+  planId:        string
+  state:         MvpAppStateAPI
+  onSignOut:     () => void
+  onOpenBilling: () => void
+  onEditProfile: () => void
 }) {
   const [copied, setCopied] = useState(false)
   const shareUrl = `https://groundupapp.com/?ref=${state.referralCode}`
@@ -2421,16 +2476,22 @@ function YouTab({
       transition={{ duration: 0.25 }}
       className="px-5 pb-4"
     >
-      {/* Profile header */}
-      <div className="flex items-center gap-4 mb-6">
+      {/* Profile header — tap anywhere to edit */}
+      <button onClick={onEditProfile} className="w-full flex items-center gap-4 mb-6 text-left group">
         <div
-          className="w-16 h-16 rounded-full flex items-center justify-center font-black text-xl"
+          className="w-16 h-16 rounded-full flex items-center justify-center font-black text-xl group-hover:scale-105 transition-transform"
           style={{ background: '#FFD700', color: '#000', boxShadow: '0 0 20px rgba(255,215,0,0.3)' }}
         >
           {initials}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-white text-xl font-black tracking-tight leading-tight">{artistName}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-white text-xl font-black tracking-tight leading-tight">{artistName}</p>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" className="group-hover:stroke-white transition-colors">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </div>
           <div className="flex items-center gap-1.5 mt-1">
             <span
               className="px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest"
@@ -2442,10 +2503,10 @@ function YouTab({
             >
               {plan.label}
             </span>
-            <span className="text-white/35 text-[10px] font-bold">· Indie Artist</span>
+            <span className="text-white/35 text-[10px] font-bold">· {state.profileGenre ?? 'Indie Artist'}</span>
           </div>
         </div>
-      </div>
+      </button>
 
       {/* Analytics quick stats */}
       <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-2.5">Your Career</p>
@@ -2486,7 +2547,7 @@ function YouTab({
       {/* Menu sections */}
       <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-2.5">Account</p>
       <div className="rounded-2xl border border-white/8 bg-zinc-900/50 overflow-hidden mb-4">
-        <MenuRow icon="◷" label="Plan & Billing"      detail={plan.label}             onClick={onUpgrade} />
+        <MenuRow icon="◷" label="Plan & Billing"      detail={plan.label}             onClick={onOpenBilling} />
         <MenuRow icon="↗" label="Full Analytics"      detail="Spotify · Meta" />
         <MenuRow icon="◌" label="Knowledge Base"      detail="Videos + guides" />
         <MenuRow icon="⊡" label="Connected Platforms" detail="Spotify · Meta · Stripe" />
@@ -3013,5 +3074,491 @@ function KbPlayerSheet({
         </div>
       </motion.div>
     </>
+  )
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Wave 4 sheets — NewRelease · Billing · EditProfile · PastReleaseStats · Confetti
+// ════════════════════════════════════════════════════════════════════════════
+
+// ─── Reusable bottom-sheet shell ────────────────────────────────────────────
+function SheetShell({
+  children, onClose, accent = '#FFD700', height = '88%',
+}: {
+  children: React.ReactNode
+  onClose:  () => void
+  accent?:  string
+  height?:  string
+}) {
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 z-40 bg-black/75 backdrop-blur-md"
+      />
+      <motion.div
+        initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+        transition={{ type: 'spring', stiffness: 280, damping: 32 }}
+        className="absolute left-0 right-0 bottom-0 z-50 rounded-t-3xl border-t bg-[#0A0A0A] overflow-hidden flex flex-col"
+        style={{ height, borderColor: `${accent}33` }}
+      >
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-white/15" />
+        </div>
+        {children}
+      </motion.div>
+    </>
+  )
+}
+
+// ─── NewReleaseSheet — add a release with auto-generated checklist ──────────
+function NewReleaseSheet({
+  onClose, onAdd,
+}: {
+  onClose: () => void
+  onAdd:   (draft: { title: string; type: 'Single' | 'EP' | 'Album'; dropDate: string }) => void
+}) {
+  const [title, setTitle] = useState('')
+  const [type, setType]   = useState<'Single' | 'EP' | 'Album'>('Single')
+  // Default drop date = 30 days out
+  const defaultDate = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10)
+  const [dropDate, setDropDate] = useState(defaultDate)
+
+  const canSubmit = title.trim().length > 0 && !!dropDate
+
+  return (
+    <SheetShell onClose={onClose}>
+      <div className="px-5 pb-6 overflow-y-auto flex-1">
+        <div className="flex items-start justify-between mb-1">
+          <div>
+            <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.25em] mb-1">New Release</p>
+            <h2 className="text-white text-xl font-black tracking-tighter">Plan a drop.</h2>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white flex items-center justify-center">
+            <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+        <p className="text-white/45 text-[11.5px] mb-5">
+          uP will build the rollout checklist based on the release type.
+        </p>
+
+        {/* Title */}
+        <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-1.5">Title</p>
+        <input
+          type="text"
+          autoFocus
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="What's it called?"
+          className="w-full h-12 px-4 rounded-2xl bg-zinc-900/80 border border-white/10 text-white text-[14px] font-bold placeholder:text-white/25 focus:border-[#FFD700]/50 focus:outline-none transition-colors mb-4"
+        />
+
+        {/* Type chips */}
+        <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-1.5">Type</p>
+        <div className="flex gap-2 mb-4">
+          {(['Single', 'EP', 'Album'] as const).map(t => {
+            const selected = type === t
+            return (
+              <button
+                key={t}
+                onClick={() => setType(t)}
+                className={`flex-1 h-11 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
+                  selected
+                    ? 'bg-[#FFD700] text-black'
+                    : 'bg-zinc-900 border border-white/10 text-white/60 hover:border-[#FFD700]/40 hover:text-white'
+                }`}
+              >
+                {t}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Drop date */}
+        <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-1.5">Drop date</p>
+        <input
+          type="date"
+          value={dropDate}
+          onChange={(e) => setDropDate(e.target.value)}
+          min={new Date().toISOString().slice(0, 10)}
+          className="w-full h-12 px-4 rounded-2xl bg-zinc-900/80 border border-white/10 text-white text-[14px] font-bold focus:border-[#FFD700]/50 focus:outline-none transition-colors mb-4"
+        />
+
+        {/* Submit */}
+        <button
+          onClick={() => canSubmit && onAdd({ title, type, dropDate })}
+          disabled={!canSubmit}
+          className="w-full h-13 py-3.5 rounded-2xl font-black text-[12px] uppercase tracking-widest mt-2 transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:hover:scale-100"
+          style={{ background: '#FFD700', color: '#000', boxShadow: '0 4px 14px rgba(255,215,0,0.35)' }}
+        >
+          Add release → uP builds the plan
+        </button>
+
+        <p className="text-white/25 text-[10px] text-center mt-4">
+          You can edit the checklist anytime after adding it.
+        </p>
+      </div>
+    </SheetShell>
+  )
+}
+
+// ─── BillingSheet — current plan card + manage/cancel/upgrade ───────────────
+function BillingSheet({
+  currentPlan, onClose, onUpgrade, onCancel,
+}: {
+  currentPlan: string
+  onClose:     () => void
+  onUpgrade:   () => void
+  onCancel:    () => void
+}) {
+  const meta = PLAN_META[currentPlan] ?? PLAN_META.solo
+  const planNumbers: Record<string, { price: string; per: string }> = {
+    solo:      { price: '$4.99',  per: '/ month' },
+    weekly:    { price: '$9.99',  per: '/ week' },
+    monthly:   { price: '$29.99', per: '/ month' },
+    strategic: { price: '$49.99', per: '/ month' },
+  }
+  const prices = planNumbers[currentPlan] ?? planNumbers.solo
+  // Demo: bill renews in 14 days
+  const nextBill = new Date(Date.now() + 14 * 86_400_000).toLocaleDateString([], { month: 'long', day: 'numeric' })
+  const [confirmCancel, setConfirmCancel] = useState(false)
+
+  return (
+    <SheetShell onClose={onClose} height="80%">
+      <div className="px-5 pb-6 overflow-y-auto flex-1">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.25em] mb-1">Plan &amp; Billing</p>
+            <h2 className="text-white text-xl font-black tracking-tighter">Your subscription.</h2>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white flex items-center justify-center">
+            <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Current plan card */}
+        <div
+          className="p-4 rounded-2xl border mb-5"
+          style={{
+            background:  `linear-gradient(140deg, ${meta.color}15 0%, ${meta.color}05 100%)`,
+            borderColor: `${meta.color}40`,
+            boxShadow:   `0 4px 24px ${meta.color}15`,
+          }}
+        >
+          <p className="text-[9px] font-black uppercase tracking-[0.25em] mb-1.5" style={{ color: meta.color }}>
+            Current plan
+          </p>
+          <p className="text-white text-2xl font-black tracking-tighter">{meta.label}</p>
+          <div className="flex items-baseline gap-1 mt-1">
+            <p className="text-white text-xl font-black tracking-tighter">{prices.price}</p>
+            <p className="text-white/40 text-[12px] font-bold">{prices.per}</p>
+          </div>
+          <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/8">
+            <p className="text-white/50 text-[11px] font-medium">Next billing</p>
+            <p className="text-white text-[11px] font-black">{nextBill}</p>
+          </div>
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-white/50 text-[11px] font-medium">Payment method</p>
+            <p className="text-white text-[11px] font-black">•••• 4242</p>
+          </div>
+        </div>
+
+        {/* Actions */}
+        {currentPlan !== 'strategic' && (
+          <button
+            onClick={onUpgrade}
+            className="w-full h-13 py-3.5 rounded-2xl font-black text-[12px] uppercase tracking-widest mb-2.5 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            style={{ background: '#FFD700', color: '#000', boxShadow: '0 4px 14px rgba(255,215,0,0.35)' }}
+          >
+            Upgrade plan →
+          </button>
+        )}
+
+        <button
+          className="w-full h-12 rounded-2xl border border-white/10 bg-zinc-900 text-white/70 hover:text-white text-[11px] font-black uppercase tracking-widest transition-colors mb-2.5"
+        >
+          Update payment method
+        </button>
+
+        <button
+          className="w-full h-12 rounded-2xl border border-white/10 bg-zinc-900 text-white/70 hover:text-white text-[11px] font-black uppercase tracking-widest transition-colors mb-2.5"
+        >
+          Billing history
+        </button>
+
+        {!confirmCancel ? (
+          <button
+            onClick={() => setConfirmCancel(true)}
+            className="w-full h-12 rounded-2xl text-red-400/80 hover:text-red-400 text-[11px] font-black uppercase tracking-widest transition-colors"
+          >
+            Cancel subscription
+          </button>
+        ) : (
+          <div className="p-4 rounded-2xl border border-red-500/30 bg-red-500/5">
+            <p className="text-red-300 text-[12px] font-bold mb-3 text-center">
+              Cancel and switch back to Solo? You'll lose uP iMessage + unlimited outreach.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={onCancel}
+                className="flex-1 h-11 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 hover:bg-red-500/25 text-[11px] font-black uppercase tracking-widest transition-colors"
+              >
+                Yes, cancel
+              </button>
+              <button
+                onClick={() => setConfirmCancel(false)}
+                className="flex-1 h-11 rounded-xl border border-white/15 text-white/70 hover:text-white hover:border-white/30 text-[11px] font-black uppercase tracking-widest transition-colors"
+              >
+                Keep plan
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </SheetShell>
+  )
+}
+
+// ─── EditProfileSheet — change artist name + genre ──────────────────────────
+const PROFILE_GENRES = ['Hip-Hop', 'R&B', 'Pop', 'Indie', 'Electronic', 'Rock', 'Country', 'Latin', 'Afrobeats', 'Other']
+
+function EditProfileSheet({
+  initialName, initialGenre, onClose, onSave,
+}: {
+  initialName:  string
+  initialGenre: string | null
+  onClose:      () => void
+  onSave:       (next: { artistName: string; genre: string | null }) => void
+}) {
+  const [name, setName]   = useState(initialName)
+  const [genre, setGenre] = useState<string | null>(initialGenre)
+
+  return (
+    <SheetShell onClose={onClose} height="78%">
+      <div className="px-5 pb-6 overflow-y-auto flex-1">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.25em] mb-1">Edit Profile</p>
+            <h2 className="text-white text-xl font-black tracking-tighter">How should uP know you?</h2>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white flex items-center justify-center">
+            <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-1.5">Artist name</p>
+        <input
+          type="text"
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Your stage name"
+          className="w-full h-12 px-4 rounded-2xl bg-zinc-900/80 border border-white/10 text-white text-[14px] font-bold placeholder:text-white/25 focus:border-[#FFD700]/50 focus:outline-none transition-colors mb-4"
+        />
+
+        <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-1.5">Genre</p>
+        <div className="grid grid-cols-3 gap-1.5 mb-5">
+          {PROFILE_GENRES.map(g => {
+            const selected = genre === g
+            return (
+              <button
+                key={g}
+                onClick={() => setGenre(selected ? null : g)}
+                className={`h-11 rounded-xl text-[10.5px] font-black uppercase tracking-wide transition-all ${
+                  selected ? 'bg-[#FFD700] text-black' : 'bg-zinc-900 border border-white/10 text-white/65 hover:border-[#FFD700]/40 hover:text-white'
+                }`}
+              >
+                {g}
+              </button>
+            )
+          })}
+        </div>
+
+        <button
+          onClick={() => onSave({ artistName: name.trim() || 'Artist', genre })}
+          className="w-full h-13 py-3.5 rounded-2xl font-black text-[12px] uppercase tracking-widest transition-transform hover:scale-[1.02] active:scale-[0.98]"
+          style={{ background: '#FFD700', color: '#000', boxShadow: '0 4px 14px rgba(255,215,0,0.35)' }}
+        >
+          Save changes
+        </button>
+
+        <p className="text-white/25 text-[10px] text-center mt-4">
+          uP will use your updated context on the next message.
+        </p>
+      </div>
+    </SheetShell>
+  )
+}
+
+// ─── PastReleaseStatsSheet — detail view for archived releases ──────────────
+function PastReleaseStatsSheet({
+  release, onClose,
+}: {
+  release: { id: string; title: string; type: string; releasedDate: string; streams: string; weeklyDelta: string; accent: string; art: string }
+  onClose: () => void
+}) {
+  // Demo data — 8-week sparkline (linear growth with some variance)
+  const weeks = [42, 58, 71, 65, 80, 88, 92, 100]
+  const maxV  = Math.max(...weeks)
+
+  return (
+    <SheetShell onClose={onClose} accent={release.accent}>
+      <div className="overflow-y-auto flex-1">
+        {/* Hero art */}
+        <div className="relative aspect-[2/1] flex items-end p-4" style={{ background: release.art }}>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 border border-white/15 text-white flex items-center justify-center backdrop-blur-sm"
+          >
+            <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+          <div className="relative">
+            <p className="text-white/70 text-[9px] font-black uppercase tracking-widest mb-1">
+              {release.type} · Released {release.releasedDate}
+            </p>
+            <h2 className="text-white text-2xl font-black tracking-tighter leading-tight">{release.title}</h2>
+          </div>
+        </div>
+
+        <div className="px-5 py-5">
+          {/* Stat hero */}
+          <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-1.5">Total Streams</p>
+          <div className="flex items-baseline gap-2 mb-4">
+            <p className="text-white text-4xl font-black tracking-tighter">{release.streams}</p>
+            <p
+              className="text-[12px] font-black uppercase tracking-widest"
+              style={{ color: release.accent }}
+            >
+              {release.weeklyDelta}
+            </p>
+          </div>
+
+          {/* 8-week sparkline */}
+          <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-2">8-week trend</p>
+          <div className="h-24 flex items-end gap-1.5 mb-5">
+            {weeks.map((v, i) => (
+              <div
+                key={i}
+                className="flex-1 rounded-t transition-all"
+                style={{
+                  height:     `${(v / maxV) * 100}%`,
+                  background: `linear-gradient(to top, ${release.accent}90, ${release.accent}30)`,
+                  boxShadow:  i === weeks.length - 1 ? `0 0 8px ${release.accent}` : 'none',
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Top tracks */}
+          <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-2.5">Top tracks</p>
+          <div className="space-y-1.5 mb-5">
+            {['Track 1', 'Track 2', 'Track 3'].slice(0, release.type === 'Single' ? 1 : 3).map((t, i) => (
+              <div key={t} className="flex items-center gap-3 p-2.5 rounded-xl border border-white/8 bg-zinc-900/40">
+                <span className="text-white/30 text-[11px] font-black w-4">{i + 1}</span>
+                <p className="flex-1 text-white text-[12px] font-bold truncate">
+                  {release.title}{release.type !== 'Single' ? ` — ${t}` : ''}
+                </p>
+                <p className="text-white/40 text-[10px] font-bold">
+                  {((Number(release.streams.replace(/[^\d.]/g, '')) || 50) * (1 / (i + 1.4))).toFixed(0)}k
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Source breakdown */}
+          <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-2.5">Discovery sources</p>
+          <div className="space-y-1.5">
+            <SourceRow label="Spotify Algorithmic" pct={42} accent={release.accent} />
+            <SourceRow label="Curator Playlists"    pct={28} accent={release.accent} />
+            <SourceRow label="Your Profile"         pct={18} accent={release.accent} />
+            <SourceRow label="Search + Other"       pct={12} accent={release.accent} />
+          </div>
+
+          <p className="text-white/25 text-[10px] text-center mt-5">
+            Data refreshes every 24 hours from Spotify for Artists.
+          </p>
+        </div>
+      </div>
+    </SheetShell>
+  )
+}
+
+function SourceRow({ label, pct, accent }: { label: string; pct: number; accent: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <p className="w-32 text-white/55 text-[10.5px] font-bold truncate">{label}</p>
+      <div className="flex-1 h-1.5 rounded-full bg-white/8 overflow-hidden">
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: accent }} />
+      </div>
+      <p className="w-10 text-right text-white text-[10.5px] font-black">{pct}%</p>
+    </div>
+  )
+}
+
+// ─── ConfettiBurst — fires when a release's last task is completed ─────────
+function ConfettiBurst({ releaseTitle, onDone }: { releaseTitle: string; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2800)
+    return () => clearTimeout(t)
+  }, [onDone])
+
+  const pieces = Array.from({ length: 40 }, (_, i) => i)
+  const colors = ['#FFD700', '#A78BFA', '#34D399', '#F472B6', '#60A5FA', '#FB923C', '#FFFFFF']
+
+  return (
+    <div className="absolute inset-0 z-[100] pointer-events-none overflow-hidden">
+      {pieces.map(i => {
+        const left  = Math.random() * 100
+        const delay = Math.random() * 0.3
+        const color = colors[i % colors.length]
+        const dur   = 1.6 + Math.random() * 0.9
+        const rot   = (Math.random() - 0.5) * 720
+        return (
+          <motion.span
+            key={i}
+            initial={{ y: -20, x: 0, opacity: 0, rotate: 0 }}
+            animate={{
+              y:       ['-20px', '120%'],
+              opacity: [0, 1, 1, 0],
+              rotate:  rot,
+            }}
+            transition={{
+              duration: dur,
+              delay,
+              ease:     'easeOut',
+              times:    [0, 0.1, 0.85, 1],
+            }}
+            className="absolute top-0 block w-2 h-3 rounded-sm"
+            style={{ left: `${left}%`, background: color, boxShadow: `0 0 4px ${color}` }}
+          />
+        )
+      })}
+
+      {/* Center toast */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.7, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ type: 'spring', stiffness: 280, damping: 18 }}
+        className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 px-5 py-3 rounded-2xl text-center"
+        style={{
+          background: 'linear-gradient(160deg, rgba(255,215,0,0.95) 0%, rgba(255,193,7,0.95) 100%)',
+          boxShadow:  '0 12px 36px rgba(255,215,0,0.5), inset 0 1px 0 rgba(255,255,255,0.5)',
+        }}
+      >
+        <p className="text-black text-[10px] font-black uppercase tracking-[0.25em]">Release complete</p>
+        <p className="text-black text-[14px] font-black tracking-tight mt-0.5">{releaseTitle} ✓</p>
+      </motion.div>
+    </div>
   )
 }
