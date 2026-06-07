@@ -35,6 +35,7 @@ type StepId =
   | 'tools'        // feature grid — show what they get inside the app
   | 'handoff'      // "all of this runs through iMessage" + Message uP CTA
   | 'paywall'      // 3-tier plan picker before iMessage opens
+  | 'app'          // ← the in-product app shell (post-conversion)
 
 const TOTAL_STEPS = 8
 
@@ -211,7 +212,10 @@ export default function MvpAppView() {
               goal={GOALS.find(g => g.id === goalId)?.label}
               onContinue={() => goTo('paywall')} />}
             {step === 'paywall' && <PaywallStep key="paywall"
-              onBack={() => goTo('handoff')} />}
+              onBack={() => goTo('handoff')}
+              onPick={() => goTo('app')} />}
+            {step === 'app'     && <AppShell    key="app"
+              artistName={artistName || 'Artist'} />}
           </AnimatePresence>
 
           {/* Progress dots — only during the 8 onboarding question steps */}
@@ -1093,15 +1097,15 @@ function HandoffStep({ goal, onContinue }: { goal?: string; onContinue: () => vo
   )
 }
 
-// ─── Step 7d: Paywall — 3-tier plan picker before iMessage opens ────────────
-function PaywallStep({ onBack }: { onBack: () => void }) {
+// ─── Step 7d: Paywall — 4-tier plan picker (payment skipped for MVP) ────────
+function PaywallStep({ onBack, onPick }: { onBack: () => void; onPick: (planId: string) => void }) {
   const [picked, setPicked] = useState<string | null>(null)
 
   function choose(planId: string) {
     if (picked) return
     setPicked(planId)
-    // Hold the selection beat, then hand off to iMessage
-    setTimeout(() => { window.location.href = IMESSAGE_LINK }, 520)
+    // Skip Stripe for now — hold the selection beat, then drop into the app
+    setTimeout(() => onPick(planId), 520)
   }
 
   return (
@@ -1110,19 +1114,20 @@ function PaywallStep({ onBack }: { onBack: () => void }) {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -24 }}
       transition={{ duration: 0.32 }}
-      className="absolute inset-0 flex flex-col px-6 pt-16 pb-6 overflow-y-auto"
+      className="absolute inset-0 overflow-y-auto"
     >
-      <BackButton onBack={onBack} />
+      <div className="min-h-full flex flex-col px-6 pt-14 pb-6">
+        <BackButton onBack={onBack} />
 
-      <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-3 px-2">
-        Pick your plan
-      </p>
-      <h2 className="text-white text-3xl font-black tracking-tighter leading-tight mb-2 px-2">
-        Start with uP.
-      </h2>
-      <p className="text-white/45 text-sm font-medium mb-6 px-2">
-        Pick how you want to start. uP texts you the moment you do.
-      </p>
+        <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-2 px-2">
+          Pick your plan
+        </p>
+        <h2 className="text-white text-2xl font-black tracking-tighter leading-tight mb-1 px-2">
+          Start with uP.
+        </h2>
+        <p className="text-white/45 text-[12px] font-medium mb-4 px-2">
+          Pick how you want to start. uP texts you the moment you do.
+        </p>
 
       {/* Tier 0 — Solo (entry tier, 1-month trial, limited features) */}
       <PlanCard
@@ -1205,9 +1210,10 @@ function PaywallStep({ onBack }: { onBack: () => void }) {
         </div>
       </button>
 
-      <p className="text-white/30 text-[10px] text-center mt-5 leading-relaxed px-4">
-        Cancel anytime during your trial. Charged when the trial ends.
-      </p>
+        <p className="text-white/30 text-[10px] text-center mt-4 leading-relaxed px-4">
+          Cancel anytime during your trial. Charged when the trial ends.
+        </p>
+      </div>
     </motion.div>
   )
 }
@@ -1235,7 +1241,7 @@ function PlanCard({
     <motion.button
       onClick={onPick}
       whileTap={{ scale: 0.98 }}
-      className={`relative mx-2 mb-3 p-5 rounded-2xl border-2 text-left transition-all overflow-hidden ${
+      className={`relative mx-2 mb-2.5 p-4 rounded-2xl border-2 text-left transition-all overflow-hidden ${
         picked
           ? 'bg-[#FFD700] border-[#FFD700]'
           : highlighted
@@ -1261,45 +1267,45 @@ function PlanCard({
         {eyebrow}
       </p>
 
-      <div className="flex items-baseline gap-2 mb-1">
-        <p className={`text-2xl font-black tracking-tighter ${
+      <div className="flex items-baseline gap-2 mb-0.5">
+        <p className={`text-xl font-black tracking-tighter ${
           picked ? 'text-black' : 'text-white'
         }`}>
           {title}
         </p>
-        <p className={`text-[11px] font-bold ${
+        <p className={`text-[10px] font-bold ${
           picked ? 'text-black/60' : 'text-white/40'
         }`}>
           {tagline}
         </p>
       </div>
 
-      <div className="flex items-baseline gap-1 mb-2">
-        <p className={`text-4xl font-black tracking-tighter ${
+      <div className="flex items-baseline gap-1 mb-1">
+        <p className={`text-3xl font-black tracking-tighter ${
           picked ? 'text-black' : 'text-white'
         }`}>
           {price}
         </p>
-        <p className={`text-sm font-bold ${
+        <p className={`text-[13px] font-bold ${
           picked ? 'text-black/60' : 'text-white/40'
         }`}>
           {per}
         </p>
       </div>
 
-      <p className={`text-[10px] font-medium ${
+      <p className={`text-[9px] font-medium ${
         picked ? 'text-black/60' : 'text-white/35'
       }`}>
         {afterTrial}
       </p>
 
       {features && features.length > 0 && (
-        <ul className="mt-3 pt-3 border-t space-y-1.5"
+        <ul className="mt-2.5 pt-2.5 border-t space-y-1"
             style={{ borderColor: picked ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.06)' }}>
           {features.map(f => (
             <li
               key={f.label}
-              className={`flex items-center gap-2 text-[10px] leading-snug ${
+              className={`flex items-center gap-2 text-[9.5px] leading-snug ${
                 picked ? 'text-black/75' : f.kind === 'out' ? 'text-white/35' : 'text-white/65'
               }`}
             >
@@ -1310,6 +1316,264 @@ function PlanCard({
         </ul>
       )}
     </motion.button>
+  )
+}
+
+// ─── App shell — bottom-tab navigator post-paywall ───────────────────────────
+
+type TabId = 'home' | 'releases' | 'up' | 'network' | 'you'
+
+interface TabDef {
+  id:    TabId
+  label: string
+  /** Lucide-ish path (just stroke geometry) so we don't add a deps import */
+  glyph: React.ReactNode
+}
+
+const APP_TABS: TabDef[] = [
+  { id: 'home',     label: 'Home',
+    glyph: <path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-7h-6v7H5a2 2 0 0 1-2-2v-9z" strokeLinecap="round" strokeLinejoin="round" /> },
+  { id: 'releases', label: 'Releases',
+    glyph: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="3" /></> },
+  { id: 'up',       label: 'uP',
+    glyph: <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" strokeLinecap="round" strokeLinejoin="round" /> },
+  { id: 'network',  label: 'Network',
+    glyph: <><circle cx="9" cy="7" r="3" /><circle cx="17" cy="11" r="2.5" /><path d="M3 21v-1a6 6 0 0 1 12 0v1M14 21v-1a4 4 0 0 1 7 0v1" strokeLinecap="round" /></> },
+  { id: 'you',      label: 'You',
+    glyph: <><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a8 8 0 0 1 16 0v1" strokeLinecap="round" /></> },
+]
+
+function AppShell({ artistName }: { artistName: string }) {
+  const [tab, setTab] = useState<TabId>('home')
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      className="absolute inset-0 flex flex-col bg-[#050505]"
+    >
+      {/* Status bar already mounted by parent */}
+      <div className="flex-1 overflow-y-auto pt-12 pb-24">
+        <AnimatePresence mode="wait">
+          {tab === 'home'     && <HomeTab     key="home"     artistName={artistName} onJumpTo={setTab} />}
+          {tab === 'releases' && <ReleasesTab key="releases" />}
+          {tab === 'up'       && <UpTab       key="up"       artistName={artistName} />}
+          {tab === 'network'  && <NetworkTab  key="network" />}
+          {tab === 'you'      && <YouTab      key="you"      artistName={artistName} />}
+        </AnimatePresence>
+      </div>
+
+      {/* Bottom tab bar */}
+      <nav
+        className="absolute bottom-0 left-0 right-0 px-3 pt-2 pb-5 flex items-center justify-between"
+        style={{
+          background:'linear-gradient(180deg, rgba(10,10,10,0.6) 0%, #0A0A0A 60%)',
+          borderTop:'1px solid rgba(255,255,255,0.06)',
+          backdropFilter:'blur(20px)',
+        }}
+      >
+        {APP_TABS.map(t => {
+          const active = tab === t.id
+          const isCenter = t.id === 'up'
+          return (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className="flex-1 flex flex-col items-center gap-1 py-1.5 group"
+            >
+              {isCenter ? (
+                // Center "uP" gets a larger, gold-filled circular badge
+                <div
+                  className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+                    active ? 'scale-110' : ''
+                  }`}
+                  style={{
+                    background: active
+                      ? 'linear-gradient(160deg, #FFD700 0%, #B8860B 100%)'
+                      : 'rgba(255,215,0,0.12)',
+                    border:     '1px solid rgba(255,215,0,0.4)',
+                    boxShadow:  active
+                      ? '0 6px 20px rgba(255,215,0,0.45), inset 0 1px 0 rgba(255,255,255,0.45)'
+                      : 'none',
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                       stroke={active ? '#000' : '#FFD700'} strokeWidth="2">
+                    {t.glyph}
+                  </svg>
+                </div>
+              ) : (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke={active ? '#FFD700' : 'rgba(255,255,255,0.4)'}
+                     strokeWidth="1.8"
+                     className="transition-colors">
+                  {t.glyph}
+                </svg>
+              )}
+              <span
+                className={`text-[9px] font-black uppercase tracking-[0.1em] transition-colors ${
+                  active ? 'text-[#FFD700]' : 'text-white/35'
+                } ${isCenter ? 'mt-0.5' : ''}`}
+              >
+                {t.label}
+              </span>
+            </button>
+          )
+        })}
+      </nav>
+    </motion.div>
+  )
+}
+
+// ─── Tab: Home ───────────────────────────────────────────────────────────────
+function HomeTab({ artistName, onJumpTo }: { artistName: string; onJumpTo: (t: TabId) => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="px-5 pb-4"
+    >
+      <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-1">
+        Today
+      </p>
+      <h2 className="text-white text-2xl font-black tracking-tighter mb-5">
+        Hey {artistName}.
+      </h2>
+
+      {/* uP latest message preview */}
+      <button
+        onClick={() => onJumpTo('up')}
+        className="w-full p-4 rounded-2xl border border-[#FFD700]/25 bg-[#FFD700]/8 text-left flex items-start gap-3 mb-3 hover:bg-[#FFD700]/12 transition-colors"
+      >
+        <div className="w-9 h-9 rounded-full bg-[#FFD700] flex items-center justify-center shrink-0 mt-0.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="black">
+            <path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.2em] mb-1">uP · 2m ago</p>
+          <p className="text-white text-[12px] leading-snug">
+            Spotify pitch for your next drop is due Friday — I drafted it. Approve to send?
+          </p>
+        </div>
+      </button>
+
+      {/* Quick stats */}
+      <div className="grid grid-cols-2 gap-2.5 mb-5">
+        <Tile label="Monthly listeners"  value="1.2k"  trend="+18%" />
+        <Tile label="Active conversations" value="5"   trend="curators" />
+      </div>
+
+      {/* Today's tasks */}
+      <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-3">
+        Today's tasks
+      </p>
+      <div className="space-y-2">
+        <TaskRow label="Approve Spotify pitch (Friday)"   icon="✓" />
+        <TaskRow label="Review DJ Smoov reply"            icon="◯" />
+        <TaskRow label="Confirm Meta budget bump → $75/d" icon="◯" />
+      </div>
+    </motion.div>
+  )
+}
+
+function Tile({ label, value, trend }: { label: string; value: string; trend: string }) {
+  return (
+    <div className="p-3.5 rounded-2xl border border-white/8 bg-zinc-900/60">
+      <p className="text-white text-2xl font-black tracking-tight leading-none mb-1.5">{value}</p>
+      <div className="flex items-center justify-between">
+        <p className="text-white/40 text-[9px] font-black uppercase tracking-widest">{label}</p>
+        <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest">{trend}</p>
+      </div>
+    </div>
+  )
+}
+
+function TaskRow({ label, icon }: { label: string; icon: string }) {
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-xl border border-white/6 bg-zinc-900/40">
+      <span className="text-[#FFD700] text-sm">{icon}</span>
+      <p className="text-white/75 text-[12px] flex-1">{label}</p>
+    </div>
+  )
+}
+
+// ─── Tab placeholders (full screens to be built next) ────────────────────────
+
+function ReleasesTab() {
+  return (
+    <PlaceholderTab
+      eyebrow="Releases"
+      title="Your drop calendar"
+      sub="The release scheduler will live here — drop dates, rollout tasks, and uP-managed timelines."
+    />
+  )
+}
+
+function UpTab({ artistName }: { artistName: string }) {
+  return (
+    <PlaceholderTab
+      eyebrow="uP Chat"
+      title={`Talk to uP, ${artistName.split(' ')[0]}`}
+      sub="Your 24/7 AI music manager. Conversation UI mounts here next — every other tool flows through this screen."
+    />
+  )
+}
+
+function NetworkTab() {
+  return (
+    <PlaceholderTab
+      eyebrow="Network"
+      title="Curator + creator outreach"
+      sub="Active conversations, replies, and pitch templates go here. uP handles the drafting; you approve."
+    />
+  )
+}
+
+function YouTab({ artistName }: { artistName: string }) {
+  return (
+    <PlaceholderTab
+      eyebrow="You"
+      title={artistName}
+      sub="Profile, plan, analytics, knowledge base, settings — your account hub goes here."
+    />
+  )
+}
+
+function PlaceholderTab({ eyebrow, title, sub }: { eyebrow: string; title: string; sub: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="px-5 pb-4"
+    >
+      <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-2">
+        {eyebrow}
+      </p>
+      <h2 className="text-white text-2xl font-black tracking-tighter leading-tight mb-3">
+        {title}
+      </h2>
+      <p className="text-white/45 text-sm leading-relaxed mb-8">
+        {sub}
+      </p>
+
+      <div
+        className="p-5 rounded-2xl border border-dashed border-white/15 text-center"
+        style={{ background:'rgba(255,215,0,0.04)' }}
+      >
+        <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.25em] mb-1.5">
+          Coming next
+        </p>
+        <p className="text-white/55 text-[12px] leading-snug">
+          Tell me what to build on this screen and I'll wire it.
+        </p>
+      </div>
+    </motion.div>
   )
 }
 
