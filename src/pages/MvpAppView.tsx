@@ -1470,25 +1470,20 @@ function AppShell({ artistName, planId }: { artistName: string; planId: string }
               className="flex-1 flex flex-col items-center gap-1 py-1.5 group"
             >
               {isCenter ? (
-                // Center "uP" gets a larger, gold-filled circular badge
+                // Center "uP" uses the real brand orb with the rich multi-layer
+                // halo from the website hero — always glowing, brighter when
+                // active so the dock pulses attention toward the AI manager.
                 <div
-                  className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+                  className={`w-11 h-11 rounded-full overflow-hidden relative transition-all ${
                     active ? 'scale-110' : ''
                   }`}
                   style={{
-                    background: active
-                      ? 'linear-gradient(160deg, #FFD700 0%, #B8860B 100%)'
-                      : 'rgba(255,215,0,0.12)',
-                    border:     '1px solid rgba(255,215,0,0.4)',
-                    boxShadow:  active
-                      ? '0 6px 20px rgba(255,215,0,0.45), inset 0 1px 0 rgba(255,255,255,0.45)'
-                      : 'none',
+                    boxShadow: active
+                      ? '0 0 6px rgba(255,215,0,0.8), 0 0 18px rgba(255,215,0,0.55), 0 0 44px rgba(255,215,0,0.32), 0 0 80px rgba(255,215,0,0.16), inset 0 0 0 1px rgba(255,255,255,0.3)'
+                      : '0 0 4px rgba(255,215,0,0.55), 0 0 14px rgba(255,215,0,0.3), 0 0 32px rgba(255,215,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.18)',
                   }}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                       stroke={active ? '#000' : '#FFD700'} strokeWidth="2">
-                    {t.glyph}
-                  </svg>
+                  <img src="/up-avatar.png" alt="uP" className="w-full h-full object-cover" />
                 </div>
               ) : (
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
@@ -1539,7 +1534,7 @@ function HomeTab({ artistName, onJumpTo }: { artistName: string; onJumpTo: (t: T
           className="w-11 h-11 rounded-full overflow-hidden shrink-0 mt-0.5 relative"
           style={{
             boxShadow:
-              '0 0 14px rgba(255,215,0,0.55), 0 0 36px rgba(255,215,0,0.25), inset 0 0 0 1px rgba(255,255,255,0.18)',
+              '0 0 6px rgba(255,215,0,0.75), 0 0 18px rgba(255,215,0,0.5), 0 0 44px rgba(255,215,0,0.3), 0 0 80px rgba(255,215,0,0.14), inset 0 0 0 1px rgba(255,255,255,0.28)',
           }}
         >
           <img src="/up-avatar.png" alt="uP" className="w-full h-full object-cover" />
@@ -1840,13 +1835,13 @@ function UpTab({ artistName, planId }: { artistName: string; planId: string }) {
       transition={{ duration: 0.25 }}
       className="px-4 pb-4"
     >
-      {/* Chat header — orb avatar w/ halo, matching website hero */}
+      {/* Chat header — orb avatar w/ multi-layer halo matching website hero */}
       <div className="flex items-center gap-3 px-1 mb-4">
         <div
-          className="w-11 h-11 rounded-full overflow-hidden relative"
+          className="w-12 h-12 rounded-full overflow-hidden relative"
           style={{
             boxShadow:
-              '0 0 16px rgba(255,215,0,0.5), 0 0 36px rgba(255,215,0,0.22), inset 0 0 0 1px rgba(255,255,255,0.18)',
+              '0 0 6px rgba(255,215,0,0.8), 0 0 18px rgba(255,215,0,0.55), 0 0 44px rgba(255,215,0,0.3), 0 0 80px rgba(255,215,0,0.14), inset 0 0 0 1px rgba(255,255,255,0.28)',
           }}
         >
           <img src="/up-avatar.png" alt="uP" className="w-full h-full object-cover" />
