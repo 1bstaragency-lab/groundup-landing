@@ -1243,7 +1243,7 @@ function PaywallStep({ onBack, onPick }: { onBack: () => void; onPick: (planId: 
           </p>
         </div>
         <span className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest shrink-0">
-          Contact us →
+          Tap to contact us →
         </span>
       </a>
 
