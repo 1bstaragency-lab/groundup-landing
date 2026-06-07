@@ -22,10 +22,20 @@ import { motion, AnimatePresence } from 'framer-motion'
 const IMESSAGE_LINK = 'https://start.msg.new/EEHfxKYWDk'
 
 type StepId =
-  | 'splash' | 'welcome' | 'name' | 'genre' | 'stage' | 'goal'
-  | 'ready'        // "all set, [name]" celebration before the tour
+  | 'splash' | 'welcome'
+  | 'name'         // step 1 — who they are
+  | 'genre'        // step 2 — what they make
+  | 'stage'        // step 3 — where they are
+  | 'cadence'      // step 4 — how often they ship
+  | 'pain'         // step 5 — what's hurting (multi-select)
+  | 'investment'   // step 6 — budget reality
+  | 'vision'       // step 7 — 90-day target outcome
+  | 'goal'         // step 8 — first action uP should take
+  | 'ready'        // celebration before the tools tour
   | 'tools'        // feature grid — show what they get inside the app
   | 'handoff'      // "all of this runs through iMessage" + the iMessage CTA
+
+const TOTAL_STEPS = 8
 
 const GENRES = ['Hip-Hop', 'R&B', 'Pop', 'Indie', 'Electronic', 'Rock', 'Country', 'Latin', 'Afrobeats', 'Other']
 const STAGES = [
@@ -43,11 +53,53 @@ const GOALS = [
   { id: 'sync',      emoji: '📺', label: 'Land sync placements' },
 ]
 
+// Step 4 — Release cadence (how often they ship)
+const CADENCES = [
+  { id: 'never',    label: 'Haven\'t released yet',       sub: 'Working on the first drop' },
+  { id: 'yearly',   label: 'Once or twice a year',        sub: 'Slow and intentional' },
+  { id: 'quarterly',label: 'Every 2–3 months',            sub: 'Building momentum' },
+  { id: 'monthly',  label: 'Monthly or more',             sub: 'Aggressive release cycle' },
+]
+
+// Step 5 — Pain points (MULTI-SELECT — the "we get you" moment)
+const PAIN_POINTS = [
+  { id: 'overwhelm', emoji: '💭', label: "I don't know what to focus on" },
+  { id: 'budget',    emoji: '💸', label: 'No budget for paid promo' },
+  { id: 'alone',     emoji: '🙋', label: "I'm doing this alone" },
+  { id: 'curators',  emoji: '📭', label: 'Pitched curators, no replies' },
+  { id: 'time',      emoji: '⏰', label: 'No time between music + marketing' },
+  { id: 'fans',      emoji: '🎯', label: "I don't know who my fans are" },
+  { id: 'tracking',  emoji: '📊', label: "Can't tell what's actually working" },
+  { id: 'fade',      emoji: '🔥', label: 'My releases flop after week 1' },
+]
+
+// Step 6 — Monthly investment (budget reality check)
+const INVESTMENTS = [
+  { id: 'zero',  label: '$0 — bootstrapping',     sub: 'Pure organic growth' },
+  { id: 'small', label: 'Under $100 / month',     sub: 'Tight budget, test small' },
+  { id: 'mid',   label: '$100 – $500 / month',    sub: 'Some room to invest' },
+  { id: 'large', label: '$500+ / month',          sub: 'Ready to scale' },
+]
+
+// Step 7 — 90-day vision (where do you want to be?)
+const VISIONS = [
+  { id: '1k',        emoji: '🎯', label: 'First 1k monthly listeners' },
+  { id: 'editorial', emoji: '★',  label: 'First Spotify editorial pickup' },
+  { id: '100',       emoji: '💰', label: 'First $100 from my music' },
+  { id: 'show',      emoji: '🎫', label: 'First sold-out local show' },
+  { id: 'sync',      emoji: '📺', label: 'First sync placement' },
+  { id: 'consistent',emoji: '🚀', label: 'Just want to release consistently' },
+]
+
 export default function MvpAppView() {
   const [step,        setStep]        = useState<StepId>('splash')
   const [artistName,  setArtistName]  = useState('')
   const [genre,       setGenre]       = useState<string | null>(null)
   const [stageId,     setStageId]     = useState<string | null>(null)
+  const [cadenceId,   setCadenceId]   = useState<string | null>(null)
+  const [pains,       setPains]       = useState<string[]>([])
+  const [investmentId,setInvestmentId]= useState<string | null>(null)
+  const [visionId,    setVisionId]    = useState<string | null>(null)
   const [goalId,      setGoalId]      = useState<string | null>(null)
 
   useEffect(() => {
@@ -93,27 +145,60 @@ export default function MvpAppView() {
               onNext={() => goTo('genre')}
               onBack={() => goTo('welcome')} />}
             {step === 'genre'   && <BubbleStep  key="genre"
-              eyebrow="Step 2 of 4"
+              eyebrow={`Step 2 of ${TOTAL_STEPS}`}
               question="What's your sound?"
               options={GENRES}
               selected={genre}
               onSelect={(v) => { setGenre(v); goTo('stage') }}
               onBack={() => goTo('name')} />}
             {step === 'stage'   && <ChipStep    key="stage"
-              eyebrow="Step 3 of 4"
+              eyebrow={`Step 3 of ${TOTAL_STEPS}`}
               question="Where's your career at?"
               options={STAGES.map(s => ({ id: s.id, label: s.label, sub: s.sub }))}
               selected={stageId}
-              onSelect={(v) => { setStageId(v); goTo('goal') }}
+              onSelect={(v) => { setStageId(v); goTo('cadence') }}
               onBack={() => goTo('genre')}
               stacked />}
+            {step === 'cadence' && <ChipStep    key="cadence"
+              eyebrow={`Step 4 of ${TOTAL_STEPS}`}
+              question="How often do you release?"
+              options={CADENCES.map(c => ({ id: c.id, label: c.label, sub: c.sub }))}
+              selected={cadenceId}
+              onSelect={(v) => { setCadenceId(v); goTo('pain') }}
+              onBack={() => goTo('stage')}
+              stacked />}
+            {step === 'pain'    && <MultiChipStep key="pain"
+              eyebrow={`Step 5 of ${TOTAL_STEPS}`}
+              question="What's been blocking your growth?"
+              hint="Tap everything that feels true. uP works around these."
+              options={PAIN_POINTS}
+              selected={pains}
+              onChange={setPains}
+              onNext={() => goTo('investment')}
+              onBack={() => goTo('cadence')} />}
+            {step === 'investment' && <ChipStep    key="investment"
+              eyebrow={`Step 6 of ${TOTAL_STEPS}`}
+              question="What's your monthly music budget?"
+              options={INVESTMENTS.map(o => ({ id: o.id, label: o.label, sub: o.sub }))}
+              selected={investmentId}
+              onSelect={(v) => { setInvestmentId(v); goTo('vision') }}
+              onBack={() => goTo('pain')}
+              stacked />}
+            {step === 'vision'  && <ChipStep    key="vision"
+              eyebrow={`Step 7 of ${TOTAL_STEPS}`}
+              question="What does winning look like in 90 days?"
+              options={VISIONS.map(v => ({ id: v.id, label: v.label, emoji: v.emoji }))}
+              selected={visionId}
+              onSelect={(v) => { setVisionId(v); goTo('goal') }}
+              onBack={() => goTo('investment')}
+              stacked />}
             {step === 'goal'    && <ChipStep    key="goal"
-              eyebrow="Step 4 of 4"
+              eyebrow={`Step 8 of ${TOTAL_STEPS}`}
               question="What should uP help with first?"
               options={GOALS.map(g => ({ id: g.id, label: g.label, emoji: g.emoji }))}
               selected={goalId}
               onSelect={(v) => { setGoalId(v); goTo('ready') }}
-              onBack={() => goTo('stage')}
+              onBack={() => goTo('vision')}
               stacked />}
 
             {step === 'ready'   && <ReadyStep   key="ready"
@@ -125,8 +210,9 @@ export default function MvpAppView() {
               goal={GOALS.find(g => g.id === goalId)?.label} />}
           </AnimatePresence>
 
-          {/* Progress dots — only during the 4 onboarding question steps */}
-          {(step === 'name' || step === 'genre' || step === 'stage' || step === 'goal') && (
+          {/* Progress dots — only during the 8 onboarding question steps */}
+          {(step === 'name' || step === 'genre' || step === 'stage' || step === 'cadence' ||
+            step === 'pain' || step === 'investment' || step === 'vision' || step === 'goal') && (
             <ProgressDots step={step} />
           )}
         </div>
@@ -280,7 +366,7 @@ function NameStep({
     >
       <BackButton onBack={onBack} />
       <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-4">
-        Step 1 of 4
+        Step 1 of {TOTAL_STEPS}
       </p>
       <h2 className="text-white text-3xl font-black tracking-tighter leading-tight mb-3">
         What's your artist name?
@@ -504,7 +590,91 @@ function ChipStep({
   )
 }
 
-// ─── Step 7a: Ready — celebrate, intro the tour ─────────────────────────────
+// ─── Step 5: Pain points (multi-select) ─────────────────────────────────────
+// Differs from ChipStep because users pick 1+ pain points and tap "Continue"
+// explicitly. This step is the "we see you" moment in the flow — uP uses
+// these answers to tailor its strategy AND its empathy.
+function MultiChipStep({
+  eyebrow, question, hint, options, selected, onChange, onNext, onBack,
+}: {
+  eyebrow:  string
+  question: string
+  hint:     string
+  options:  { id: string; emoji: string; label: string }[]
+  selected: string[]
+  onChange: (next: string[]) => void
+  onNext:   () => void
+  onBack:   () => void
+}) {
+  function toggle(id: string) {
+    onChange(
+      selected.includes(id) ? selected.filter(s => s !== id) : [...selected, id]
+    )
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -24 }}
+      transition={{ duration: 0.32 }}
+      className="absolute inset-0 flex flex-col px-8 pt-20 pb-24"
+    >
+      <BackButton onBack={onBack} />
+      <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-3">
+        {eyebrow}
+      </p>
+      <h2 className="text-white text-3xl font-black tracking-tighter leading-tight mb-2">
+        {question}
+      </h2>
+      <p className="text-white/40 text-[12px] font-medium mb-6">{hint}</p>
+
+      <div className="flex-1 overflow-y-auto flex flex-col gap-2">
+        {options.map(opt => {
+          const isSel = selected.includes(opt.id)
+          return (
+            <button
+              key={opt.id}
+              onClick={() => toggle(opt.id)}
+              className={`text-left px-4 py-3 rounded-2xl border transition-all flex items-center gap-3 ${
+                isSel
+                  ? 'bg-[#FFD700] border-[#FFD700] text-black'
+                  : 'bg-zinc-900 border-white/8 text-white hover:border-[#FFD700]/40'
+              }`}
+            >
+              <span className="text-lg shrink-0">{opt.emoji}</span>
+              <span className={`flex-1 font-black text-[12px] tracking-tight ${
+                isSel ? 'text-black' : 'text-white'
+              }`}>
+                {opt.label}
+              </span>
+              {isSel && (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3">
+                  <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      <button
+        onClick={onNext}
+        disabled={selected.length === 0}
+        className="w-full h-14 rounded-2xl font-black text-[13px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-30 disabled:hover:scale-100 hover:scale-[1.02] active:scale-[0.98] mt-3"
+        style={{
+          background:'#FFD700',
+          color:'#000',
+          boxShadow:'0 8px 24px rgba(255,215,0,0.35), inset 0 1px 0 rgba(255,255,255,0.4)',
+        }}
+      >
+        Continue ({selected.length} picked) →
+      </button>
+    </motion.div>
+  )
+}
+
+// ─── Step 9a: Ready — celebrate, intro the tour ─────────────────────────────
 function ReadyStep({ name, onContinue }: { name: string; onContinue: () => void }) {
   return (
     <motion.div
@@ -927,16 +1097,16 @@ function BackButton({ onBack }: { onBack: () => void }) {
 }
 
 function ProgressDots({ step }: { step: StepId }) {
-  const order: StepId[] = ['name', 'genre', 'stage', 'goal']
+  const order: StepId[] = ['name', 'genre', 'stage', 'cadence', 'pain', 'investment', 'vision', 'goal']
   const idx = order.indexOf(step)
   return (
-    <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 pointer-events-none">
+    <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-1.5 pointer-events-none px-6">
       {order.map((s, i) => (
         <div
           key={s}
           className="h-1 rounded-full transition-all"
           style={{
-            width:      i <= idx ? '24px' : '8px',
+            width:      i <= idx ? '18px' : '6px',
             background: i <= idx ? '#FFD700' : 'rgba(255,255,255,0.15)',
           }}
         />
