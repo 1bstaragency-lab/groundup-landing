@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import {
   Home, BookOpen, Calendar, Layout, User,
   Bell, TrendingUp, Users, Network,
-  MoreHorizontal, X, Music2, Settings, Zap, Search,
+  MoreHorizontal, X, Settings, Zap, Search,
   LogOut, ChevronDown,
 } from "lucide-react"
 import { useAuth } from "../../hooks/useAuth"
@@ -17,24 +17,40 @@ interface DashboardShellProps {
   children: ReactNode
 }
 
-// isMain = highlighted top-4 with gold treatment in sidebar
-const MENU_ITEMS = [
+// ── MVP nav model ────────────────────────────────────────────────────────────
+// isMain = highlighted top tier with gold treatment
+// preview = "Coming Soon" — visible but routes to a teaser page
+type IconCmp = React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>
+
+type MenuItem = {
+  id:         string
+  label:      string
+  icon:       IconCmp
+  mobileShow: boolean
+  isMain:     boolean
+  small?:     boolean
+  preview?:   boolean
+}
+
+const MENU_ITEMS: MenuItem[] = [
+  // ── Core MVP — the 6 pillars ───────────────────────────────────────────────
   { id: "home",        label: "Dashboard",          icon: Home,         mobileShow: true,  isMain: true },
   { id: "rollouts",    label: "Releases",           icon: CdRocketIcon, mobileShow: true,  isMain: true },
-  { id: "analytics",   label: "Analytics",          icon: TrendingUp,   mobileShow: true,  isMain: true },
-  { id: "learn",       label: "Knowledge Base",     icon: BookOpen,     mobileShow: true,  isMain: true,  small: true },
-  { id: "scheduler",   label: "Scheduler",          icon: Calendar,     mobileShow: false, isMain: false },
-  { id: "studio",      label: "Content Studio",     icon: Layout,       mobileShow: false, isMain: false },
-  { id: "influencers", label: "Influencer Network", icon: Network,      mobileShow: false, isMain: false, small: true },
-  { id: "team",        label: "Team",               icon: Users,        mobileShow: false, isMain: false },
-  { id: "curator",     label: "Curator",            icon: Music2,       mobileShow: false, isMain: false },
-  { id: "profile",     label: "Artist Profile",     icon: User,         mobileShow: false, isMain: false },
+  { id: "scheduler",   label: "Campaigns",          icon: Calendar,     mobileShow: true,  isMain: true },
+  { id: "influencers", label: "Influencer Outreach", icon: Network,     mobileShow: true,  isMain: true, small: true },
+  { id: "analytics",   label: "Analytics",          icon: TrendingUp,   mobileShow: false, isMain: true },
+  { id: "profile",     label: "Artist Profile",     icon: User,         mobileShow: false, isMain: true },
+
+  // ── Preview (Coming Soon) ──────────────────────────────────────────────────
+  { id: "learn",       label: "Knowledge Base",     icon: BookOpen,     mobileShow: false, isMain: false, small: true, preview: true },
+  { id: "studio",      label: "Content Studio",     icon: Layout,       mobileShow: false, isMain: false, preview: true },
+  { id: "team",        label: "Team",               icon: Users,        mobileShow: false, isMain: false, preview: true },
 ]
 
 const BOTTOM_NAV_ITEMS = MENU_ITEMS.filter(m => m.mobileShow)
 const MORE_ITEMS       = MENU_ITEMS.filter(m => !m.mobileShow)
 const MAIN_ITEMS       = MENU_ITEMS.filter(m => m.isMain)
-const OTHER_ITEMS      = MENU_ITEMS.filter(m => !m.isMain)
+const PREVIEW_ITEMS    = MENU_ITEMS.filter(m => m.preview)
 
 export function DashboardShell({ children }: DashboardShellProps) {
   const { user, profile, signOut } = useAuth()
@@ -111,7 +127,12 @@ export function DashboardShell({ children }: DashboardShellProps) {
       >
         <Icon size={17} />
         <span className={`font-black uppercase tracking-widest ${item.small ? 'text-[9px]' : 'text-[11px]'}`}>{item.label}</span>
-        {active && <div className="ml-auto w-1.5 h-1.5 bg-white/60 rounded-full" />}
+        {item.preview && (
+          <span className="ml-auto text-[8px] font-black uppercase tracking-[0.15em] px-1.5 py-0.5 rounded-md border border-[#FFD700]/25 text-[#FFD700]/80 bg-[#FFD700]/5">
+            Soon
+          </span>
+        )}
+        {active && !item.preview && <div className="ml-auto w-1.5 h-1.5 bg-white/60 rounded-full" />}
       </button>
     )
   }
@@ -127,16 +148,16 @@ export function DashboardShell({ children }: DashboardShellProps) {
         </div>
 
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto pb-4">
-          {/* Main 4 — gold-treated */}
+          {/* MVP Core — the 6 pillars */}
           <p className="text-[#FFD700]/30 text-[8px] font-black uppercase tracking-[0.35em] px-2 pb-2 pt-2">Core</p>
           {MAIN_ITEMS.map(item => <SidebarNavItem key={item.id} item={item} />)}
 
           {/* Divider */}
           <div className="my-3 border-t border-white/5" />
 
-          {/* Others */}
-          <p className="text-white/15 text-[8px] font-black uppercase tracking-[0.35em] px-2 pb-2">Tools</p>
-          {OTHER_ITEMS.map(item => <SidebarNavItem key={item.id} item={item} />)}
+          {/* Preview tiles — coming soon */}
+          <p className="text-white/15 text-[8px] font-black uppercase tracking-[0.35em] px-2 pb-2">Coming Soon</p>
+          {PREVIEW_ITEMS.map(item => <SidebarNavItem key={item.id} item={item} />)}
         </nav>
 
         <div className="p-6 border-t border-white/5 space-y-4">

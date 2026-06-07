@@ -2,14 +2,18 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence as AP } from 'framer-motion';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { HomeSection } from './pages/dashboard/HomeSection';
-import { LearnSection } from './components/dashboard/LearnSection';
+// LearnSection + TeamSection + CuratorSection are out of MVP scope — replaced
+// with MvpPreviewPage teaser. Import paths preserved below for the day we
+// flip these back on.
+// import { LearnSection }    from './components/dashboard/LearnSection';
+// import { TeamSection }     from './components/dashboard/TeamSection';
+// import { CuratorSection }  from './components/dashboard/CuratorSection';
+import { MvpPreviewPage } from './pages/dashboard/MvpPreviewPage';
 import { SchedulerSection } from './components/dashboard/SchedulerSection';
 import { StudioSection } from './components/dashboard/StudioSection';
 import { ProfileSection } from './components/dashboard/ProfileSection';
 import { RolloutsSection } from './components/dashboard/RolloutsSection';
 import { AnalyticsSection } from './components/dashboard/AnalyticsSection';
-import { TeamSection } from './components/dashboard/TeamSection';
-import { CuratorSection } from './components/dashboard/CuratorSection';
 import { InfluencerSection } from './components/dashboard/InfluencerSection';
 import { TeamDashboardMockup } from './components/ui/TeamDashboardMockup';
 import ShaderShowcase from './components/ui/hero';
@@ -669,12 +673,17 @@ function App() {
         <Route path="home" element={<HomeSection />} />
         <Route path="rollouts" element={<RolloutsSection />} />
         <Route path="analytics" element={<AnalyticsSection />} />
-        <Route path="learn" element={<LearnSection />} />
+        {/* MVP core surfaces (Campaigns = Scheduler component for now) */}
         <Route path="scheduler" element={<SchedulerSection />} />
-        <Route path="studio" element={<StudioSection />} />
         <Route path="influencers" element={<InfluencerSection />} />
-        <Route path="team" element={<TeamSection />} />
-        <Route path="curator" element={<CuratorSection />} />
+
+        {/* Curator merged into Influencer Outreach — keep route as redirect */}
+        <Route path="curator" element={<Navigate to="../influencers" replace />} />
+
+        {/* Preview routes (Coming Soon teaser pages) */}
+        <Route path="learn"  element={<MvpPreviewPage feature="Knowledge Base" />} />
+        <Route path="studio" element={<StudioSection />} />
+        <Route path="team"   element={<MvpPreviewPage feature="Team" />} />
         <Route path="profile" element={<ProfileSection />} />
       </Route>
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
