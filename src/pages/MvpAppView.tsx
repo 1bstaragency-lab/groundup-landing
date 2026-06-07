@@ -1101,15 +1101,22 @@ function HandoffStep({ goal, onContinue }: { goal?: string; onContinue: () => vo
   )
 }
 
-// ─── Step 7d: Paywall — 4-tier plan picker (payment skipped for MVP) ────────
+// ─── Step 7d: Paywall — 4-tier plan picker (tap to expand, tap again to confirm)
 function PaywallStep({ onBack, onPick }: { onBack: () => void; onPick: (planId: string) => void }) {
+  const [expanded, setExpanded] = useState<string | null>(null)
   const [picked, setPicked] = useState<string | null>(null)
 
+  // 1st tap on a tier → expand to show benefits
+  // 2nd tap on the same tier → confirm + advance
+  // Tap a different tier → switch expansion
   function choose(planId: string) {
     if (picked) return
-    setPicked(planId)
-    // Skip Stripe for now — hold the selection beat, then drop into the app
-    setTimeout(() => onPick(planId), 520)
+    if (expanded === planId) {
+      setPicked(planId)
+      setTimeout(() => onPick(planId), 520)
+    } else {
+      setExpanded(planId)
+    }
   }
 
   return (
@@ -1133,86 +1140,81 @@ function PaywallStep({ onBack, onPick }: { onBack: () => void; onPick: (planId: 
           Pick how you want to start. uP texts you the moment you do.
         </p>
 
-      {/* Tier 0 — Solo (entry tier, 1-month trial, limited features) */}
-      <PlanCard
-        id="solo"
-        eyebrow="1-month free trial"
-        title="Solo"
-        tagline="Indie artist starter"
-        price="$4.99"
-        per="/ month"
-        afterTrial="Then $4.99 every month"
-        features={[
-          { kind: 'in',  label: 'Release Scheduler' },
-          { kind: 'in',  label: 'Video playlist library' },
-          { kind: 'in',  label: 'Influencer Network preview' },
-          { kind: 'cap', label: 'Outreach capped at 3 / month' },
-          { kind: 'out', label: 'No uP iMessage assistant' },
-        ]}
-        picked={picked === 'solo'}
-        onPick={() => choose('solo')}
-      />
+      {(() => {
+        const cards = [
+          {
+            id: 'solo',     eyebrow: '1-month free trial',  title: 'Solo',     tagline: 'Indie artist starter',
+            price: '$4.99', per: '/ month', afterTrial: 'Then $4.99 every month',
+            features: [
+              { kind: 'in' as const,  label: 'Release Scheduler' },
+              { kind: 'in' as const,  label: 'Video playlist library' },
+              { kind: 'in' as const,  label: 'Influencer Network preview' },
+              { kind: 'cap' as const, label: 'Outreach capped at 3 / month' },
+              { kind: 'out' as const, label: 'No uP iMessage assistant' },
+              { kind: 'out' as const, label: 'No Meta + TikTok ads' },
+            ],
+            highlighted: false,
+          },
+          {
+            id: 'weekly', eyebrow: '3-day free trial', title: 'Weekly', tagline: 'Test the waters · Full access',
+            price: '$9.99', per: '/ week', afterTrial: 'Then $9.99 every week',
+            features: [
+              { kind: 'in' as const, label: 'Everything in Solo' },
+              { kind: 'in' as const, label: 'uP iMessage AI manager (unlimited)' },
+              { kind: 'in' as const, label: 'Unlimited curator outreach' },
+              { kind: 'in' as const, label: 'Meta + TikTok ad management' },
+              { kind: 'in' as const, label: 'Full Knowledge Base access' },
+              { kind: 'in' as const, label: 'Cancel anytime' },
+            ],
+            highlighted: false,
+          },
+          {
+            id: 'monthly', eyebrow: '7-day free trial', title: 'Monthly', tagline: 'Most popular · Best value',
+            price: '$29.99', per: '/ month', afterTrial: 'Then $29.99 every month',
+            features: [
+              { kind: 'in' as const, label: 'Everything in Weekly' },
+              { kind: 'in' as const, label: 'Save 30% vs paying weekly' },
+              { kind: 'in' as const, label: 'Priority uP responses (< 30s)' },
+              { kind: 'in' as const, label: 'Advanced analytics dashboard' },
+              { kind: 'in' as const, label: 'Monthly strategy review from uP' },
+              { kind: 'in' as const, label: 'Early access to new tools' },
+            ],
+            highlighted: true,
+          },
+          {
+            id: 'strategic', eyebrow: 'No trial · Premium tier', title: 'Strategic Artist', tagline: 'All-in for serious careers',
+            price: '$49.99', per: '/ month', afterTrial: 'Billed monthly · Cancel anytime',
+            features: [
+              { kind: 'in' as const, label: 'Everything in Monthly' },
+              { kind: 'in' as const, label: '1-on-1 strategy call (monthly)' },
+              { kind: 'in' as const, label: 'Direct founder access' },
+              { kind: 'in' as const, label: 'Custom release rollout playbooks' },
+              { kind: 'in' as const, label: 'Beta features early access' },
+              { kind: 'in' as const, label: 'Priority customer support' },
+            ],
+            highlighted: false,
+          },
+        ]
 
-      {/* Tier 1 — Weekly trial */}
-      <PlanCard
-        id="weekly"
-        eyebrow="3-day free trial"
-        title="Weekly"
-        tagline="Test the waters · Full access"
-        price="$9.99"
-        per="/ week"
-        afterTrial="Then $9.99 every week"
-        picked={picked === 'weekly'}
-        onPick={() => choose('weekly')}
-      />
-
-      {/* Tier 2 — Monthly trial (highlighted) */}
-      <PlanCard
-        id="monthly"
-        eyebrow="7-day free trial"
-        title="Monthly"
-        tagline="Most popular · Best value"
-        price="$29.99"
-        per="/ month"
-        afterTrial="Then $29.99 every month"
-        highlighted
-        picked={picked === 'monthly'}
-        onPick={() => choose('monthly')}
-      />
-
-      {/* Tier 3 — Strategic Artist (compact, subtext-style) */}
-      <button
-        onClick={() => choose('strategic')}
-        disabled={!!picked && picked !== 'strategic'}
-        className={`mt-2 mx-2 p-3.5 rounded-2xl border text-left transition-all ${
-          picked === 'strategic'
-            ? 'bg-[#FFD700]/15 border-[#FFD700]/60'
-            : 'bg-zinc-900/60 border-white/8 hover:border-[#FFD700]/40 hover:bg-zinc-900'
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-[#FFD700] text-sm font-black shrink-0"
-            style={{
-              background:'rgba(255,215,0,0.08)',
-              border:    '1px solid rgba(255,215,0,0.22)',
-            }}
-          >
-            ✦
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-white text-[11px] font-black uppercase tracking-wide leading-tight">
-              Strategic Artist
-            </p>
-            <p className="text-white/40 text-[10px] font-medium leading-snug mt-0.5">
-              All-in plan for serious careers · <span className="text-[#FFD700]/80 font-bold">$49.99/mo</span>
-            </p>
-          </div>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,215,0,0.6)" strokeWidth="2.5">
-            <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-      </button>
+        return cards.map(c => (
+          <PlanCard
+            key={c.id}
+            id={c.id}
+            eyebrow={c.eyebrow}
+            title={c.title}
+            tagline={c.tagline}
+            price={c.price}
+            per={c.per}
+            afterTrial={c.afterTrial}
+            features={c.features}
+            highlighted={c.highlighted}
+            expanded={expanded === c.id}
+            picked={picked === c.id}
+            dimmed={expanded !== null && expanded !== c.id && picked === null}
+            onPick={() => choose(c.id)}
+          />
+        ))
+      })()}
 
         <p className="text-white/30 text-[10px] text-center mt-4 leading-relaxed px-4">
           Cancel anytime during your trial. Charged when the trial ends.
@@ -1222,11 +1224,11 @@ function PaywallStep({ onBack, onPick }: { onBack: () => void; onPick: (planId: 
   )
 }
 
-// ─── PlanCard for tier 0 / 1 / 2 ─────────────────────────────────────────────
+// ─── PlanCard ────────────────────────────────────────────────────────────────
 type PlanFeature = { kind: 'in' | 'cap' | 'out'; label: string }
 
 function PlanCard({
-  eyebrow, title, tagline, price, per, afterTrial, highlighted, picked, onPick,
+  eyebrow, title, tagline, price, per, afterTrial, highlighted, picked, expanded, dimmed, onPick,
   features,
 }: {
   id:           string
@@ -1238,6 +1240,8 @@ function PlanCard({
   afterTrial:   string
   highlighted?: boolean
   picked:       boolean
+  expanded:     boolean
+  dimmed:       boolean
   onPick:       () => void
   features?:    PlanFeature[]
 }) {
@@ -1245,18 +1249,25 @@ function PlanCard({
     <motion.button
       onClick={onPick}
       whileTap={{ scale: 0.98 }}
-      className={`relative mx-2 mb-2.5 p-4 rounded-2xl border-2 text-left transition-all overflow-hidden ${
+      animate={{
+        opacity: dimmed ? 0.45 : 1,
+        scale:   expanded && !picked ? 1.01 : 1,
+      }}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+      className={`relative mx-2 mb-2.5 p-4 rounded-2xl border-2 text-left transition-colors overflow-hidden ${
         picked
           ? 'bg-[#FFD700] border-[#FFD700]'
-          : highlighted
-            ? 'bg-zinc-900 border-[#FFD700]/60 hover:border-[#FFD700]'
-            : 'bg-zinc-900/60 border-white/10 hover:border-[#FFD700]/40'
+          : expanded
+            ? 'bg-zinc-900 border-[#FFD700]'
+            : highlighted
+              ? 'bg-zinc-900 border-[#FFD700]/60 hover:border-[#FFD700]'
+              : 'bg-zinc-900/60 border-white/10 hover:border-[#FFD700]/40'
       }`}
-      style={highlighted && !picked ? {
-        boxShadow: '0 0 32px rgba(255,215,0,0.18)',
+      style={(highlighted || expanded) && !picked ? {
+        boxShadow: expanded ? '0 0 40px rgba(255,215,0,0.28)' : '0 0 32px rgba(255,215,0,0.18)',
       } : undefined}
     >
-      {highlighted && !picked && (
+      {highlighted && !picked && !expanded && (
         <div
           className="absolute -top-2.5 right-4 px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-[0.18em]"
           style={{ background:'#FFD700', color:'#000' }}
@@ -1303,22 +1314,55 @@ function PlanCard({
         {afterTrial}
       </p>
 
-      {features && features.length > 0 && (
-        <ul className="mt-2.5 pt-2.5 border-t space-y-1"
-            style={{ borderColor: picked ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.06)' }}>
-          {features.map(f => (
-            <li
-              key={f.label}
-              className={`flex items-center gap-2 text-[9.5px] leading-snug ${
-                picked ? 'text-black/75' : f.kind === 'out' ? 'text-white/35' : 'text-white/65'
-              }`}
+      {/* Features list only shows when this tier is expanded or already picked */}
+      <AnimatePresence initial={false}>
+        {(expanded || picked) && features && features.length > 0 && (
+          <motion.ul
+            key="features"
+            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+            animate={{ opacity: 1, height: 'auto', marginTop: 10 }}
+            exit={{    opacity: 0, height: 0, marginTop: 0 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            className="pt-2.5 border-t space-y-1.5 overflow-hidden"
+            style={{ borderColor: picked ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.08)' }}
+          >
+            {features.map(f => (
+              <li
+                key={f.label}
+                className={`flex items-center gap-2 text-[10px] leading-snug ${
+                  picked ? 'text-black/80' : f.kind === 'out' ? 'text-white/40' : 'text-white/75'
+                }`}
+              >
+                <FeatureGlyph kind={f.kind} picked={picked} />
+                <span className={f.kind === 'out' ? 'line-through opacity-80' : ''}>{f.label}</span>
+              </li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+
+      {/* "Tap to confirm" prompt — shown only when expanded and not yet picked */}
+      <AnimatePresence>
+        {expanded && !picked && (
+          <motion.div
+            key="confirm-hint"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.2 }}
+            className="mt-3 pt-3 border-t flex items-center justify-center gap-1.5"
+            style={{ borderColor: 'rgba(255,215,0,0.18)' }}
+          >
+            <motion.span
+              animate={{ opacity: [1, 0.5, 1] }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+              className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.2em]"
             >
-              <FeatureGlyph kind={f.kind} picked={picked} />
-              <span className={f.kind === 'out' ? 'line-through opacity-80' : ''}>{f.label}</span>
-            </li>
-          ))}
-        </ul>
-      )}
+              Tap again to start {title} →
+            </motion.span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.button>
   )
 }
