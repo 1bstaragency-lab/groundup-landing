@@ -1712,7 +1712,7 @@ function HomeTab({ artistName, onJumpTo, state }: { artistName: string; onJumpTo
             Knowledge Base
           </p>
           <span className="text-[#FFD700]/70 text-[9px] font-black uppercase tracking-widest">
-            {KB_PLAYLISTS.length} playlists
+            Playlists
           </span>
         </div>
         <div
