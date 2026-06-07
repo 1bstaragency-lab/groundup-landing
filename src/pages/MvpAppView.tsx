@@ -33,7 +33,8 @@ type StepId =
   | 'goal'         // step 8 — first action uP should take
   | 'ready'        // celebration before the tools tour
   | 'tools'        // feature grid — show what they get inside the app
-  | 'handoff'      // "all of this runs through iMessage" + the iMessage CTA
+  | 'handoff'      // "all of this runs through iMessage" + Message uP CTA
+  | 'paywall'      // 3-tier plan picker before iMessage opens
 
 const TOTAL_STEPS = 8
 
@@ -207,7 +208,10 @@ export default function MvpAppView() {
             {step === 'tools'   && <ToolsStep   key="tools"
               onContinue={() => goTo('handoff')} />}
             {step === 'handoff' && <HandoffStep key="handoff"
-              goal={GOALS.find(g => g.id === goalId)?.label} />}
+              goal={GOALS.find(g => g.id === goalId)?.label}
+              onContinue={() => goTo('paywall')} />}
+            {step === 'paywall' && <PaywallStep key="paywall"
+              onBack={() => goTo('handoff')} />}
           </AnimatePresence>
 
           {/* Progress dots — only during the 8 onboarding question steps */}
@@ -1030,7 +1034,7 @@ function ToolDetailSheet({ tool, onClose }: { tool: Tool; onClose: () => void })
 }
 
 // ─── Step 7c: Handoff — "all of this runs through iMessage" ─────────────────
-function HandoffStep({ goal }: { goal?: string }) {
+function HandoffStep({ goal, onContinue }: { goal?: string; onContinue: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, x: 24 }}
@@ -1073,8 +1077,8 @@ function HandoffStep({ goal }: { goal?: string }) {
         No more dashboards. Just message uP.
       </p>
 
-      <a
-        href={IMESSAGE_LINK}
+      <button
+        onClick={onContinue}
         className="w-full max-w-[280px] h-14 rounded-2xl font-black text-[13px] uppercase tracking-widest flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98]"
         style={{
           background:'#FFD700',
@@ -1083,9 +1087,188 @@ function HandoffStep({ goal }: { goal?: string }) {
         }}
       >
         Message uP →
-      </a>
+      </button>
       <p className="text-white/30 text-[11px] mt-4">uP · +1 (310) 919-9037</p>
     </motion.div>
+  )
+}
+
+// ─── Step 7d: Paywall — 3-tier plan picker before iMessage opens ────────────
+function PaywallStep({ onBack }: { onBack: () => void }) {
+  const [picked, setPicked] = useState<string | null>(null)
+
+  function choose(planId: string) {
+    if (picked) return
+    setPicked(planId)
+    // Hold the selection beat, then hand off to iMessage
+    setTimeout(() => { window.location.href = IMESSAGE_LINK }, 520)
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -24 }}
+      transition={{ duration: 0.32 }}
+      className="absolute inset-0 flex flex-col px-6 pt-16 pb-6 overflow-y-auto"
+    >
+      <BackButton onBack={onBack} />
+
+      <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-3 px-2">
+        Pick your plan
+      </p>
+      <h2 className="text-white text-3xl font-black tracking-tighter leading-tight mb-2 px-2">
+        Start with uP.
+      </h2>
+      <p className="text-white/45 text-sm font-medium mb-6 px-2">
+        Pick how you want to start. uP texts you the moment you do.
+      </p>
+
+      {/* Tier 1 — Weekly trial */}
+      <PlanCard
+        id="weekly"
+        eyebrow="3-day free trial"
+        title="Weekly"
+        tagline="Test the waters"
+        price="$9.99"
+        per="/ week"
+        afterTrial="Then $9.99 every week"
+        picked={picked === 'weekly'}
+        onPick={() => choose('weekly')}
+      />
+
+      {/* Tier 2 — Monthly trial (highlighted) */}
+      <PlanCard
+        id="monthly"
+        eyebrow="7-day free trial"
+        title="Monthly"
+        tagline="Most popular · Best value"
+        price="$29.99"
+        per="/ month"
+        afterTrial="Then $29.99 every month"
+        highlighted
+        picked={picked === 'monthly'}
+        onPick={() => choose('monthly')}
+      />
+
+      {/* Tier 3 — Strategic Artist (compact, subtext-style) */}
+      <button
+        onClick={() => choose('strategic')}
+        disabled={!!picked && picked !== 'strategic'}
+        className={`mt-2 mx-2 p-3.5 rounded-2xl border text-left transition-all ${
+          picked === 'strategic'
+            ? 'bg-[#FFD700]/15 border-[#FFD700]/60'
+            : 'bg-zinc-900/60 border-white/8 hover:border-[#FFD700]/40 hover:bg-zinc-900'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-[#FFD700] text-sm font-black shrink-0"
+            style={{
+              background:'rgba(255,215,0,0.08)',
+              border:    '1px solid rgba(255,215,0,0.22)',
+            }}
+          >
+            ✦
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-[11px] font-black uppercase tracking-wide leading-tight">
+              Strategic Artist
+            </p>
+            <p className="text-white/40 text-[10px] font-medium leading-snug mt-0.5">
+              All-in plan for serious careers · <span className="text-[#FFD700]/80 font-bold">$49.99/mo</span>
+            </p>
+          </div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,215,0,0.6)" strokeWidth="2.5">
+            <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      </button>
+
+      <p className="text-white/30 text-[10px] text-center mt-5 leading-relaxed px-4">
+        Cancel anytime during your trial. Charged when the trial ends.
+      </p>
+    </motion.div>
+  )
+}
+
+// ─── PlanCard for tier 1 & 2 ─────────────────────────────────────────────────
+function PlanCard({
+  eyebrow, title, tagline, price, per, afterTrial, highlighted, picked, onPick,
+}: {
+  id:           string
+  eyebrow:      string
+  title:        string
+  tagline:      string
+  price:        string
+  per:          string
+  afterTrial:   string
+  highlighted?: boolean
+  picked:       boolean
+  onPick:       () => void
+}) {
+  return (
+    <motion.button
+      onClick={onPick}
+      whileTap={{ scale: 0.98 }}
+      className={`relative mx-2 mb-3 p-5 rounded-2xl border-2 text-left transition-all overflow-hidden ${
+        picked
+          ? 'bg-[#FFD700] border-[#FFD700]'
+          : highlighted
+            ? 'bg-zinc-900 border-[#FFD700]/60 hover:border-[#FFD700]'
+            : 'bg-zinc-900/60 border-white/10 hover:border-[#FFD700]/40'
+      }`}
+      style={highlighted && !picked ? {
+        boxShadow: '0 0 32px rgba(255,215,0,0.18)',
+      } : undefined}
+    >
+      {highlighted && !picked && (
+        <div
+          className="absolute -top-2.5 right-4 px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-[0.18em]"
+          style={{ background:'#FFD700', color:'#000' }}
+        >
+          Most Popular
+        </div>
+      )}
+
+      <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-2 ${
+        picked ? 'text-black/70' : 'text-[#FFD700]'
+      }`}>
+        {eyebrow}
+      </p>
+
+      <div className="flex items-baseline gap-2 mb-1">
+        <p className={`text-2xl font-black tracking-tighter ${
+          picked ? 'text-black' : 'text-white'
+        }`}>
+          {title}
+        </p>
+        <p className={`text-[11px] font-bold ${
+          picked ? 'text-black/60' : 'text-white/40'
+        }`}>
+          {tagline}
+        </p>
+      </div>
+
+      <div className="flex items-baseline gap-1 mb-2">
+        <p className={`text-4xl font-black tracking-tighter ${
+          picked ? 'text-black' : 'text-white'
+        }`}>
+          {price}
+        </p>
+        <p className={`text-sm font-bold ${
+          picked ? 'text-black/60' : 'text-white/40'
+        }`}>
+          {per}
+        </p>
+      </div>
+
+      <p className={`text-[10px] font-medium ${
+        picked ? 'text-black/60' : 'text-white/35'
+      }`}>
+        {afterTrial}
+      </p>
+    </motion.button>
   )
 }
 
