@@ -19,7 +19,9 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const IMESSAGE_LINK = 'https://start.msg.new/EEHfxKYWDk'
+// iMessage handoff is paused while we build the in-app flow.
+// When ready: re-add a constant for start.msg.new/<linkId> and wire it
+// into UpTab + the closing screens.
 
 type StepId =
   | 'splash' | 'welcome'
@@ -1515,43 +1517,11 @@ function ReleasesTab() {
 
 function UpTab({ artistName }: { artistName: string }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.25 }}
-      className="px-5 pb-4"
-    >
-      <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-2">
-        uP Chat
-      </p>
-      <h2 className="text-white text-2xl font-black tracking-tighter leading-tight mb-3">
-        Talk to uP, {artistName.split(' ')[0]}.
-      </h2>
-      <p className="text-white/45 text-sm leading-relaxed mb-6">
-        Your 24/7 AI music manager. In-app conversation UI mounts here next — every other tool flows through this screen.
-      </p>
-
-      <div
-        className="p-5 rounded-2xl border border-dashed border-white/15 text-center mb-4"
-        style={{ background:'rgba(255,215,0,0.04)' }}
-      >
-        <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.25em] mb-1.5">
-          Coming next
-        </p>
-        <p className="text-white/55 text-[12px] leading-snug">
-          In-app chat history + composer wires up here.
-        </p>
-      </div>
-
-      {/* Native iMessage handoff for users on iOS who want to keep texting */}
-      <a
-        href={IMESSAGE_LINK}
-        className="w-full h-12 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 border border-[#FFD700]/30 text-[#FFD700] hover:bg-[#FFD700]/10 transition-colors"
-      >
-        Open in iMessage →
-      </a>
-    </motion.div>
+    <PlaceholderTab
+      eyebrow="uP Chat"
+      title={`Talk to uP, ${artistName.split(' ')[0]}.`}
+      sub="Your 24/7 AI music manager. In-app conversation UI mounts here next — every other tool flows through this screen."
+    />
   )
 }
 
