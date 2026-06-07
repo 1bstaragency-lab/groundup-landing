@@ -737,16 +737,19 @@ interface ToolDemo {
 }
 
 interface Tool {
-  id:    string
-  icon:  string
-  title: string
-  sub:   string
-  demo:  ToolDemo
+  id:        string
+  icon:      string
+  title:     string
+  sub:       string
+  /** Per-tile CTA — distinct per tool so the grid doesn't read as repetitive */
+  ctaLabel:  string
+  demo:      ToolDemo
 }
 
 const TOOLS: Tool[] = [
   {
     id: 'releases', icon: '◯', title: 'Releases', sub: 'Drop calendar + rollout',
+    ctaLabel: 'Preview a release plan',
     demo: {
       headline: 'Plan your next drop, end to end.',
       stats: [
@@ -759,6 +762,7 @@ const TOOLS: Tool[] = [
   },
   {
     id: 'campaigns', icon: '⏱', title: 'Campaigns', sub: 'Meta + TikTok ads',
+    ctaLabel: 'See ad results',
     demo: {
       headline: 'Run paid ads, no dashboards.',
       stats: [
@@ -771,6 +775,7 @@ const TOOLS: Tool[] = [
   },
   {
     id: 'influencer', icon: '⊕', title: 'Influencer Reach', sub: 'Curators + creators',
+    ctaLabel: 'Read a curator reply',
     demo: {
       headline: 'Pitch curators, automatically.',
       stats: [
@@ -783,6 +788,7 @@ const TOOLS: Tool[] = [
   },
   {
     id: 'analytics', icon: '↗', title: 'Analytics', sub: 'Spotify + ad performance',
+    ctaLabel: 'View live stats',
     demo: {
       headline: 'Track everything that matters.',
       stats: [
@@ -794,6 +800,7 @@ const TOOLS: Tool[] = [
   },
   {
     id: 'kb', icon: '◌', title: 'Knowledge Base', sub: 'Videos + playbooks',
+    ctaLabel: 'Browse the library',
     demo: {
       headline: 'Industry playbooks at your fingertips.',
       stats: [
@@ -806,6 +813,7 @@ const TOOLS: Tool[] = [
   },
   {
     id: 'chat', icon: '✦', title: 'uP Chat', sub: 'Your 24/7 AI manager',
+    ctaLabel: 'Read a real chat',
     demo: {
       headline: 'I\'m always one text away.',
       stats: [
@@ -867,7 +875,7 @@ function ToolsStep({ onContinue }: { onContinue: () => void }) {
                 {t.sub}
               </p>
               <p className="text-[#FFD700]/70 group-hover:text-[#FFD700] text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-1 transition-colors">
-                See it work →
+                {t.ctaLabel} →
               </p>
             </div>
           </motion.button>
