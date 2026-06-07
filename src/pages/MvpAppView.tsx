@@ -1596,6 +1596,29 @@ function AppShell({ artistName, initialPlanId, onboardingCtx, onSignOut }: AppSh
   )
 }
 
+// ─── Knowledge Base — YouTube playlists surfaced on Home ────────────────────
+// Cover thumbnails come straight from YouTube's hqdefault pattern so we
+// don't host artwork ourselves.
+interface KbPlaylist {
+  id:         string
+  title:      string
+  category:   string
+  videos:     number
+  coverYtId:  string             // YouTube video ID used for the thumbnail
+  playlistId: string             // YouTube playlist ID for the open link
+}
+
+const KB_PLAYLISTS: KbPlaylist[] = [
+  { id: 'pl-tiktok',   title: 'TikTok Growth',    category: 'Growth',   videos: 8,
+    coverYtId: '7MSplBGZXx4', playlistId: 'PLE3F0DD96B6BCEF2D' },
+  { id: 'pl-spotify',  title: 'Spotify Pitching', category: 'Curators', videos: 12,
+    coverYtId: 'qekbbQ4Zt1M', playlistId: 'PLE3F0DD96B6BCEF2D' },
+  { id: 'pl-ads',      title: 'Meta Ads 101',     category: 'Paid',     videos: 6,
+    coverYtId: 'taw7RMwETfE', playlistId: 'PLE3F0DD96B6BCEF2D' },
+  { id: 'pl-rollout',  title: 'Release Rollout',  category: 'Strategy', videos: 10,
+    coverYtId: '7MSplBGZXx4', playlistId: 'PLE3F0DD96B6BCEF2D' },
+]
+
 // ─── Tab: Home ───────────────────────────────────────────────────────────────
 function HomeTab({ artistName, onJumpTo, state }: { artistName: string; onJumpTo: (t: TabId) => void; state: MvpAppStateAPI }) {
   const latest        = state.latestUpMessage
@@ -1701,6 +1724,62 @@ function HomeTab({ artistName, onJumpTo, state }: { artistName: string; onJumpTo
             </button>
           ))
         )}
+      </div>
+
+      {/* Knowledge Base — horizontal scroll of YouTube playlists */}
+      <div className="mt-6 -mx-5">
+        <div className="flex items-center justify-between mb-3 px-5">
+          <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em]">
+            Knowledge Base
+          </p>
+          <a
+            href="#"
+            className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest hover:opacity-80 transition-opacity"
+          >
+            View all →
+          </a>
+        </div>
+        <div
+          className="flex gap-2.5 overflow-x-auto pb-2 px-5"
+          style={{ scrollbarWidth: 'none' }}
+        >
+          {KB_PLAYLISTS.map(pl => (
+            <a
+              key={pl.id}
+              href={`https://www.youtube.com/playlist?list=${pl.playlistId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group shrink-0 w-[130px]"
+            >
+              <div className="relative aspect-square rounded-xl overflow-hidden border border-white/10 group-hover:border-[#FFD700]/40 transition-colors">
+                <img
+                  src={`https://img.youtube.com/vi/${pl.coverYtId}/hqdefault.jpg`}
+                  alt={pl.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
+                <div className="absolute top-2 left-2">
+                  <span
+                    className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest"
+                    style={{ background: 'rgba(0,0,0,0.6)', color: '#FFD700', backdropFilter: 'blur(4px)' }}
+                  >
+                    {pl.category}
+                  </span>
+                </div>
+                <div className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all opacity-90 group-hover:opacity-100 group-hover:scale-110"
+                     style={{ background: '#FFD700', boxShadow: '0 4px 10px rgba(255,215,0,0.45)' }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="black" className="ml-0.5">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-2.5">
+                  <p className="text-white text-[11px] font-black tracking-tight leading-tight line-clamp-2">{pl.title}</p>
+                  <p className="text-white/55 text-[9px] font-bold mt-0.5">{pl.videos} videos</p>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
       </div>
     </motion.div>
   )
