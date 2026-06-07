@@ -176,36 +176,26 @@ function SplashStep() {
       transition={{ duration: 0.4 }}
       className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505]"
     >
-      {/* Brand mark — gu-icon.png (square logo asset) */}
+      {/* Brand mark — gu-icon.png (single primary logo, no duplicate wordmark) */}
       <motion.div
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1,   opacity: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 18, delay: 0.1 }}
-        className="relative mb-7"
-        style={{ filter: 'drop-shadow(0 0 50px rgba(255,215,0,0.45))' }}
+        className="relative mb-5"
+        style={{ filter: 'drop-shadow(0 0 60px rgba(255,215,0,0.5))' }}
       >
         <img
           src="/gu-icon.png"
           alt="GrounduP"
-          className="w-28 h-28 object-contain"
+          className="w-36 h-36 object-contain"
         />
       </motion.div>
-
-      {/* Wordmark — logo.webp (GrounduP type-only lockup) */}
-      <motion.img
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
-        src="/logo.webp"
-        alt="GrounduP"
-        className="h-7 object-contain"
-      />
 
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.7, duration: 0.5 }}
-        className="text-white/40 text-[10px] font-black uppercase tracking-[0.3em] mt-3"
+        transition={{ delay: 0.5, duration: 0.5 }}
+        className="text-white/40 text-[10px] font-black uppercase tracking-[0.4em]"
       >
         Artist OS
       </motion.p>
