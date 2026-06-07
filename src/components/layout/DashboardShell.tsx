@@ -39,10 +39,10 @@ const MENU_ITEMS: MenuItem[] = [
   { id: "scheduler",   label: "Campaigns",          icon: Calendar,     mobileShow: true,  isMain: true },
   { id: "influencers", label: "Influencer Outreach", icon: Network,     mobileShow: true,  isMain: true, small: true },
   { id: "analytics",   label: "Analytics",          icon: TrendingUp,   mobileShow: false, isMain: true },
+  { id: "learn",       label: "Knowledge Base",     icon: BookOpen,     mobileShow: false, isMain: true, small: true },
   { id: "profile",     label: "Artist Profile",     icon: User,         mobileShow: false, isMain: true },
 
   // ── Preview (Coming Soon) ──────────────────────────────────────────────────
-  { id: "learn",       label: "Knowledge Base",     icon: BookOpen,     mobileShow: false, isMain: false, small: true, preview: true },
   { id: "studio",      label: "Content Studio",     icon: Layout,       mobileShow: false, isMain: false, preview: true },
   { id: "team",        label: "Team",               icon: Users,        mobileShow: false, isMain: false, preview: true },
 ]

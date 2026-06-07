@@ -5,9 +5,11 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   Play, Pause, Square, X, BookOpen, TrendingUp, Music2,
   Truck, Megaphone, Globe, ChevronRight, Volume2, Loader2,
-  FileText, Clock, ExternalLink, Newspaper,
+  FileText, Clock, ExternalLink, Newspaper, Lock,
 } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 import { ArticleCard } from "../ui/article-card"
+import { usePlan } from "../../hooks/usePlan"
 
 // ─── PDF Library ──────────────────────────────────────────────────────────────
 
@@ -648,13 +650,23 @@ function PlaylistModal({ playlist, onClose }: { playlist: Playlist; onClose: () 
 
 // ─── Main Section ─────────────────────────────────────────────────────────────
 export function LearnSection() {
+  const navigate = useNavigate()
+  const plan = usePlan()
+  const canReadPro = plan.isAtLeast('pro')
+
   const [activeCategory, setActiveCategory] = useState<string>('All')
   const [openGuide, setOpenGuide]           = useState<PdfGuide | null>(null)
   const [openPlaylist, setOpenPlaylist]     = useState<typeof VIDEO_PLAYLISTS[number] | null>(null)
+  const [showUpgrade, setShowUpgrade]       = useState<{ blockedItem: string } | null>(null)
 
   const filteredGuides = activeCategory === 'All'
     ? PDF_LIBRARY
     : PDF_LIBRARY.filter(g => g.category === activeCategory)
+
+  function tryOpenGuide(guide: PdfGuide) {
+    if (canReadPro) { setOpenGuide(guide); return }
+    setShowUpgrade({ blockedItem: guide.title })
+  }
 
   return (
     <motion.div key="learn" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-10">
@@ -694,6 +706,11 @@ export function LearnSection() {
         <div className="flex items-center gap-2 mb-6">
           <BookOpen size={14} className="text-[#FFD700]" />
           <h2 className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.3em]">Knowledge Base</h2>
+          {!canReadPro && (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-[#FFD700]/30 bg-[#FFD700]/10 text-[#FFD700] text-[8px] font-black uppercase tracking-[0.15em] ml-2">
+              <Lock size={9} /> Pro
+            </span>
+          )}
           <span className="text-white/20 text-[10px] font-bold ml-auto">{PDF_LIBRARY.length} guides</span>
         </div>
 
@@ -727,14 +744,22 @@ export function LearnSection() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
-                onClick={() => setOpenGuide(guide)}
-                className={`text-left p-5 bg-zinc-900/40 border ${meta.border} rounded-2xl hover:bg-zinc-900/70 transition-all group`}
+                onClick={() => tryOpenGuide(guide)}
+                className={`text-left p-5 bg-zinc-900/40 border ${meta.border} rounded-2xl hover:bg-zinc-900/70 transition-all group relative ${
+                  !canReadPro ? 'opacity-90' : ''
+                }`}
               >
                 <div className="flex items-start justify-between mb-3">
                   <span className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 ${meta.color}`}>
                     {meta.icon}{guide.category}
                   </span>
-                  <ChevronRight size={13} className="text-white/20 group-hover:text-white/50 transition-colors shrink-0" />
+                  {canReadPro ? (
+                    <ChevronRight size={13} className="text-white/20 group-hover:text-white/50 transition-colors shrink-0" />
+                  ) : (
+                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-[#FFD700]/30 bg-[#FFD700]/10 text-[#FFD700] text-[8px] font-black uppercase tracking-[0.15em] shrink-0">
+                      <Lock size={9} /> Pro
+                    </span>
+                  )}
                 </div>
                 <p className="text-white font-black text-sm uppercase tracking-tight leading-snug mb-2 group-hover:text-[#FFD700] transition-colors">
                   {guide.title}
@@ -762,15 +787,29 @@ export function LearnSection() {
         <div className="flex items-center gap-2 mb-6">
           <Newspaper size={14} className="text-[#FFD700]" />
           <h2 className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.3em]">Industry Articles</h2>
+          {!canReadPro && (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-[#FFD700]/30 bg-[#FFD700]/10 text-[#FFD700] text-[8px] font-black uppercase tracking-[0.15em] ml-2">
+              <Lock size={9} /> Pro
+            </span>
+          )}
           <span className="text-white/20 text-[10px] font-bold ml-auto">{ARTICLES.length} articles</span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+          // Free users: intercept any click inside the grid and show the upgrade modal
+          onClickCapture={!canReadPro ? (e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            setShowUpgrade({ blockedItem: 'Industry Articles' })
+          } : undefined}
+        >
           {ARTICLES.map((article, i) => (
             <motion.div
               key={article.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
+              className={!canReadPro ? 'cursor-pointer relative' : ''}
             >
               <ArticleCard
                 coverGradient={article.coverGradient}
@@ -783,6 +822,11 @@ export function LearnSection() {
                 publishedAt={article.publishedAt}
                 href={article.href}
               />
+              {!canReadPro && (
+                <div className="absolute top-3 right-3 flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-[#FFD700]/30 bg-black/60 backdrop-blur-sm text-[#FFD700] text-[8px] font-black uppercase tracking-[0.15em] pointer-events-none">
+                  <Lock size={9} /> Pro
+                </div>
+              )}
             </motion.div>
           ))}
         </div>
@@ -792,7 +836,90 @@ export function LearnSection() {
       <AnimatePresence>
         {openGuide    && <PdfReaderModal   guide={openGuide}       onClose={() => setOpenGuide(null)} />}
         {openPlaylist && <PlaylistModal    playlist={openPlaylist} onClose={() => setOpenPlaylist(null)} />}
+        {showUpgrade && (
+          <UpgradeGate
+            blockedItem={showUpgrade.blockedItem}
+            onClose={() => setShowUpgrade(null)}
+            onUpgrade={() => { setShowUpgrade(null); navigate('/pricing') }}
+          />
+        )}
       </AnimatePresence>
     </motion.div>
+  )
+}
+
+// ─── Upgrade gate modal (free users hitting locked content) ──────────────────
+function UpgradeGate({
+  blockedItem, onClose, onUpgrade,
+}: {
+  blockedItem: string
+  onClose:     () => void
+  onUpgrade:   () => void
+}) {
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md"
+      />
+      <motion.div
+        initial={{ opacity: 0, y: 24, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0,  scale: 1 }}
+        exit={{    opacity: 0, y: 24, scale: 0.97 }}
+        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+        className="fixed inset-0 z-[210] flex items-center justify-center p-4 pointer-events-none"
+      >
+        <div
+          className="relative w-full max-w-md pointer-events-auto rounded-3xl border border-[#FFD700]/20 p-8 text-center"
+          style={{
+            background: 'linear-gradient(160deg,#0F0F0F 0%,#0A0A0A 100%)',
+            boxShadow:  '0 40px 80px rgba(0,0,0,0.6), 0 0 80px rgba(255,215,0,0.1)',
+          }}
+        >
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[70%] h-32 bg-[#FFD700]/20 blur-[80px] rounded-full pointer-events-none" />
+
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center"
+            aria-label="Close"
+          >
+            <X size={12} />
+          </button>
+
+          <div className="relative">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-[#FFD700]/10 border border-[#FFD700]/30 flex items-center justify-center mb-5">
+              <Lock size={22} className="text-[#FFD700]" />
+            </div>
+            <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-3">Pro Content</p>
+            <h3 className="text-white text-2xl font-black tracking-tighter mb-3">
+              Unlock the full Knowledge Base
+            </h3>
+            <p className="text-white/50 text-sm leading-relaxed mb-6">
+              "{blockedItem}" — plus every other guide, article, and industry breakdown — is included with{' '}
+              <span className="text-[#FFD700] font-bold">uP Pro</span>. Video Library stays free.
+            </p>
+            <button
+              onClick={onUpgrade}
+              className="w-full h-12 rounded-2xl font-black text-[13px] tracking-wide flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                background: '#FFD700',
+                color:      '#000',
+                boxShadow:  '0 4px 20px rgba(255,215,0,0.35), inset 0 1px 0 rgba(255,255,255,0.4)',
+              }}
+            >
+              Upgrade to Pro
+              <ChevronRight size={16} />
+            </button>
+            <button
+              onClick={onClose}
+              className="mt-3 text-white/40 hover:text-white text-[11px] font-black uppercase tracking-widest transition-colors"
+            >
+              Not now
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </>
   )
 }
