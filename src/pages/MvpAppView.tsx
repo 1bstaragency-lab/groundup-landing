@@ -1127,17 +1127,17 @@ function PaywallStep({ onBack, onPick }: { onBack: () => void; onPick: (planId: 
       transition={{ duration: 0.32 }}
       className="absolute inset-0 overflow-y-auto"
     >
-      <div className="min-h-full flex flex-col px-6 pt-14 pb-6">
+      <div className="min-h-full flex flex-col px-5 pt-12 pb-5">
         <BackButton onBack={onBack} />
 
-        <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-2 px-2">
+        <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.25em] mb-1.5 px-1">
           Pick your plan
         </p>
-        <h2 className="text-white text-2xl font-black tracking-tighter leading-tight mb-1 px-2">
+        <h2 className="text-white text-xl font-black tracking-tighter leading-tight mb-1 px-1">
           Start with uP.
         </h2>
-        <p className="text-white/45 text-[12px] font-medium mb-4 px-2">
-          Pick how you want to start. uP texts you the moment you do.
+        <p className="text-white/45 text-[11px] font-medium mb-3.5 px-1">
+          Tap a plan to see what's included. Tap again to start.
         </p>
 
       {(() => {
@@ -1182,8 +1182,9 @@ function PaywallStep({ onBack, onPick }: { onBack: () => void; onPick: (planId: 
             highlighted: true,
           },
           {
-            id: 'strategic', eyebrow: 'No trial · Premium tier', title: 'Strategic Artist', tagline: 'All-in for serious careers',
-            price: '$49.99', per: '/ month', afterTrial: 'Billed monthly · Cancel anytime',
+            id: 'strategic', eyebrow: 'Premium · No trial', title: 'Strategic Artist', tagline: 'For serious careers',
+            price: '$49.99', per: '/ mo', afterTrial: 'Cancel anytime',
+            compact: true,
             features: [
               { kind: 'in' as const, label: 'Everything in Monthly' },
               { kind: 'in' as const, label: '1-on-1 strategy call (monthly)' },
@@ -1208,6 +1209,7 @@ function PaywallStep({ onBack, onPick }: { onBack: () => void; onPick: (planId: 
             afterTrial={c.afterTrial}
             features={c.features}
             highlighted={c.highlighted}
+            compact={c.compact}
             expanded={expanded === c.id}
             picked={picked === c.id}
             dimmed={expanded !== null && expanded !== c.id && picked === null}
@@ -1215,6 +1217,35 @@ function PaywallStep({ onBack, onPick }: { onBack: () => void; onPick: (planId: 
           />
         ))
       })()}
+
+      {/* Enterprise — labels + teams, no public pricing */}
+      <a
+        href="mailto:team@groundupapp.com?subject=GrounduP%20Enterprise%20Inquiry"
+        className="mx-2 mt-1 p-3 rounded-2xl border border-white/10 bg-zinc-900/40 flex items-center gap-3 hover:border-[#FFD700]/35 hover:bg-zinc-900 transition-colors"
+      >
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+          style={{
+            background: 'linear-gradient(140deg, rgba(255,215,0,0.16) 0%, rgba(255,215,0,0.04) 100%)',
+            border:     '1px solid rgba(255,215,0,0.25)',
+          }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="2">
+            <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01" strokeLinecap="round" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-white text-[11px] font-black uppercase tracking-wide leading-tight">
+            Enterprise
+          </p>
+          <p className="text-white/40 text-[10px] font-medium leading-snug mt-0.5">
+            Custom plans for labels, teams &amp; rosters
+          </p>
+        </div>
+        <span className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest shrink-0">
+          Contact us →
+        </span>
+      </a>
 
         <p className="text-white/30 text-[10px] text-center mt-4 leading-relaxed px-4">
           Cancel anytime during your trial. Charged when the trial ends.
@@ -1228,7 +1259,7 @@ function PaywallStep({ onBack, onPick }: { onBack: () => void; onPick: (planId: 
 type PlanFeature = { kind: 'in' | 'cap' | 'out'; label: string }
 
 function PlanCard({
-  eyebrow, title, tagline, price, per, afterTrial, highlighted, picked, expanded, dimmed, onPick,
+  eyebrow, title, tagline, price, per, afterTrial, highlighted, compact, picked, expanded, dimmed, onPick,
   features,
 }: {
   id:           string
@@ -1239,12 +1270,17 @@ function PlanCard({
   per:          string
   afterTrial:   string
   highlighted?: boolean
+  compact?:     boolean
   picked:       boolean
   expanded:     boolean
   dimmed:       boolean
   onPick:       () => void
   features?:    PlanFeature[]
 }) {
+  // Padding tightens for compact tier, expands when revealed
+  const padCls = compact && !expanded && !picked ? 'p-3' : 'p-3.5'
+  const marginCls = compact && !expanded && !picked ? 'mb-2' : 'mb-2'
+
   return (
     <motion.button
       onClick={onPick}
@@ -1254,7 +1290,7 @@ function PlanCard({
         scale:   expanded && !picked ? 1.01 : 1,
       }}
       transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-      className={`relative mx-2 mb-2.5 p-4 rounded-2xl border-2 text-left transition-colors overflow-hidden ${
+      className={`relative mx-2 ${marginCls} ${padCls} rounded-2xl border-2 text-left transition-colors overflow-hidden ${
         picked
           ? 'bg-[#FFD700] border-[#FFD700]'
           : expanded
@@ -1264,55 +1300,44 @@ function PlanCard({
               : 'bg-zinc-900/60 border-white/10 hover:border-[#FFD700]/40'
       }`}
       style={(highlighted || expanded) && !picked ? {
-        boxShadow: expanded ? '0 0 40px rgba(255,215,0,0.28)' : '0 0 32px rgba(255,215,0,0.18)',
+        boxShadow: expanded ? '0 0 40px rgba(255,215,0,0.28)' : '0 0 28px rgba(255,215,0,0.16)',
       } : undefined}
     >
       {highlighted && !picked && !expanded && (
         <div
-          className="absolute -top-2.5 right-4 px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-[0.18em]"
+          className="absolute -top-2 right-3 px-1.5 py-0.5 rounded-md text-[7.5px] font-black uppercase tracking-[0.18em]"
           style={{ background:'#FFD700', color:'#000' }}
         >
           Most Popular
         </div>
       )}
 
-      <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-2 ${
+      <p className={`text-[8.5px] font-black uppercase tracking-[0.22em] ${compact && !expanded && !picked ? 'mb-1' : 'mb-1.5'} ${
         picked ? 'text-black/70' : 'text-[#FFD700]'
       }`}>
         {eyebrow}
       </p>
 
-      <div className="flex items-baseline gap-2 mb-0.5">
-        <p className={`text-xl font-black tracking-tighter ${
-          picked ? 'text-black' : 'text-white'
-        }`}>
-          {title}
-        </p>
-        <p className={`text-[10px] font-bold ${
-          picked ? 'text-black/60' : 'text-white/40'
-        }`}>
-          {tagline}
-        </p>
-      </div>
-
-      <div className="flex items-baseline gap-1 mb-1">
-        <p className={`text-3xl font-black tracking-tighter ${
-          picked ? 'text-black' : 'text-white'
-        }`}>
-          {price}
-        </p>
-        <p className={`text-[13px] font-bold ${
-          picked ? 'text-black/60' : 'text-white/40'
-        }`}>
-          {per}
-        </p>
-      </div>
-
-      <p className={`text-[9px] font-medium ${
-        picked ? 'text-black/60' : 'text-white/35'
-      }`}>
-        {afterTrial}
-      </p>
+      {/* Compact (collapsed) layout — single tight row */}
+      {compact && !expanded && !picked ? (
+        <div className="flex items-baseline gap-2">
+          <p className="text-white text-base font-black tracking-tight">{title}</p>
+          <p className="text-white/35 text-[9.5px] font-bold flex-1">{tagline}</p>
+          <p className="text-white text-base font-black tracking-tight">{price}<span className="text-white/40 text-[10px] font-bold">{per}</span></p>
+        </div>
+      ) : (
+        <>
+          <div className="flex items-baseline gap-2 mb-0.5">
+            <p className={`text-lg font-black tracking-tighter ${picked ? 'text-black' : 'text-white'}`}>{title}</p>
+            <p className={`text-[10px] font-bold ${picked ? 'text-black/60' : 'text-white/40'}`}>{tagline}</p>
+          </div>
+          <div className="flex items-baseline gap-1 mb-1">
+            <p className={`${compact ? 'text-2xl' : 'text-[26px]'} font-black tracking-tighter ${picked ? 'text-black' : 'text-white'}`}>{price}</p>
+            <p className={`text-[12px] font-bold ${picked ? 'text-black/60' : 'text-white/40'}`}>{per}</p>
+          </div>
+          <p className={`text-[9px] font-medium ${picked ? 'text-black/60' : 'text-white/35'}`}>{afterTrial}</p>
+        </>
+      )}
 
       {/* Features list only shows when this tier is expanded or already picked */}
       <AnimatePresence initial={false}>
