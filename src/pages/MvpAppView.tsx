@@ -88,10 +88,10 @@ export default function MvpAppView() {
               onChange={setArtistName}
               onNext={() => goTo('genre')}
               onBack={() => goTo('welcome')} />}
-            {step === 'genre'   && <ChipStep    key="genre"
+            {step === 'genre'   && <BubbleStep  key="genre"
               eyebrow="Step 2 of 4"
               question="What's your sound?"
-              options={GENRES.map(g => ({ id: g, label: g }))}
+              options={GENRES}
               selected={genre}
               onSelect={(v) => { setGenre(v); goTo('stage') }}
               onBack={() => goTo('name')} />}
@@ -305,7 +305,119 @@ function NameStep({
   )
 }
 
-// ─── Steps 4-6: Chip-style selection ────────────────────────────────────────
+// ─── Step 4 (genre): Floating bubbles ───────────────────────────────────────
+// Hardcoded positions + sizes so the cluster looks organically balanced.
+// Each entry: x/y are % of the container, size is px.
+const BUBBLE_LAYOUT: { x: number; y: number; size: number }[] = [
+  { x: 18, y:  4, size: 88 },  // Hip-Hop  (top-left, large)
+  { x: 62, y:  2, size: 72 },  // R&B
+  { x: 42, y: 22, size: 84 },  // Pop      (center-top)
+  { x:  4, y: 22, size: 76 },  // Indie
+  { x: 70, y: 22, size: 80 },  // Electronic
+  { x: 18, y: 44, size: 80 },  // Rock
+  { x: 56, y: 44, size: 84 },  // Country
+  { x:  6, y: 66, size: 76 },  // Latin
+  { x: 38, y: 66, size: 92 },  // Afrobeats (lower-center, largest)
+  { x: 72, y: 66, size: 72 },  // Other
+]
+
+function BubbleStep({
+  eyebrow, question, options, selected, onSelect, onBack,
+}: {
+  eyebrow:  string
+  question: string
+  options:  string[]
+  selected: string | null
+  onSelect: (id: string) => void
+  onBack:   () => void
+}) {
+  // Local state lets us play the highlight/enlarge animation BEFORE advancing
+  const [picked, setPicked] = useState<string | null>(null)
+
+  function tap(id: string) {
+    if (picked) return // ignore subsequent taps while advancing
+    setPicked(id)
+    // Hold the satisfaction beat, then move on
+    setTimeout(() => onSelect(id), 520)
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -24 }}
+      transition={{ duration: 0.32 }}
+      className="absolute inset-0 flex flex-col px-8 pt-20 pb-24"
+    >
+      <BackButton onBack={onBack} />
+      <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-4">
+        {eyebrow}
+      </p>
+      <h2 className="text-white text-3xl font-black tracking-tighter leading-tight mb-6">
+        {question}
+      </h2>
+
+      {/* Bubble play area */}
+      <div className="relative flex-1 -mx-2">
+        {options.map((label, i) => {
+          const pos       = BUBBLE_LAYOUT[i] ?? { x: 30, y: 30, size: 76 }
+          const isPicked  = picked === label
+          const isSel     = selected === label
+          // Each bubble has its own gentle float — different duration/delay per index
+          // so they don't move in lockstep.
+          const floatDur  = 3.2 + (i % 4) * 0.4
+          const floatDelay = (i * 0.18) % 1.4
+
+          return (
+            <motion.button
+              key={label}
+              onClick={() => tap(label)}
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{
+                opacity: 1,
+                scale: isPicked ? 1.28 : 1,
+                y:     isPicked ? 0 : [0, -8, 0],
+              }}
+              transition={{
+                opacity:  { duration: 0.4, delay: i * 0.05 },
+                scale:    { type: 'spring', stiffness: 320, damping: 16 },
+                y:        isPicked
+                  ? { duration: 0 }
+                  : { duration: floatDur, repeat: Infinity, ease: 'easeInOut', delay: floatDelay },
+              }}
+              whileTap={{ scale: 0.92 }}
+              className={`absolute rounded-full font-black text-[12px] tracking-tight flex items-center justify-center text-center px-2 transition-colors ${
+                isPicked || isSel
+                  ? 'text-black'
+                  : 'text-white/90'
+              }`}
+              style={{
+                left:       `${pos.x}%`,
+                top:        `${pos.y}%`,
+                width:      pos.size,
+                height:     pos.size,
+                background: isPicked || isSel
+                  ? '#FFD700'
+                  : 'radial-gradient(circle at 35% 30%, #2a2a2a 0%, #18181b 70%, #0d0d0d 100%)',
+                boxShadow:  isPicked || isSel
+                  ? '0 0 36px rgba(255,215,0,0.55), inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -8px 16px rgba(0,0,0,0.25)'
+                  : 'inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -6px 16px rgba(0,0,0,0.4), 0 6px 18px rgba(0,0,0,0.35)',
+                border:     isPicked || isSel
+                  ? '1px solid rgba(255,215,0,0.6)'
+                  : '1px solid rgba(255,255,255,0.06)',
+                zIndex:     isPicked ? 10 : 1,
+              }}
+            >
+              {label}
+            </motion.button>
+          )
+        })}
+      </div>
+    </motion.div>
+  )
+}
+
+// ─── Steps 5-6: Chip-style selection (stacked cards) ─────────────────────────
 function ChipStep({
   eyebrow, question, options, selected, onSelect, onBack, stacked,
 }: {
