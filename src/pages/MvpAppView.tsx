@@ -1467,6 +1467,12 @@ function AppShell({ artistName, planId, onboardingCtx, onSignOut }: AppShellProp
     pains:      onboardingCtx.pains,
   })
 
+  // When switching INTO the uP tab, clear the unread badge.
+  function switchTab(next: TabId) {
+    if (next === 'up') state.markChatSeen()
+    setTab(next)
+  }
+
   function handleSignOut() {
     state.resetAll()
     onSignOut()
@@ -1502,11 +1508,15 @@ function AppShell({ artistName, planId, onboardingCtx, onSignOut }: AppShellProp
         {APP_TABS.map(t => {
           const active = tab === t.id
           const isCenter = t.id === 'up'
+          const badgeCount =
+            t.id === 'up'      ? state.chatUnreadCount    :
+            t.id === 'network' ? state.networkUnreadCount :
+            0
           return (
             <button
               key={t.id}
-              onClick={() => setTab(t.id)}
-              className="flex-1 flex flex-col items-center gap-1 py-1.5 group"
+              onClick={() => switchTab(t.id)}
+              className="relative flex-1 flex flex-col items-center gap-1 py-1.5 group"
             >
               {isCenter ? (
                 // Center "uP" uses the real brand orb with the rich multi-layer
@@ -1539,6 +1549,16 @@ function AppShell({ artistName, planId, onboardingCtx, onSignOut }: AppShellProp
               >
                 {t.label}
               </span>
+
+              {/* Unread badge — bright red pill, native iOS style */}
+              {badgeCount > 0 && !active && (
+                <span
+                  className="absolute top-0.5 right-1/2 translate-x-[14px] min-w-[16px] h-[16px] px-1 rounded-full bg-[#FF3B30] text-white text-[9px] font-black flex items-center justify-center"
+                  style={{ boxShadow: '0 2px 6px rgba(255,59,48,0.4)' }}
+                >
+                  {badgeCount > 9 ? '9+' : badgeCount}
+                </span>
+              )}
             </button>
           )
         })}
@@ -1549,8 +1569,9 @@ function AppShell({ artistName, planId, onboardingCtx, onSignOut }: AppShellProp
 
 // ─── Tab: Home ───────────────────────────────────────────────────────────────
 function HomeTab({ artistName, onJumpTo, state }: { artistName: string; onJumpTo: (t: TabId) => void; state: MvpAppStateAPI }) {
-  const latest = state.latestUpMessage
-  const tasks  = state.upcomingTasks
+  const latest        = state.latestUpMessage
+  const tasks         = state.upcomingTasks
+  const pendingAction = state.pendingActionMessage
 
   return (
     <motion.div
@@ -1567,28 +1588,45 @@ function HomeTab({ artistName, onJumpTo, state }: { artistName: string; onJumpTo
         Hey {artistName}.
       </h2>
 
-      {/* uP latest message preview — live from chat state */}
+      {/* uP latest message preview — live from chat state, inline action CTA */}
       {latest && (
-        <button
-          onClick={() => onJumpTo('up')}
-          className="w-full p-4 rounded-2xl border border-[#FFD700]/25 bg-[#FFD700]/8 text-left flex items-start gap-3.5 mb-3 hover:bg-[#FFD700]/12 transition-colors"
-        >
-          <div
-            className="w-11 h-11 rounded-full overflow-hidden shrink-0 mt-0.5 relative"
-            style={{
-              boxShadow:
-                '0 0 6px rgba(255,215,0,0.75), 0 0 18px rgba(255,215,0,0.5), 0 0 44px rgba(255,215,0,0.3), 0 0 80px rgba(255,215,0,0.14), inset 0 0 0 1px rgba(255,255,255,0.28)',
-            }}
+        <div className="w-full p-4 rounded-2xl border border-[#FFD700]/25 bg-[#FFD700]/8 flex items-start gap-3.5 mb-3">
+          <button
+            onClick={() => onJumpTo('up')}
+            className="flex items-start gap-3.5 flex-1 min-w-0 text-left"
           >
-            <img src="/up-avatar.png" alt="uP" className="w-full h-full object-cover" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.2em] mb-1">uP · {latest.ts}</p>
-            <p className="text-white text-[12px] leading-snug line-clamp-3 whitespace-pre-line">
-              {latest.text}
-            </p>
-          </div>
-        </button>
+            <div
+              className="w-11 h-11 rounded-full overflow-hidden shrink-0 mt-0.5 relative"
+              style={{
+                boxShadow:
+                  '0 0 6px rgba(255,215,0,0.75), 0 0 18px rgba(255,215,0,0.5), 0 0 44px rgba(255,215,0,0.3), 0 0 80px rgba(255,215,0,0.14), inset 0 0 0 1px rgba(255,255,255,0.28)',
+              }}
+            >
+              <img src="/up-avatar.png" alt="uP" className="w-full h-full object-cover" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.2em] mb-1">uP · {latest.ts}</p>
+              <p className="text-white text-[12px] leading-snug line-clamp-3 whitespace-pre-line">
+                {latest.text}
+              </p>
+              {/* Inline action button — fires the message's action without
+                  forcing the user to jump into the Chat tab first */}
+              {pendingAction?.action && pendingAction.id === latest.id && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); state.runChatAction(pendingAction.id) }}
+                  className="mt-2.5 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-transform hover:scale-[1.03] active:scale-[0.97]"
+                  style={{
+                    background: '#FFD700',
+                    color:      '#000',
+                    boxShadow:  '0 4px 12px rgba(255,215,0,0.35)',
+                  }}
+                >
+                  {pendingAction.action.label}
+                </button>
+              )}
+            </div>
+          </button>
+        </div>
       )}
 
       {/* Quick stats */}
@@ -1815,6 +1853,50 @@ function ReleasesTab({ state }: { state: MvpAppStateAPI }) {
           )
         })}
       </div>
+
+      {/* Past releases archive */}
+      {state.pastReleases.length > 0 && (
+        <div className="mt-7">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em]">
+              Past Releases
+            </p>
+            <p className="text-white/25 text-[10px] font-bold">{state.pastReleases.length} live</p>
+          </div>
+          <div className="space-y-2">
+            {state.pastReleases.map(p => (
+              <button
+                key={p.id}
+                className="w-full p-3 rounded-2xl border border-white/8 bg-zinc-900/40 flex items-center gap-3 text-left hover:border-white/20 hover:bg-zinc-900/70 transition-colors"
+              >
+                <div
+                  className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center text-lg font-black text-white"
+                  style={{ background: p.art, textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
+                >
+                  {p.title[0]}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-0.5">
+                    {p.type} · {p.releasedDate}
+                  </p>
+                  <p className="text-white text-[13px] font-black tracking-tight leading-tight truncate">
+                    {p.title}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end shrink-0">
+                  <p className="text-white text-[13px] font-black tracking-tight">{p.streams}</p>
+                  <p
+                    className="text-[9px] font-black uppercase tracking-widest mt-0.5"
+                    style={{ color: p.accent }}
+                  >
+                    {p.weeklyDelta}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </motion.div>
   )
 }
@@ -1909,7 +1991,7 @@ function UpTab({ artistName, planId, state }: { artistName: string; planId: stri
             className="flex-1 overflow-y-auto pr-1 -mr-1"
             style={{ scrollbarWidth: 'none' }}
           >
-            <ChatBubbles messages={state.chat} />
+            <ChatBubbles messages={state.chat} onRunAction={state.runChatAction} />
             {state.chatPending && <TypingDots />}
           </div>
 
@@ -1965,7 +2047,15 @@ function UpTab({ artistName, planId, state }: { artistName: string; planId: stri
   )
 }
 
-function ChatBubbles({ dimmed = false, messages }: { dimmed?: boolean; messages?: ChatMsg[] }) {
+function ChatBubbles({
+  dimmed = false,
+  messages,
+  onRunAction,
+}: {
+  dimmed?:     boolean
+  messages?:   ChatMsg[]
+  onRunAction?: (msgId: string) => void
+}) {
   const msgs = messages ?? []  // Solo lock overlay passes no messages → empty fallback
   return (
     <div className={`space-y-2.5 ${dimmed ? 'opacity-30 blur-[1.5px] pointer-events-none' : ''}`}>
@@ -1991,7 +2081,7 @@ function ChatBubbles({ dimmed = false, messages }: { dimmed?: boolean; messages?
           )
         }
         return (
-          <div key={m.id} className={`flex ${isUp ? 'justify-start' : 'justify-end'}`}>
+          <div key={m.id} className={`flex flex-col ${isUp ? 'items-start' : 'items-end'}`}>
             <div
               className={`max-w-[80%] px-3.5 py-2.5 text-[12.5px] leading-snug whitespace-pre-line ${
                 isUp ? 'rounded-2xl rounded-bl-md text-white' : 'rounded-2xl rounded-br-md text-black font-semibold'
@@ -2003,6 +2093,21 @@ function ChatBubbles({ dimmed = false, messages }: { dimmed?: boolean; messages?
             >
               {m.text}
             </div>
+            {/* Inline action button under uP messages — only when action is
+                attached, unfulfilled, and a handler is provided */}
+            {isUp && m.action && !m.action.done && onRunAction && (
+              <button
+                onClick={() => onRunAction(m.id)}
+                className="mt-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-transform hover:scale-[1.03] active:scale-[0.97]"
+                style={{
+                  background: '#FFD700',
+                  color:      '#000',
+                  boxShadow:  '0 4px 12px rgba(255,215,0,0.35)',
+                }}
+              >
+                {m.action.label}
+              </button>
+            )}
           </div>
         )
       })}

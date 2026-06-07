@@ -32,6 +32,9 @@ export interface ChatMsg {
   from: 'up' | 'me'
   text?: string
   card?: { title: string; sub: string; stat: string; accent: string }
+  /** Optional inline action — renders as a button beneath the bubble.
+   *  When tapped, sends `replyText` as the user's response. */
+  action?: { label: string; replyText: string; done?: boolean }
   ts:   string
 }
 
@@ -92,6 +95,36 @@ const SEED_CHAT: ChatMsg[] = [
   { id: '4', from: 'up',
     card: { title: "Yesterday's Meta Campaign", sub: '412 new listeners · $0.12 / listener', stat: '+18%', accent: '#60A5FA' },
     ts: '8:03 AM' },
+  { id: '5', from: 'up',
+    text: 'Want me to approve the Spotify pitch and send it now? I can also queue DJ Smoov a thank-you DM at the same time.',
+    action: { label: 'Approve & send →', replyText: 'Approve and send.' },
+    ts: '8:04 AM' },
+]
+
+// Past releases — finalized, no active checklist. Shown in the Releases tab
+// archive section. Stats are mock numbers; real implementation pulls from
+// Spotify-for-Artists / Apple Music for Artists.
+export interface PastRelease {
+  id:           string
+  title:        string
+  type:         'Single' | 'EP' | 'Album'
+  releasedDate: string             // human readable
+  streams:      string             // formatted: "42k"
+  weeklyDelta:  string             // "+8% this week"
+  accent:       string
+  art:          string
+}
+
+export const SEED_PAST: PastRelease[] = [
+  { id: 'p1', title: 'After Hours', type: 'Single', releasedDate: 'May 22, 2026',
+    streams: '38.4k', weeklyDelta: '+12% this week', accent: '#60A5FA',
+    art: 'linear-gradient(140deg, #0F1F33 0%, #1A3A66 50%, #60A5FA 100%)' },
+  { id: 'p2', title: 'Velvet Floor', type: 'EP', releasedDate: 'Feb 14, 2026',
+    streams: '127k', weeklyDelta: '+3% this week', accent: '#34D399',
+    art: 'linear-gradient(140deg, #0F2A22 0%, #1A4A33 50%, #34D399 100%)' },
+  { id: 'p3', title: '4AM', type: 'Single', releasedDate: 'Nov 8, 2025',
+    streams: '208k', weeklyDelta: '— this week', accent: '#F472B6',
+    art: 'linear-gradient(140deg, #2A0F22 0%, #4A1A3A 50%, #F472B6 100%)' },
 ]
 
 // ─── Hook ──────────────────────────────────────────────────────────────────
@@ -100,6 +133,9 @@ export function useMvpAppState(onboarding: OnboardingCtx) {
   const [releases, setReleases] = useState<Release[]>(SEED_RELEASES)
   const [chat, setChat]         = useState<ChatMsg[]>(SEED_CHAT)
   const [chatPending, setChatPending] = useState(false)
+  // Length of chat array the last time the user opened the uP Chat tab.
+  // chatUnreadCount = number of uP messages added after this length.
+  const [lastSeenChatLen, setLastSeenChatLen] = useState(SEED_CHAT.length)
   const persistTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Load persisted state on mount
@@ -206,15 +242,36 @@ export function useMvpAppState(onboarding: OnboardingCtx) {
     }
   }, [chat, chatPending, onboarding])
 
+  // ─── Run an inline action from a uP message ─────────────────────────────
+  // Marks the action done (so the button disappears), then sends the
+  // action's replyText as if the user typed it.
+  const runChatAction = useCallback((msgId: string) => {
+    let replyText: string | null = null
+    setChat(prev => prev.map(m => {
+      if (m.id !== msgId || !m.action || m.action.done) return m
+      replyText = m.action.replyText
+      return { ...m, action: { ...m.action, done: true } }
+    }))
+    if (replyText) sendChat(replyText)
+  }, [sendChat])
+
+  // ─── Mark the chat as seen (reset unread counter) ───────────────────────
+  const markChatSeen = useCallback(() => setLastSeenChatLen(chat.length), [chat.length])
+
   // ─── Reset everything (sign out) ────────────────────────────────────────
   const resetAll = useCallback(() => {
     try { localStorage.removeItem(STORAGE_KEY) } catch { /* noop */ }
     setReleases(SEED_RELEASES)
     setChat(SEED_CHAT)
+    setLastSeenChatLen(SEED_CHAT.length)
   }, [])
 
   // ─── Derived: latest uP message for Home banner ─────────────────────────
   const latestUpMessage = chat.slice().reverse().find(m => m.from === 'up' && m.text) ?? null
+
+  // ─── Derived: latest uP message that has an unfulfilled action ──────────
+  const pendingActionMessage =
+    chat.slice().reverse().find(m => m.from === 'up' && m.action && !m.action.done) ?? null
 
   // ─── Derived: next 3 incomplete tasks across all releases ───────────────
   const upcomingTasks = releases.flatMap(r =>
@@ -223,17 +280,32 @@ export function useMvpAppState(onboarding: OnboardingCtx) {
       .filter(t => !t.done)
   ).slice(0, 3)
 
+  // ─── Derived: unread badge counts for the tab bar ───────────────────────
+  const chatUnreadCount =
+    chat.slice(lastSeenChatLen).filter(m => m.from === 'up').length
+  // Network is static in this MVP — DJ Smoov's "replied" row is what's new.
+  const networkUnreadCount = 1
+
+  // ─── Derived: past releases (still seeded for now) ──────────────────────
+  const pastReleases = SEED_PAST
+
   return {
     // State
     releases,
+    pastReleases,
     chat,
     chatPending,
     // Derived
     latestUpMessage,
+    pendingActionMessage,
     upcomingTasks,
+    chatUnreadCount,
+    networkUnreadCount,
     // Actions
     toggleTask,
     sendChat,
+    runChatAction,
+    markChatSeen,
     resetAll,
   }
 }
