@@ -343,7 +343,7 @@ function ChipStep({
         {question}
       </h2>
 
-      <div className={`flex-1 overflow-y-auto ${stacked ? 'flex flex-col gap-2.5' : 'flex flex-wrap gap-2'}`}>
+      <div className={`${stacked ? 'flex-1 overflow-y-auto flex flex-col gap-2.5' : 'grid grid-cols-3 gap-2 content-start auto-rows-min'}`}>
         {options.map(opt => {
           const isSel = selected === opt.id
           if (stacked) {
@@ -373,14 +373,15 @@ function ChipStep({
               </button>
             )
           }
+          // Non-stacked grid tile — fixed-height compact card, not a stretched pill
           return (
             <button
               key={opt.id}
               onClick={() => onSelect(opt.id)}
-              className={`px-4 py-2.5 rounded-full border text-[13px] font-black transition-all ${
+              className={`h-16 rounded-2xl border text-[12px] font-black transition-all flex items-center justify-center text-center px-2 ${
                 isSel
                   ? 'bg-[#FFD700] border-[#FFD700] text-black'
-                  : 'bg-zinc-900 border-white/8 text-white hover:border-[#FFD700]/40'
+                  : 'bg-zinc-900 border-white/8 text-white/90 hover:border-[#FFD700]/40 hover:bg-zinc-800'
               }`}
             >
               {opt.label}
