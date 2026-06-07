@@ -18,7 +18,13 @@
  */
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useMvpAppState, type MvpAppStateAPI, type ChatMsg } from './mvp/useMvpAppState'
+import {
+  useMvpAppState,
+  type MvpAppStateAPI,
+  type ChatMsg,
+  type OutreachRow,
+  type OutreachThreadMsg,
+} from './mvp/useMvpAppState'
 
 // iMessage handoff is paused while we build the in-app flow.
 // When ready: re-add a constant for start.msg.new/<linkId> and wire it
@@ -220,7 +226,7 @@ export default function MvpAppView() {
               onPick={(p) => { setPlanId(p); goTo('app') }} />}
             {step === 'app'     && <AppShell    key="app"
               artistName={artistName || 'Artist'}
-              planId={planId}
+              initialPlanId={planId}
               onboardingCtx={{
                 artistName: artistName || 'Artist',
                 genre,
@@ -1453,19 +1459,22 @@ const APP_TABS: TabDef[] = [
 
 interface AppShellProps {
   artistName:    string
-  planId:        string
+  initialPlanId: string
   onboardingCtx: { artistName: string; genre?: string | null; goal?: string | null; pains?: string[] }
   onSignOut:     () => void
 }
 
-function AppShell({ artistName, planId, onboardingCtx, onSignOut }: AppShellProps) {
+function AppShell({ artistName, initialPlanId, onboardingCtx, onSignOut }: AppShellProps) {
   const [tab, setTab] = useState<TabId>('home')
   const state = useMvpAppState({
     artistName: onboardingCtx.artistName,
     genre:      onboardingCtx.genre,
     goal:       onboardingCtx.goal,
     pains:      onboardingCtx.pains,
-  })
+  }, initialPlanId)
+  const planId = state.planId
+  const [upgradeSheet, setUpgradeSheet] = useState(false)
+  const [openOutreachId, setOpenOutreachId] = useState<string | null>(null)
 
   // When switching INTO the uP tab, clear the unread badge.
   function switchTab(next: TabId) {
@@ -1488,11 +1497,11 @@ function AppShell({ artistName, planId, onboardingCtx, onSignOut }: AppShellProp
       {/* Status bar already mounted by parent */}
       <div className="flex-1 overflow-y-auto pt-12 pb-24">
         <AnimatePresence mode="wait">
-          {tab === 'home'     && <HomeTab     key="home"     artistName={artistName} onJumpTo={setTab} state={state} />}
+          {tab === 'home'     && <HomeTab     key="home"     artistName={artistName} onJumpTo={switchTab} state={state} />}
           {tab === 'releases' && <ReleasesTab key="releases" state={state} />}
-          {tab === 'up'       && <UpTab       key="up"       artistName={artistName} planId={planId} state={state} />}
-          {tab === 'network'  && <NetworkTab  key="network"  planId={planId} />}
-          {tab === 'you'      && <YouTab      key="you"      artistName={artistName} planId={planId} onSignOut={handleSignOut} />}
+          {tab === 'up'       && <UpTab       key="up"       artistName={artistName} planId={planId} state={state} onUpgrade={() => setUpgradeSheet(true)} />}
+          {tab === 'network'  && <NetworkTab  key="network"  planId={planId} state={state} onUpgrade={() => setUpgradeSheet(true)} onOpenThread={setOpenOutreachId} />}
+          {tab === 'you'      && <YouTab      key="you"      artistName={artistName} planId={planId} state={state} onSignOut={handleSignOut} onUpgrade={() => setUpgradeSheet(true)} />}
         </AnimatePresence>
       </div>
 
@@ -1563,6 +1572,26 @@ function AppShell({ artistName, planId, onboardingCtx, onSignOut }: AppShellProp
           )
         })}
       </nav>
+
+      {/* Modal sheets — upgrade flow + outreach thread drawer */}
+      <AnimatePresence>
+        {upgradeSheet && (
+          <UpgradeSheet
+            currentPlan={planId}
+            onClose={() => setUpgradeSheet(false)}
+            onPick={(id) => { state.changePlan(id); setUpgradeSheet(false) }}
+          />
+        )}
+        {openOutreachId && (
+          <OutreachThreadSheet
+            row={state.outreach.find(o => o.id === openOutreachId)!}
+            thread={state.outreachThreads[openOutreachId] ?? []}
+            onAccept={() => { state.acceptDraft(openOutreachId); setOpenOutreachId(null) }}
+            onDismiss={() => { state.dismissDraft(openOutreachId); setOpenOutreachId(null) }}
+            onClose={() => setOpenOutreachId(null)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
@@ -1912,7 +1941,7 @@ const QUICK_ACTIONS = [
   'Run an ad',
 ]
 
-function UpTab({ artistName, planId, state }: { artistName: string; planId: string; state: MvpAppStateAPI }) {
+function UpTab({ artistName, planId, state, onUpgrade }: { artistName: string; planId: string; state: MvpAppStateAPI; onUpgrade: () => void }) {
   const locked = planId === 'solo'   // Solo plan: uP iMessage disabled
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -1972,7 +2001,8 @@ function UpTab({ artistName, planId, state }: { artistName: string; planId: stri
               Your AI music manager works the moment you upgrade. {artistName}, you're on Solo — upgrade for unlimited messaging.
             </p>
             <button
-              className="px-5 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest"
+              onClick={onUpgrade}
+              className="px-5 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest hover:scale-[1.03] active:scale-[0.97] transition-transform"
               style={{ background:'#FFD700', color:'#000', boxShadow:'0 4px 14px rgba(255,215,0,0.35)' }}
             >
               Upgrade to Monthly →
@@ -2139,36 +2169,28 @@ function TypingDots() {
 }
 
 // ─── Network — outreach list (drives freemium tension) ──────────────────────
-interface OutreachRow {
-  id:        string
-  name:      string
-  followers: string
-  initials:  string
-  accent:    string
-  status:    'replied' | 'pending' | 'opened' | 'queued'
-  preview:   string
-}
+// OutreachRow type imported at the top of this file from useMvpAppState
 
-const OUTREACH: OutreachRow[] = [
-  { id: 'o1', name: 'DJ Smoov',     followers: '92K', initials: 'DS', accent: '#FFD700',
-    status: 'replied', preview: '"Love this — adding to Late Night Vibes 🔥"' },
-  { id: 'o2', name: 'Curator Mara', followers: '480K', initials: 'CM', accent: '#A78BFA',
-    status: 'opened',  preview: 'Read 2h ago · No reply yet' },
-  { id: 'o3', name: 'Devon K',      followers: '210K', initials: 'DK', accent: '#60A5FA',
-    status: 'pending', preview: 'Sent yesterday' },
-]
-
+// Browse list stays as a constant — these aren't conversations yet
 const BROWSE: OutreachRow[] = [
   { id: 'b1', name: 'Soulful Vibes',  followers: '340K', initials: 'SV', accent: '#34D399', status: 'queued', preview: 'R&B · Indie' },
   { id: 'b2', name: 'After Hours FM', followers: '210K', initials: 'AH', accent: '#F87171', status: 'queued', preview: 'Late Night · Curated' },
   { id: 'b3', name: 'New Wave Pop',   followers: '580K', initials: 'NW', accent: '#FB923C', status: 'queued', preview: 'Pop · Editorial' },
 ]
 
-function NetworkTab({ planId }: { planId: string }) {
+function NetworkTab({
+  planId, state, onUpgrade, onOpenThread,
+}: {
+  planId:       string
+  state:        MvpAppStateAPI
+  onUpgrade:    () => void
+  onOpenThread: (rowId: string) => void
+}) {
   const plan = PLAN_META[planId] ?? PLAN_META.solo
   const cap  = plan.outreachCap
   const used = 2                            // demo: artist already used 2 of 3
   const atCap = cap !== null && used >= cap
+  const outreach = state.outreach
 
   return (
     <motion.div
@@ -2213,7 +2235,8 @@ function NetworkTab({ planId }: { planId: string }) {
           </p>
           {(atCap || used === cap - 1) && (
             <button
-              className="mt-3 w-full h-10 rounded-xl font-black text-[11px] uppercase tracking-widest"
+              onClick={onUpgrade}
+              className="mt-3 w-full h-10 rounded-xl font-black text-[11px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-transform"
               style={{ background:'#FFD700', color:'#000', boxShadow:'0 4px 14px rgba(255,215,0,0.3)' }}
             >
               Upgrade for unlimited →
@@ -2222,10 +2245,21 @@ function NetworkTab({ planId }: { planId: string }) {
         </div>
       )}
 
-      {/* Active conversations */}
+      {/* Active conversations — tappable, opens thread sheet */}
       <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-2.5">Active</p>
       <div className="space-y-2 mb-6">
-        {OUTREACH.map(o => <OutreachCard key={o.id} row={o} />)}
+        {outreach.map(o => {
+          const hasDraft = (state.outreachThreads[o.id] ?? []).some(m => m.from === 'up_draft')
+          return (
+            <button
+              key={o.id}
+              onClick={() => onOpenThread(o.id)}
+              className="w-full text-left"
+            >
+              <OutreachCard row={o} hasDraft={hasDraft} />
+            </button>
+          )
+        })}
       </div>
 
       {/* Browse list */}
@@ -2253,7 +2287,7 @@ function NetworkTab({ planId }: { planId: string }) {
   )
 }
 
-function OutreachCard({ row }: { row: OutreachRow }) {
+function OutreachCard({ row, hasDraft }: { row: OutreachRow; hasDraft?: boolean }) {
   const statusColors: Record<OutreachRow['status'], { dot: string; label: string; text: string }> = {
     replied: { dot: '#34D399', label: 'Replied',     text: 'text-[#34D399]' },
     opened:  { dot: '#A78BFA', label: 'Opened',      text: 'text-[#A78BFA]' },
@@ -2262,7 +2296,10 @@ function OutreachCard({ row }: { row: OutreachRow }) {
   }
   const s = statusColors[row.status]
   return (
-    <div className="p-3 rounded-2xl border border-white/8 bg-zinc-900/60 flex items-center gap-3">
+    <div
+      className="p-3 rounded-2xl border bg-zinc-900/60 flex items-center gap-3 hover:bg-zinc-900 transition-colors"
+      style={{ borderColor: hasDraft ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.08)' }}
+    >
       <div
         className="w-10 h-10 rounded-full flex items-center justify-center font-black text-[11px] shrink-0 border"
         style={{
@@ -2277,6 +2314,12 @@ function OutreachCard({ row }: { row: OutreachRow }) {
         <div className="flex items-center gap-2 mb-0.5">
           <p className="text-white text-[12px] font-black tracking-tight truncate">{row.name}</p>
           <p className="text-white/35 text-[10px] font-bold shrink-0">{row.followers}</p>
+          {hasDraft && (
+            <span className="px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest shrink-0"
+                  style={{ background:'rgba(255,215,0,0.15)', color:'#FFD700', border:'1px solid rgba(255,215,0,0.3)' }}>
+              uP drafted
+            </span>
+          )}
         </div>
         <p className="text-white/55 text-[10.5px] leading-snug truncate">{row.preview}</p>
       </div>
@@ -2289,7 +2332,31 @@ function OutreachCard({ row }: { row: OutreachRow }) {
 }
 
 // ─── You — profile / plan / analytics / settings ────────────────────────────
-function YouTab({ artistName, planId, onSignOut }: { artistName: string; planId: string; onSignOut: () => void }) {
+function YouTab({
+  artistName, planId, state, onSignOut, onUpgrade,
+}: {
+  artistName: string
+  planId:     string
+  state:      MvpAppStateAPI
+  onSignOut:  () => void
+  onUpgrade:  () => void
+}) {
+  const [copied, setCopied] = useState(false)
+  const shareUrl = `https://groundupapp.com/?ref=${state.referralCode}`
+
+  async function shareReferral() {
+    const message = `Yo — uP is the AI music manager I've been using. Drops your career strategy in iMessage. Use my code:\n${shareUrl}`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'GrounduP — uP AI music manager', text: message, url: shareUrl })
+      } else {
+        await navigator.clipboard.writeText(shareUrl)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      }
+      state.bumpReferralCount()
+    } catch { /* user cancelled — noop */ }
+  }
   const plan = PLAN_META[planId] ?? PLAN_META.solo
   const initials = artistName.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'A'
 
@@ -2333,10 +2400,38 @@ function YouTab({ artistName, planId, onSignOut }: { artistName: string; planId:
         <StatTile value="3"    label="Releases live"     trend="2 upcoming" trendColor="rgba(255,255,255,0.4)" />
       </div>
 
+      {/* Refer a friend — viral growth lever */}
+      <button
+        onClick={shareReferral}
+        className="w-full p-4 rounded-2xl border border-[#FFD700]/30 mb-5 text-left flex items-center gap-3 hover:border-[#FFD700]/50 transition-colors"
+        style={{
+          background:'linear-gradient(140deg, rgba(255,215,0,0.10) 0%, rgba(255,215,0,0.03) 100%)',
+          boxShadow: '0 4px 24px rgba(255,215,0,0.10)',
+        }}
+      >
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+             style={{ background:'rgba(255,215,0,0.18)', border:'1px solid rgba(255,215,0,0.35)' }}>
+          <span className="text-lg">🎁</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-white text-[12px] font-black uppercase tracking-tight leading-tight">
+            Refer artists, earn $20 each
+          </p>
+          <p className="text-white/45 text-[10.5px] font-medium mt-0.5">
+            {state.referralCount > 0
+              ? `${state.referralCount} shared · $${state.referralCount * 20} earned`
+              : `Share your code · ${state.referralCode}`}
+          </p>
+        </div>
+        <span className="text-[#FFD700] text-[10px] font-black uppercase tracking-widest shrink-0">
+          {copied ? 'Copied ✓' : 'Share →'}
+        </span>
+      </button>
+
       {/* Menu sections */}
       <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-2.5">Account</p>
       <div className="rounded-2xl border border-white/8 bg-zinc-900/50 overflow-hidden mb-4">
-        <MenuRow icon="◷" label="Plan & Billing"      detail={plan.label}  />
+        <MenuRow icon="◷" label="Plan & Billing"      detail={plan.label}             onClick={onUpgrade} />
         <MenuRow icon="↗" label="Full Analytics"      detail="Spotify · Meta" />
         <MenuRow icon="◌" label="Knowledge Base"      detail="Videos + guides" />
         <MenuRow icon="⊡" label="Connected Platforms" detail="Spotify · Meta · Stripe" />
@@ -2380,9 +2475,9 @@ function StatTile({ value, label, trend, trendColor }: { value: string; label: s
   )
 }
 
-function MenuRow({ icon, label, detail }: { icon: string; label: string; detail: string }) {
+function MenuRow({ icon, label, detail, onClick }: { icon: string; label: string; detail: string; onClick?: () => void }) {
   return (
-    <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/3 transition-colors border-b border-white/5 last:border-b-0">
+    <button onClick={onClick} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/3 transition-colors border-b border-white/5 last:border-b-0">
       <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-[#FFD700] text-sm">
         {icon}
       </div>
@@ -2450,5 +2545,263 @@ function ProgressDots({ step }: { step: StepId }) {
         />
       ))}
     </div>
+  )
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Wave 3 modals — UpgradeSheet + OutreachThreadSheet
+// ════════════════════════════════════════════════════════════════════════════
+
+// ─── UpgradeSheet — slide-up plan picker for in-app upgrades ────────────────
+interface UpgradeTier {
+  id:       string
+  label:    string
+  pitch:    string
+  price:    string
+  per:      string
+  trial?:   string
+  features: string[]
+}
+
+const UPGRADE_TIERS: UpgradeTier[] = [
+  { id: 'weekly',    label: 'Weekly',           pitch: 'Full access',           price: '$9.99',  per: '/ wk', trial: '3-day free trial',
+    features: ['uP iMessage AI manager', 'Unlimited curator outreach', 'Meta + TikTok ads'] },
+  { id: 'monthly',   label: 'Monthly',          pitch: 'Most popular · 30% off weekly', price: '$29.99', per: '/ mo', trial: '7-day free trial',
+    features: ['Everything in Weekly', 'Priority uP responses (< 30s)', 'Advanced analytics'] },
+  { id: 'strategic', label: 'Strategic Artist', pitch: 'For serious careers',   price: '$49.99', per: '/ mo',
+    features: ['Everything in Monthly', '1-on-1 strategy call (monthly)', 'Direct founder access'] },
+]
+
+function UpgradeSheet({
+  currentPlan, onClose, onPick,
+}: {
+  currentPlan: string
+  onClose:     () => void
+  onPick:      (id: string) => void
+}) {
+  const [picked, setPicked] = useState<string | null>(null)
+
+  function confirm(id: string) {
+    setPicked(id)
+    setTimeout(() => onPick(id), 520)
+  }
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 z-40 bg-black/75 backdrop-blur-md"
+      />
+      <motion.div
+        initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+        transition={{ type: 'spring', stiffness: 280, damping: 32 }}
+        className="absolute left-0 right-0 bottom-0 z-50 rounded-t-3xl border-t border-[#FFD700]/20 bg-[#0A0A0A] overflow-hidden"
+        style={{ maxHeight: '85%' }}
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full bg-white/15" />
+        </div>
+
+        <div className="px-5 pt-3 pb-6 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 20px)' }}>
+          <div className="flex items-start justify-between mb-1">
+            <div>
+              <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.25em] mb-1">Upgrade your plan</p>
+              <h2 className="text-white text-xl font-black tracking-tighter">Unlock everything.</h2>
+            </div>
+            <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white flex items-center justify-center">
+              <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+                <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+          <p className="text-white/45 text-[11.5px] mb-4">Pick a plan — uP fires up the moment you do.</p>
+
+          <div className="space-y-2.5">
+            {UPGRADE_TIERS.map(t => {
+              const isCurrent = t.id === currentPlan
+              const isPicked  = picked  === t.id
+              const isMonthly = t.id === 'monthly'
+              return (
+                <motion.button
+                  key={t.id}
+                  onClick={() => !isCurrent && confirm(t.id)}
+                  disabled={isCurrent}
+                  whileTap={!isCurrent ? { scale: 0.98 } : undefined}
+                  className={`relative w-full text-left p-3.5 rounded-2xl border-2 transition-colors overflow-hidden ${
+                    isPicked
+                      ? 'bg-[#FFD700] border-[#FFD700]'
+                      : isCurrent
+                        ? 'bg-zinc-900/40 border-white/10 opacity-60'
+                        : isMonthly
+                          ? 'bg-zinc-900 border-[#FFD700]/60'
+                          : 'bg-zinc-900/60 border-white/10'
+                  }`}
+                  style={isMonthly && !isPicked ? { boxShadow: '0 0 24px rgba(255,215,0,0.18)' } : undefined}
+                >
+                  {isMonthly && !isPicked && !isCurrent && (
+                    <div className="absolute -top-2 right-3 px-1.5 py-0.5 rounded-md text-[7.5px] font-black uppercase tracking-[0.18em]"
+                         style={{ background:'#FFD700', color:'#000', boxShadow:'0 3px 8px rgba(255,215,0,0.35)' }}>
+                      Most Popular
+                    </div>
+                  )}
+
+                  {t.trial && (
+                    <p className={`text-[8.5px] font-black uppercase tracking-[0.22em] mb-1.5 ${
+                      isPicked ? 'text-black/70' : 'text-[#FFD700]'
+                    }`}>{t.trial}</p>
+                  )}
+
+                  <div className="flex items-baseline gap-2 mb-0.5">
+                    <p className={`text-lg font-black tracking-tighter ${isPicked ? 'text-black' : 'text-white'}`}>{t.label}</p>
+                    <p className={`text-[10px] font-bold ${isPicked ? 'text-black/60' : 'text-white/40'}`}>{t.pitch}</p>
+                  </div>
+
+                  <div className="flex items-baseline gap-1 mb-2">
+                    <p className={`text-[22px] font-black tracking-tighter ${isPicked ? 'text-black' : 'text-white'}`}>{t.price}</p>
+                    <p className={`text-[12px] font-bold ${isPicked ? 'text-black/60' : 'text-white/40'}`}>{t.per}</p>
+                  </div>
+
+                  <ul className="space-y-1">
+                    {t.features.map(f => (
+                      <li key={f} className={`flex items-center gap-2 text-[10px] ${isPicked ? 'text-black/75' : 'text-white/65'}`}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                             stroke={isPicked ? '#000' : '#FFD700'} strokeWidth="3" className="shrink-0">
+                          <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {isCurrent && (
+                    <p className="text-white/30 text-[9px] font-black uppercase tracking-widest mt-2.5">Current plan</p>
+                  )}
+                </motion.button>
+              )
+            })}
+          </div>
+
+          <p className="text-white/25 text-[10px] text-center mt-5">
+            Cancel anytime during your trial. Charged when the trial ends.
+          </p>
+        </div>
+      </motion.div>
+    </>
+  )
+}
+
+// ─── OutreachThreadSheet — full conversation + draft approval flow ──────────
+function OutreachThreadSheet({
+  row, thread, onAccept, onDismiss, onClose,
+}: {
+  row:       OutreachRow
+  thread:    OutreachThreadMsg[]
+  onAccept:  () => void
+  onDismiss: () => void
+  onClose:   () => void
+}) {
+  const draft = thread.find(m => m.from === 'up_draft')
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 z-40 bg-black/75 backdrop-blur-md"
+      />
+      <motion.div
+        initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+        transition={{ type: 'spring', stiffness: 280, damping: 32 }}
+        className="absolute left-0 right-0 bottom-0 z-50 rounded-t-3xl border-t border-white/10 bg-[#0A0A0A] overflow-hidden flex flex-col"
+        style={{ height: '88%' }}
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-white/15" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center gap-3 px-5 py-3 border-b border-white/5 shrink-0">
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center font-black text-[11px] shrink-0 border"
+            style={{
+              background:  `${row.accent}20`,
+              borderColor: `${row.accent}50`,
+              color:       row.accent,
+            }}
+          >
+            {row.initials}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-[14px] font-black tracking-tight leading-tight truncate">{row.name}</p>
+            <p className="text-white/35 text-[10px] font-bold">{row.followers} · Curator</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white flex items-center justify-center">
+            <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Thread */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2.5" style={{ scrollbarWidth: 'none' }}>
+          {thread.filter(m => m.from !== 'up_draft').map(m => {
+            const isMe = m.from === 'me'
+            return (
+              <div key={m.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                <div
+                  className={`max-w-[80%] px-3.5 py-2.5 text-[12.5px] leading-snug ${
+                    isMe ? 'rounded-2xl rounded-br-md text-black font-semibold' : 'rounded-2xl rounded-bl-md text-white'
+                  }`}
+                  style={isMe
+                    ? { background:'#FFD700' }
+                    : { background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)' }
+                  }
+                >
+                  {m.text}
+                </div>
+                <p className="text-white/25 text-[9px] mt-0.5 px-1">{m.ts}</p>
+              </div>
+            )
+          })}
+
+          {/* Drafted reply from uP */}
+          {draft && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 p-4 rounded-2xl border-2 border-[#FFD700]/30"
+              style={{
+                background: 'linear-gradient(140deg, rgba(255,215,0,0.08) 0%, rgba(255,215,0,0.02) 100%)',
+                boxShadow:  '0 8px 32px rgba(255,215,0,0.12)',
+              }}
+            >
+              <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.25em] mb-2 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FFD700]" />
+                uP drafted a reply
+              </p>
+              <p className="text-white text-[13px] leading-snug mb-4">{draft.text}</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={onAccept}
+                  className="flex-1 h-11 rounded-xl font-black text-[11px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                  style={{ background:'#FFD700', color:'#000', boxShadow:'0 4px 14px rgba(255,215,0,0.35)' }}
+                >
+                  Approve &amp; send
+                </button>
+                <button
+                  onClick={onDismiss}
+                  className="px-4 h-11 rounded-xl border border-white/15 text-white/60 hover:text-white hover:border-white/30 text-[11px] font-black uppercase tracking-widest transition-colors"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </motion.div>
+    </>
   )
 }
