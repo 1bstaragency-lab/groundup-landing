@@ -25,6 +25,7 @@ import {
   type OutreachRow,
   type OutreachThreadMsg,
 } from './mvp/useMvpAppState'
+import { KB_PLAYLISTS, type KbPlaylist } from './mvp/kbPlaylists'
 
 // iMessage handoff is paused while we build the in-app flow.
 // When ready: re-add a constant for start.msg.new/<linkId> and wire it
@@ -1596,31 +1597,9 @@ function AppShell({ artistName, initialPlanId, onboardingCtx, onSignOut }: AppSh
   )
 }
 
-// ─── Knowledge Base — YouTube playlists surfaced on Home ────────────────────
-// Cover thumbnails come straight from YouTube's hqdefault pattern so we
-// don't host artwork ourselves.
-interface KbPlaylist {
-  id:         string
-  title:      string
-  category:   string
-  videos:     number
-  coverYtId:  string             // YouTube video ID used for the thumbnail
-  playlistId: string             // YouTube playlist ID for the open link
-}
-
-const KB_PLAYLISTS: KbPlaylist[] = [
-  { id: 'pl-tiktok',   title: 'TikTok Growth',    category: 'Growth',   videos: 8,
-    coverYtId: '7MSplBGZXx4', playlistId: 'PLE3F0DD96B6BCEF2D' },
-  { id: 'pl-spotify',  title: 'Spotify Pitching', category: 'Curators', videos: 12,
-    coverYtId: 'qekbbQ4Zt1M', playlistId: 'PLE3F0DD96B6BCEF2D' },
-  { id: 'pl-ads',      title: 'Meta Ads 101',     category: 'Paid',     videos: 6,
-    coverYtId: 'taw7RMwETfE', playlistId: 'PLE3F0DD96B6BCEF2D' },
-  { id: 'pl-rollout',  title: 'Release Rollout',  category: 'Strategy', videos: 10,
-    coverYtId: '7MSplBGZXx4', playlistId: 'PLE3F0DD96B6BCEF2D' },
-]
-
 // ─── Tab: Home ───────────────────────────────────────────────────────────────
 function HomeTab({ artistName, onJumpTo, state }: { artistName: string; onJumpTo: (t: TabId) => void; state: MvpAppStateAPI }) {
+  const [openPlaylist, setOpenPlaylist] = useState<KbPlaylist | null>(null)
   const latest        = state.latestUpMessage
   const tasks         = state.upcomingTasks
   const pendingAction = state.pendingActionMessage
@@ -1732,40 +1711,27 @@ function HomeTab({ artistName, onJumpTo, state }: { artistName: string; onJumpTo
           <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em]">
             Knowledge Base
           </p>
-          <a
-            href="#"
-            className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest hover:opacity-80 transition-opacity"
-          >
-            View all →
-          </a>
+          <span className="text-[#FFD700]/70 text-[9px] font-black uppercase tracking-widest">
+            {KB_PLAYLISTS.length} playlists
+          </span>
         </div>
         <div
           className="flex gap-2.5 overflow-x-auto pb-2 px-5"
           style={{ scrollbarWidth: 'none' }}
         >
           {KB_PLAYLISTS.map(pl => (
-            <a
-              key={pl.id}
-              href={`https://www.youtube.com/playlist?list=${pl.playlistId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group shrink-0 w-[130px]"
+            <button
+              key={pl.playlistId}
+              onClick={() => setOpenPlaylist(pl)}
+              className="group shrink-0 w-[140px] text-left"
             >
               <div className="relative aspect-square rounded-xl overflow-hidden border border-white/10 group-hover:border-[#FFD700]/40 transition-colors">
                 <img
-                  src={`https://img.youtube.com/vi/${pl.coverYtId}/hqdefault.jpg`}
+                  src={pl.coverImage}
                   alt={pl.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
-                <div className="absolute top-2 left-2">
-                  <span
-                    className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest"
-                    style={{ background: 'rgba(0,0,0,0.6)', color: '#FFD700', backdropFilter: 'blur(4px)' }}
-                  >
-                    {pl.category}
-                  </span>
-                </div>
                 <div className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all opacity-90 group-hover:opacity-100 group-hover:scale-110"
                      style={{ background: '#FFD700', boxShadow: '0 4px 10px rgba(255,215,0,0.45)' }}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="black" className="ml-0.5">
@@ -1773,14 +1739,24 @@ function HomeTab({ artistName, onJumpTo, state }: { artistName: string; onJumpTo
                   </svg>
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 p-2.5">
-                  <p className="text-white text-[11px] font-black tracking-tight leading-tight line-clamp-2">{pl.title}</p>
-                  <p className="text-white/55 text-[9px] font-bold mt-0.5">{pl.videos} videos</p>
+                  <p className="text-white text-[12px] font-black tracking-tight leading-tight line-clamp-2">{pl.title}</p>
+                  <p className="text-white/55 text-[9px] font-bold mt-0.5">{pl.videos.length} videos</p>
                 </div>
               </div>
-            </a>
+            </button>
           ))}
         </div>
       </div>
+
+      {/* In-app YouTube playlist player */}
+      <AnimatePresence>
+        {openPlaylist && (
+          <KbPlayerSheet
+            playlist={openPlaylist}
+            onClose={() => setOpenPlaylist(null)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
@@ -2879,6 +2855,161 @@ function OutreachThreadSheet({
               </div>
             </motion.div>
           )}
+        </div>
+      </motion.div>
+    </>
+  )
+}
+
+// ─── KbPlayerSheet — in-app YouTube playlist player ─────────────────────────
+function KbPlayerSheet({
+  playlist, onClose,
+}: {
+  playlist: KbPlaylist
+  onClose:  () => void
+}) {
+  const [activeIdx, setActiveIdx] = useState(0)
+  const sidebarRef = useRef<HTMLDivElement>(null)
+  const active = playlist.videos[activeIdx]
+
+  // Scroll the active list row into view in the queue
+  useEffect(() => {
+    const el = sidebarRef.current?.querySelector(`[data-idx="${activeIdx}"]`) as HTMLElement | null
+    el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [activeIdx])
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 z-40 bg-black/85 backdrop-blur-md"
+      />
+      <motion.div
+        initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+        transition={{ type: 'spring', stiffness: 280, damping: 32 }}
+        className="absolute inset-x-0 bottom-0 top-12 z-50 rounded-t-3xl border-t border-white/10 bg-[#050505] overflow-hidden flex flex-col"
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-white/15" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center gap-3 px-4 py-2.5 border-b border-white/5 shrink-0">
+          <button
+            onClick={onClose}
+            className="flex items-center gap-1.5 text-white/60 hover:text-white text-[10px] font-black uppercase tracking-widest -ml-1 px-2 py-1 rounded-lg transition-colors"
+          >
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Back
+          </button>
+          <div className="flex-1 min-w-0 text-center">
+            <p className="text-white text-[11px] font-black uppercase tracking-tight truncate">{playlist.title}</p>
+            <p className="text-white/30 text-[8px] font-bold uppercase tracking-widest mt-0.5">
+              {activeIdx + 1} / {playlist.videos.length}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white flex items-center justify-center"
+            aria-label="Close"
+          >
+            <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
+              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Player — YouTube iframe embed */}
+        <div className="relative w-full bg-black shrink-0" style={{ aspectRatio: '16/9' }}>
+          <iframe
+            key={active.id}
+            className="absolute inset-0 w-full h-full"
+            src={`https://www.youtube.com/embed/${active.id}?autoplay=1&rel=0&modestbranding=1`}
+            title={active.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+
+        {/* Now playing meta + nav */}
+        <div className="px-4 py-2.5 border-b border-white/5 shrink-0">
+          <p className="text-white text-[12px] font-black leading-snug line-clamp-2 mb-1">{active.title}</p>
+          {active.duration && (
+            <p className="text-white/35 text-[9px] font-bold uppercase tracking-widest">{active.duration}</p>
+          )}
+          {active.description && (
+            <p className="text-white/50 text-[10.5px] leading-snug mt-1.5 line-clamp-3">{active.description}</p>
+          )}
+          <div className="flex items-center gap-3 mt-2">
+            <button
+              onClick={() => setActiveIdx(i => Math.max(0, i - 1))}
+              disabled={activeIdx === 0}
+              className="text-[9px] font-black uppercase tracking-widest text-white/40 hover:text-white disabled:opacity-20 transition-colors"
+            >
+              ← Prev
+            </button>
+            <button
+              onClick={() => setActiveIdx(i => Math.min(playlist.videos.length - 1, i + 1))}
+              disabled={activeIdx === playlist.videos.length - 1}
+              className="text-[9px] font-black uppercase tracking-widest text-[#FFD700] hover:opacity-80 disabled:opacity-20 transition-opacity"
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+
+        {/* Up next queue */}
+        <div ref={sidebarRef} className="flex-1 overflow-y-auto px-3 py-2" style={{ scrollbarWidth: 'none' }}>
+          <p className="text-white/30 text-[9px] font-black uppercase tracking-[0.25em] px-2 mb-2">Up next</p>
+          <div className="space-y-1">
+            {playlist.videos.map((v, i) => {
+              const isActive = i === activeIdx
+              return (
+                <button
+                  key={v.id}
+                  data-idx={i}
+                  onClick={() => setActiveIdx(i)}
+                  className={`w-full flex items-start gap-2.5 p-2 rounded-xl text-left transition-all ${
+                    isActive ? 'bg-[#FFD700]/10 border border-[#FFD700]/25' : 'border border-transparent hover:bg-white/4'
+                  }`}
+                >
+                  <div className="relative w-[68px] h-[40px] rounded-md overflow-hidden shrink-0 bg-zinc-800">
+                    <img
+                      src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`}
+                      alt={v.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                    <div className={`absolute inset-0 flex items-center justify-center ${
+                      isActive ? 'bg-[#FFD700]/20' : 'bg-black/40'
+                    }`}>
+                      {isActive ? (
+                        <div className="w-2 h-2 rounded-full bg-[#FFD700] shadow-[0_0_6px_#FFD700]" />
+                      ) : (
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="white" className="drop-shadow">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0 pt-0.5">
+                    <p className={`text-[10.5px] font-bold leading-snug line-clamp-2 ${
+                      isActive ? 'text-[#FFD700]' : 'text-white/65'
+                    }`}>
+                      {v.title}
+                    </p>
+                    {v.duration && (
+                      <p className="text-white/30 text-[9px] font-bold mt-0.5">{v.duration}</p>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
         </div>
       </motion.div>
     </>
