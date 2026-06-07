@@ -1124,12 +1124,12 @@ function PaywallStep({ onBack }: { onBack: () => void }) {
         Pick how you want to start. uP texts you the moment you do.
       </p>
 
-      {/* Tier 0 — Freemium (entry tier, 1-month trial, limited features) */}
+      {/* Tier 0 — Solo (entry tier, 1-month trial, limited features) */}
       <PlanCard
-        id="freemium"
+        id="solo"
         eyebrow="1-month free trial"
-        title="Freemium"
-        tagline="Start free · No uP iMessage"
+        title="Solo"
+        tagline="Indie artist starter"
         price="$4.99"
         per="/ month"
         afterTrial="Then $4.99 every month"
@@ -1140,8 +1140,8 @@ function PaywallStep({ onBack }: { onBack: () => void }) {
           { kind: 'cap', label: 'Outreach capped at 3 / month' },
           { kind: 'out', label: 'No uP iMessage assistant' },
         ]}
-        picked={picked === 'freemium'}
-        onPick={() => choose('freemium')}
+        picked={picked === 'solo'}
+        onPick={() => choose('solo')}
       />
 
       {/* Tier 1 — Weekly trial */}
