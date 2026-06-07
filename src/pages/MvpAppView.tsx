@@ -176,31 +176,36 @@ function SplashStep() {
       transition={{ duration: 0.4 }}
       className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505]"
     >
+      {/* Brand mark — gu-icon.png (square logo asset) */}
       <motion.div
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1,   opacity: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 18, delay: 0.1 }}
-        className="w-24 h-24 rounded-[1.8rem] flex items-center justify-center mb-6"
-        style={{
-          background:'#FFD700',
-          boxShadow: '0 0 80px rgba(255,215,0,0.5), 0 0 0 1px rgba(255,255,255,0.4) inset',
-        }}
+        className="relative mb-7"
+        style={{ filter: 'drop-shadow(0 0 50px rgba(255,215,0,0.45))' }}
       >
-        <span className="text-black text-5xl font-black tracking-tighter">G</span>
+        <img
+          src="/gu-icon.png"
+          alt="GrounduP"
+          className="w-28 h-28 object-contain"
+        />
       </motion.div>
-      <motion.p
+
+      {/* Wordmark — logo.webp (GrounduP type-only lockup) */}
+      <motion.img
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.5 }}
-        className="text-white text-2xl font-black tracking-tighter"
-      >
-        GrounduP
-      </motion.p>
+        src="/logo.webp"
+        alt="GrounduP"
+        className="h-7 object-contain"
+      />
+
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7, duration: 0.5 }}
-        className="text-white/40 text-[10px] font-black uppercase tracking-[0.3em] mt-2"
+        className="text-white/40 text-[10px] font-black uppercase tracking-[0.3em] mt-3"
       >
         Artist OS
       </motion.p>
@@ -218,11 +223,16 @@ function WelcomeStep({ onStart }: { onStart: () => void }) {
       transition={{ duration: 0.45 }}
       className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center"
     >
+      {/* Brand icon (gu-icon.png) — no gold backplate, lets the asset breathe */}
       <div
-        className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
-        style={{ background:'#FFD700', boxShadow:'0 0 40px rgba(255,215,0,0.4)' }}
+        className="mb-6"
+        style={{ filter: 'drop-shadow(0 0 32px rgba(255,215,0,0.35))' }}
       >
-        <span className="text-black text-3xl font-black">G</span>
+        <img
+          src="/gu-icon.png"
+          alt="GrounduP"
+          className="w-16 h-16 object-contain"
+        />
       </div>
       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#FFD700]/30 bg-[#FFD700]/10 mb-5">
         <span className="w-1.5 h-1.5 rounded-full bg-[#FFD700] shadow-[0_0_8px_rgba(255,215,0,0.6)]" />
