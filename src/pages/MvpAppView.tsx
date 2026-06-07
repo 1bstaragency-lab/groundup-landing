@@ -1124,12 +1124,32 @@ function PaywallStep({ onBack }: { onBack: () => void }) {
         Pick how you want to start. uP texts you the moment you do.
       </p>
 
+      {/* Tier 0 — Freemium (entry tier, 1-month trial, limited features) */}
+      <PlanCard
+        id="freemium"
+        eyebrow="1-month free trial"
+        title="Freemium"
+        tagline="Start free · No uP iMessage"
+        price="$4.99"
+        per="/ month"
+        afterTrial="Then $4.99 every month"
+        features={[
+          { kind: 'in',  label: 'Release Scheduler' },
+          { kind: 'in',  label: 'Video playlist library' },
+          { kind: 'in',  label: 'Influencer Network preview' },
+          { kind: 'cap', label: 'Outreach capped at 3 / month' },
+          { kind: 'out', label: 'No uP iMessage assistant' },
+        ]}
+        picked={picked === 'freemium'}
+        onPick={() => choose('freemium')}
+      />
+
       {/* Tier 1 — Weekly trial */}
       <PlanCard
         id="weekly"
         eyebrow="3-day free trial"
         title="Weekly"
-        tagline="Test the waters"
+        tagline="Test the waters · Full access"
         price="$9.99"
         per="/ week"
         afterTrial="Then $9.99 every week"
@@ -1192,9 +1212,12 @@ function PaywallStep({ onBack }: { onBack: () => void }) {
   )
 }
 
-// ─── PlanCard for tier 1 & 2 ─────────────────────────────────────────────────
+// ─── PlanCard for tier 0 / 1 / 2 ─────────────────────────────────────────────
+type PlanFeature = { kind: 'in' | 'cap' | 'out'; label: string }
+
 function PlanCard({
   eyebrow, title, tagline, price, per, afterTrial, highlighted, picked, onPick,
+  features,
 }: {
   id:           string
   eyebrow:      string
@@ -1206,6 +1229,7 @@ function PlanCard({
   highlighted?: boolean
   picked:       boolean
   onPick:       () => void
+  features?:    PlanFeature[]
 }) {
   return (
     <motion.button
@@ -1268,7 +1292,48 @@ function PlanCard({
       }`}>
         {afterTrial}
       </p>
+
+      {features && features.length > 0 && (
+        <ul className="mt-3 pt-3 border-t space-y-1.5"
+            style={{ borderColor: picked ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.06)' }}>
+          {features.map(f => (
+            <li
+              key={f.label}
+              className={`flex items-center gap-2 text-[10px] leading-snug ${
+                picked ? 'text-black/75' : f.kind === 'out' ? 'text-white/35' : 'text-white/65'
+              }`}
+            >
+              <FeatureGlyph kind={f.kind} picked={picked} />
+              <span className={f.kind === 'out' ? 'line-through opacity-80' : ''}>{f.label}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </motion.button>
+  )
+}
+
+function FeatureGlyph({ kind, picked }: { kind: PlanFeature['kind']; picked: boolean }) {
+  const color = picked ? '#000' : kind === 'in' ? '#FFD700' : kind === 'cap' ? '#F59E0B' : 'rgba(255,255,255,0.3)'
+  if (kind === 'in') {
+    return (
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" className="shrink-0">
+        <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    )
+  }
+  if (kind === 'cap') {
+    return (
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" className="shrink-0">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 8v4M12 16h.01" strokeLinecap="round" />
+      </svg>
+    )
+  }
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" className="shrink-0">
+      <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+    </svg>
   )
 }
 
