@@ -775,7 +775,7 @@ const TOOLS: Tool[] = [
   },
   {
     id: 'influencer', icon: '⊕', title: 'Influencer Reach', sub: 'Curators + creators',
-    ctaLabel: 'Read a curator reply',
+    ctaLabel: 'How it works',
     demo: {
       headline: 'Pitch curators, automatically.',
       stats: [
@@ -874,7 +874,7 @@ function ToolsStep({ onContinue }: { onContinue: () => void }) {
               <p className="text-white/40 text-[10px] font-medium leading-snug mb-2">
                 {t.sub}
               </p>
-              <p className="text-[#FFD700]/70 group-hover:text-[#FFD700] text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-1 transition-colors">
+              <p className="text-[#FFD700]/70 group-hover:text-[#FFD700] text-[8px] font-black uppercase tracking-[0.14em] flex items-center gap-1 transition-colors mt-1.5">
                 {t.ctaLabel} →
               </p>
             </div>
