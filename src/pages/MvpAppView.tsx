@@ -553,16 +553,104 @@ function ReadyStep({ name, onContinue }: { name: string; onContinue: () => void 
 }
 
 // ─── Step 7b: Tools — what they get inside the Artist OS ────────────────────
-const TOOLS: { icon: string; title: string; sub: string }[] = [
-  { icon: '◯', title: 'Releases',          sub: 'Drop calendar + rollout' },
-  { icon: '⏱', title: 'Campaigns',         sub: 'Meta + TikTok ads' },
-  { icon: '⊕', title: 'Influencer Reach',  sub: 'Curators + creators' },
-  { icon: '↗', title: 'Analytics',         sub: 'Spotify + ad performance' },
-  { icon: '◌', title: 'Knowledge Base',    sub: 'Videos + playbooks' },
-  { icon: '✦', title: 'uP Chat',           sub: 'Your 24/7 AI manager' },
+
+interface ToolStat { label: string; value: string }
+interface ToolDemo {
+  /** Headline shown at the top of the detail sheet */
+  headline: string
+  /** 2 hero numbers shown as a stat row */
+  stats:    [ToolStat, ToolStat]
+  /** Mini iMessage demo — what uP texts you for this tool */
+  upMsg:    string
+  /** Your reply to uP (optional) */
+  userMsg?: string
+}
+
+interface Tool {
+  id:    string
+  icon:  string
+  title: string
+  sub:   string
+  demo:  ToolDemo
+}
+
+const TOOLS: Tool[] = [
+  {
+    id: 'releases', icon: '◯', title: 'Releases', sub: 'Drop calendar + rollout',
+    demo: {
+      headline: 'Plan your next drop, end to end.',
+      stats: [
+        { label: 'Days to launch', value: '12' },
+        { label: 'Tasks complete', value: '8/12' },
+      ],
+      upMsg:   '"Drank In My Cup" drops in 12 days. Spotify pitch is due Friday — I drafted it. Approve to send?',
+      userMsg: 'Approve.',
+    },
+  },
+  {
+    id: 'campaigns', icon: '⏱', title: 'Campaigns', sub: 'Meta + TikTok ads',
+    demo: {
+      headline: 'Run paid ads, no dashboards.',
+      stats: [
+        { label: 'New listeners today', value: '412' },
+        { label: 'Cost per listener',   value: '$0.12' },
+      ],
+      upMsg:   'Today\'s Meta campaign brought 412 new listeners at $0.12 each. Want me to scale to $75/day?',
+      userMsg: 'Scale it.',
+    },
+  },
+  {
+    id: 'influencer', icon: '⊕', title: 'Influencer Reach', sub: 'Curators + creators',
+    demo: {
+      headline: 'Pitch curators, automatically.',
+      stats: [
+        { label: 'Active conversations', value: '5' },
+        { label: 'Curators in your lane', value: '28' },
+      ],
+      upMsg:   'DJ Smoov (92K) replied 🔥 — "Love this, adding to my Late Night Vibes playlist." Want me to thank them?',
+      userMsg: 'Yes, do it.',
+    },
+  },
+  {
+    id: 'analytics', icon: '↗', title: 'Analytics', sub: 'Spotify + ad performance',
+    demo: {
+      headline: 'Track everything that matters.',
+      stats: [
+        { label: 'Monthly listeners', value: '1.2k' },
+        { label: 'Growth this week',  value: '+18%' },
+      ],
+      upMsg:   'You\'re up 18% this week — your TikTok push paid off. Top track: "Drank In My Cup" (4.2k streams).',
+    },
+  },
+  {
+    id: 'kb', icon: '◌', title: 'Knowledge Base', sub: 'Videos + playbooks',
+    demo: {
+      headline: 'Industry playbooks at your fingertips.',
+      stats: [
+        { label: 'Video playlists', value: '4' },
+        { label: 'PDF guides',      value: '24' },
+      ],
+      upMsg:   'Found a guide on TikTok hooks that fits your next release. Want the 3-bullet summary?',
+      userMsg: 'Send it.',
+    },
+  },
+  {
+    id: 'chat', icon: '✦', title: 'uP Chat', sub: 'Your 24/7 AI manager',
+    demo: {
+      headline: 'I\'m always one text away.',
+      stats: [
+        { label: 'Response time', value: '< 30s' },
+        { label: 'Available',     value: '24 / 7' },
+      ],
+      upMsg:   'Morning check-in: Friday\'s curator pitches need approval, and your ad budget refreshes tomorrow. What do you want to tackle first?',
+      userMsg: 'Curators.',
+    },
+  },
 ]
 
 function ToolsStep({ onContinue }: { onContinue: () => void }) {
+  const [expanded, setExpanded] = useState<Tool | null>(null)
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 24 }}
@@ -578,17 +666,19 @@ function ToolsStep({ onContinue }: { onContinue: () => void }) {
         Everything you need.
       </h2>
       <p className="text-white/40 text-sm font-medium mb-6 px-2">
-        Six tools, one platform — built for indie artists.
+        Tap any tool to see it work.
       </p>
 
-      <div className="grid grid-cols-2 gap-2.5 flex-1">
+      <div className="grid grid-cols-2 gap-2.5 flex-1 overflow-y-auto">
         {TOOLS.map((t, i) => (
-          <motion.div
-            key={t.title}
+          <motion.button
+            key={t.id}
+            onClick={() => setExpanded(t)}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: i * 0.06 }}
-            className="p-4 rounded-2xl border border-white/10 bg-zinc-900/60 flex flex-col justify-between hover:border-[#FFD700]/40 transition-colors"
+            whileTap={{ scale: 0.97 }}
+            className="p-4 rounded-2xl border border-white/10 bg-zinc-900/60 flex flex-col justify-between text-left hover:border-[#FFD700]/40 hover:bg-zinc-900 transition-all group"
           >
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 text-[#FFD700] text-lg font-black"
@@ -603,11 +693,14 @@ function ToolsStep({ onContinue }: { onContinue: () => void }) {
               <p className="text-white text-[12px] font-black uppercase tracking-tight leading-tight mb-1">
                 {t.title}
               </p>
-              <p className="text-white/40 text-[10px] font-medium leading-snug">
+              <p className="text-white/40 text-[10px] font-medium leading-snug mb-2">
                 {t.sub}
               </p>
+              <p className="text-[#FFD700]/70 group-hover:text-[#FFD700] text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-1 transition-colors">
+                See it work →
+              </p>
             </div>
-          </motion.div>
+          </motion.button>
         ))}
       </div>
 
@@ -622,7 +715,139 @@ function ToolsStep({ onContinue }: { onContinue: () => void }) {
       >
         Continue →
       </button>
+
+      <AnimatePresence>
+        {expanded && (
+          <ToolDetailSheet tool={expanded} onClose={() => setExpanded(null)} />
+        )}
+      </AnimatePresence>
     </motion.div>
+  )
+}
+
+// ─── Interactive bottom sheet for a single tool ─────────────────────────────
+function ToolDetailSheet({ tool, onClose }: { tool: Tool; onClose: () => void }) {
+  return (
+    <>
+      {/* backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.18 }}
+        onClick={onClose}
+        className="absolute inset-0 z-30 bg-black/70 backdrop-blur-sm"
+      />
+
+      {/* sheet */}
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+        drag="y"
+        dragConstraints={{ top: 0, bottom: 0 }}
+        dragElastic={{ top: 0, bottom: 0.4 }}
+        onDragEnd={(_, info) => { if (info.offset.y > 80) onClose() }}
+        className="absolute left-0 right-0 bottom-0 z-40 rounded-t-3xl bg-[#0A0A0A] border-t border-white/10 overflow-hidden"
+        style={{ maxHeight: '90%' }}
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 rounded-full bg-white/15" />
+        </div>
+
+        <div className="px-6 pb-8">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-5">
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center text-[#FFD700] text-xl font-black"
+              style={{
+                background: 'rgba(255,215,0,0.12)',
+                border:     '1px solid rgba(255,215,0,0.3)',
+              }}
+            >
+              {tool.icon}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.25em]">
+                Live preview
+              </p>
+              <p className="text-white text-[15px] font-black tracking-tight">
+                {tool.title}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center"
+              aria-label="Close"
+            >
+              <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+                <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Headline */}
+          <h3 className="text-white text-xl font-black tracking-tight leading-tight mb-5">
+            {tool.demo.headline}
+          </h3>
+
+          {/* Stats row */}
+          <div className="grid grid-cols-2 gap-2 mb-5">
+            {tool.demo.stats.map(s => (
+              <div
+                key={s.label}
+                className="p-4 rounded-2xl border border-[#FFD700]/15 bg-[#FFD700]/5"
+              >
+                <p className="text-[#FFD700] text-2xl font-black tracking-tight leading-none mb-2">
+                  {s.value}
+                </p>
+                <p className="text-white/50 text-[10px] font-black uppercase tracking-widest leading-snug">
+                  {s.label}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Mini iMessage demo */}
+          <p className="text-white/30 text-[9px] font-black uppercase tracking-[0.25em] mb-3">
+            How uP texts you
+          </p>
+          <div className="space-y-2">
+            <div className="flex justify-start">
+              <div
+                className="max-w-[85%] px-3.5 py-2.5 rounded-2xl rounded-bl-md text-white text-[12px] leading-snug"
+                style={{
+                  background:'rgba(255,215,0,0.10)',
+                  border:    '1px solid rgba(255,215,0,0.22)',
+                }}
+              >
+                {tool.demo.upMsg}
+              </div>
+            </div>
+            {tool.demo.userMsg && (
+              <div className="flex justify-end">
+                <div
+                  className="max-w-[70%] px-3.5 py-2.5 rounded-2xl rounded-br-md text-black text-[12px] font-semibold leading-snug"
+                  style={{ background:'#FFD700' }}
+                >
+                  {tool.demo.userMsg}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Got it */}
+          <button
+            onClick={onClose}
+            className="w-full h-12 rounded-2xl font-black text-[12px] uppercase tracking-widest flex items-center justify-center mt-6 border border-white/10 text-white/70 hover:text-white hover:border-white/30 transition-colors"
+          >
+            Got it
+          </button>
+        </div>
+      </motion.div>
+    </>
   )
 }
 
