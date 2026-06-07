@@ -1294,7 +1294,7 @@ function PlanCard({
         scale:   expanded && !picked ? 1.01 : 1,
       }}
       transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-      className={`relative mx-2 ${marginCls} ${padCls} rounded-2xl border-2 text-left transition-colors overflow-hidden ${
+      className={`relative mx-2 ${marginCls} ${padCls} rounded-2xl border-2 text-left transition-colors ${
         picked
           ? 'bg-[#FFD700] border-[#FFD700]'
           : expanded
@@ -1311,8 +1311,12 @@ function PlanCard({
     >
       {highlighted && !picked && !expanded && (
         <div
-          className="absolute -top-2 right-3 px-1.5 py-0.5 rounded-md text-[7.5px] font-black uppercase tracking-[0.18em]"
-          style={{ background:'#FFD700', color:'#000' }}
+          className="absolute -top-2.5 right-3 px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-[0.18em] z-10"
+          style={{
+            background: '#FFD700',
+            color:      '#000',
+            boxShadow:  '0 4px 12px rgba(255,215,0,0.45)',
+          }}
         >
           Most Popular
         </div>
