@@ -105,6 +105,7 @@ export default function MvpAppView() {
   const [investmentId,setInvestmentId]= useState<string | null>(null)
   const [visionId,    setVisionId]    = useState<string | null>(null)
   const [goalId,      setGoalId]      = useState<string | null>(null)
+  const [planId,      setPlanId]      = useState<string>('solo')   // chosen at paywall, default solo
 
   useEffect(() => {
     document.title = 'GrounduP — Mobile MVP'
@@ -215,9 +216,10 @@ export default function MvpAppView() {
               onContinue={() => goTo('paywall')} />}
             {step === 'paywall' && <PaywallStep key="paywall"
               onBack={() => goTo('handoff')}
-              onPick={() => goTo('app')} />}
+              onPick={(p) => { setPlanId(p); goTo('app') }} />}
             {step === 'app'     && <AppShell    key="app"
-              artistName={artistName || 'Artist'} />}
+              artistName={artistName || 'Artist'}
+              planId={planId} />}
           </AnimatePresence>
 
           {/* Progress dots — only during the 8 onboarding question steps */}
@@ -1345,7 +1347,7 @@ const APP_TABS: TabDef[] = [
     glyph: <><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a8 8 0 0 1 16 0v1" strokeLinecap="round" /></> },
 ]
 
-function AppShell({ artistName }: { artistName: string }) {
+function AppShell({ artistName, planId }: { artistName: string; planId: string }) {
   const [tab, setTab] = useState<TabId>('home')
 
   return (
@@ -1360,9 +1362,9 @@ function AppShell({ artistName }: { artistName: string }) {
         <AnimatePresence mode="wait">
           {tab === 'home'     && <HomeTab     key="home"     artistName={artistName} onJumpTo={setTab} />}
           {tab === 'releases' && <ReleasesTab key="releases" />}
-          {tab === 'up'       && <UpTab       key="up"       artistName={artistName} />}
-          {tab === 'network'  && <NetworkTab  key="network" />}
-          {tab === 'you'      && <YouTab      key="you"      artistName={artistName} />}
+          {tab === 'up'       && <UpTab       key="up"       artistName={artistName} planId={planId} />}
+          {tab === 'network'  && <NetworkTab  key="network"  planId={planId} />}
+          {tab === 'you'      && <YouTab      key="you"      artistName={artistName} planId={planId} />}
         </AnimatePresence>
       </div>
 
@@ -1503,79 +1505,634 @@ function TaskRow({ label, icon }: { label: string; icon: string }) {
   )
 }
 
-// ─── Tab placeholders (full screens to be built next) ────────────────────────
+// ════════════════════════════════════════════════════════════════════════════
+// Tab content — Releases · uP Chat · Network · You
+// ════════════════════════════════════════════════════════════════════════════
+
+const PLAN_META: Record<string, { label: string; color: string; outreachCap: number | null }> = {
+  solo:      { label: 'Solo',             color: '#94A3B8', outreachCap: 3    },
+  weekly:    { label: 'Weekly',           color: '#FFD700', outreachCap: null },
+  monthly:   { label: 'Monthly',          color: '#FFD700', outreachCap: null },
+  strategic: { label: 'Strategic Artist', color: '#A78BFA', outreachCap: null },
+}
+
+// ─── Releases — calendar + task list ────────────────────────────────────────
+interface ReleaseTask { label: string; done: boolean; due?: string }
+interface Release {
+  id:        string
+  title:     string
+  type:      'Single' | 'EP' | 'Album'
+  dropDate:  string             // ISO date
+  daysOut:   number
+  accent:    string
+  art:       string             // gradient string
+  tasks:     ReleaseTask[]
+}
+
+const RELEASES: Release[] = [
+  {
+    id: 'r1', title: 'Drank In My Cup', type: 'Single', dropDate: '2026-06-19',
+    daysOut: 12, accent: '#FFD700',
+    art: 'linear-gradient(140deg, #2A1F0F 0%, #4A3416 40%, #FFD700 100%)',
+    tasks: [
+      { label: 'Final master locked',          done: true,  due: 'Mon' },
+      { label: 'Album art uploaded',           done: true,  due: 'Tue' },
+      { label: 'Distributor scheduled',        done: true,  due: 'Wed' },
+      { label: 'Spotify for Artists pitch',    done: true,  due: 'Thu' },
+      { label: 'Pre-save link generated',      done: true,  due: 'Fri' },
+      { label: 'Press release drafted',        done: true,  due: 'Mon' },
+      { label: 'TikTok teaser #1 posted',      done: true,  due: 'Wed' },
+      { label: 'Curator pitches sent (50)',    done: true,  due: 'Fri' },
+      { label: 'TikTok teaser #2 posted',      done: false, due: 'Sat' },
+      { label: 'Meta ad creative approved',    done: false, due: 'Mon' },
+      { label: 'Day-of pre-save push',         done: false, due: 'Thu' },
+      { label: 'Release day post + DMs',       done: false, due: 'Fri' },
+    ],
+  },
+  {
+    id: 'r2', title: 'Late Night Sessions', type: 'EP', dropDate: '2026-07-22',
+    daysOut: 45, accent: '#A78BFA',
+    art: 'linear-gradient(140deg, #1A1633 0%, #3D2966 50%, #A78BFA 100%)',
+    tasks: [
+      { label: 'Track 1 final mix',  done: true  },
+      { label: 'Track 2 final mix',  done: true  },
+      { label: 'Track 3 final mix',  done: true  },
+      { label: 'Track 4 vocals',     done: false },
+      { label: 'Album art briefing', done: false },
+    ],
+  },
+]
 
 function ReleasesTab() {
-  return (
-    <PlaceholderTab
-      eyebrow="Releases"
-      title="Your drop calendar"
-      sub="The release scheduler will live here — drop dates, rollout tasks, and uP-managed timelines."
-    />
-  )
-}
+  const [openId, setOpenId] = useState<string>(RELEASES[0].id)
 
-function UpTab({ artistName }: { artistName: string }) {
-  return (
-    <PlaceholderTab
-      eyebrow="uP Chat"
-      title={`Talk to uP, ${artistName.split(' ')[0]}.`}
-      sub="Your 24/7 AI music manager. In-app conversation UI mounts here next — every other tool flows through this screen."
-    />
-  )
-}
-
-function NetworkTab() {
-  return (
-    <PlaceholderTab
-      eyebrow="Network"
-      title="Curator + creator outreach"
-      sub="Active conversations, replies, and pitch templates go here. uP handles the drafting; you approve."
-    />
-  )
-}
-
-function YouTab({ artistName }: { artistName: string }) {
-  return (
-    <PlaceholderTab
-      eyebrow="You"
-      title={artistName}
-      sub="Profile, plan, analytics, knowledge base, settings — your account hub goes here."
-    />
-  )
-}
-
-function PlaceholderTab({ eyebrow, title, sub }: { eyebrow: string; title: string; sub: string }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
+      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
       className="px-5 pb-4"
     >
-      <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-2">
-        {eyebrow}
-      </p>
-      <h2 className="text-white text-2xl font-black tracking-tighter leading-tight mb-3">
-        {title}
-      </h2>
-      <p className="text-white/45 text-sm leading-relaxed mb-8">
-        {sub}
-      </p>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-1">Releases</p>
+          <h2 className="text-white text-2xl font-black tracking-tighter">Your drop calendar.</h2>
+        </div>
+        <button className="w-9 h-9 rounded-full border border-[#FFD700]/30 bg-[#FFD700]/10 text-[#FFD700] flex items-center justify-center text-lg font-black">
+          +
+        </button>
+      </div>
 
-      <div
-        className="p-5 rounded-2xl border border-dashed border-white/15 text-center"
-        style={{ background:'rgba(255,215,0,0.04)' }}
-      >
-        <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.25em] mb-1.5">
-          Coming next
-        </p>
-        <p className="text-white/55 text-[12px] leading-snug">
-          Tell me what to build on this screen and I'll wire it.
-        </p>
+      {/* Mini calendar strip */}
+      <div className="mb-5 p-3 rounded-2xl border border-white/8 bg-zinc-900/50">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-white text-[12px] font-black uppercase tracking-wide">June 2026</p>
+          <p className="text-white/40 text-[10px] font-bold">2 releases this month</p>
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {['M','T','W','T','F','S','S'].map((d, i) =>
+            <p key={i} className="text-white/30 text-[9px] font-black text-center">{d}</p>
+          )}
+          {Array.from({ length: 30 }, (_, i) => i + 1).map(day => {
+            const isRelease = day === 19
+            const isToday   = day === 7
+            return (
+              <div
+                key={day}
+                className="aspect-square flex items-center justify-center rounded-md text-[10px] font-bold relative"
+                style={{
+                  background:
+                    isRelease ? '#FFD700' :
+                    isToday   ? 'rgba(255,255,255,0.08)' : 'transparent',
+                  color:
+                    isRelease ? '#000' :
+                    isToday   ? '#FFD700' : 'rgba(255,255,255,0.45)',
+                  border: isToday ? '1px solid rgba(255,215,0,0.4)' : 'none',
+                }}
+              >
+                {day}
+                {isRelease && (
+                  <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 text-[7px]">●</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Release cards */}
+      <div className="space-y-3">
+        {RELEASES.map(r => {
+          const isOpen   = openId === r.id
+          const done     = r.tasks.filter(t => t.done).length
+          const total    = r.tasks.length
+          const pct      = Math.round((done / total) * 100)
+          return (
+            <div
+              key={r.id}
+              className="rounded-2xl border border-white/10 bg-zinc-900/60 overflow-hidden"
+            >
+              <button
+                onClick={() => setOpenId(isOpen ? '' : r.id)}
+                className="w-full p-3 flex items-center gap-3 text-left"
+              >
+                {/* Art */}
+                <div
+                  className="w-14 h-14 rounded-xl shrink-0 flex items-center justify-center text-2xl font-black"
+                  style={{ background: r.art, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
+                >
+                  {r.title[0]}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest mb-0.5">
+                    {r.type} · {r.daysOut <= 7 ? `${r.daysOut} days` : `${r.daysOut} days out`}
+                  </p>
+                  <p className="text-white text-[14px] font-black tracking-tight leading-tight truncate">
+                    {r.title}
+                  </p>
+                  {/* Progress bar */}
+                  <div className="mt-2 h-1 rounded-full bg-white/8 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${pct}%`, background: r.accent, boxShadow: `0 0 8px ${r.accent}80` }}
+                    />
+                  </div>
+                  <p className="text-white/40 text-[10px] font-bold mt-1.5">
+                    {done} of {total} tasks · {pct}% complete
+                  </p>
+                </div>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5"
+                     className={`transition-transform ${isOpen ? 'rotate-90' : ''}`}>
+                  <path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+
+              {isOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="px-3 pb-3 space-y-1.5 border-t border-white/5"
+                >
+                  {r.tasks.map((t, i) => (
+                    <div
+                      key={i}
+                      className={`flex items-center gap-3 px-2 py-2 rounded-lg ${
+                        t.done ? 'opacity-50' : ''
+                      }`}
+                    >
+                      <div
+                        className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                          t.done ? 'bg-[#FFD700] border-[#FFD700]' : 'border-white/30'
+                        }`}
+                      >
+                        {t.done && (
+                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3.5">
+                            <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </div>
+                      <p className={`flex-1 text-[12px] leading-snug ${
+                        t.done ? 'text-white/55 line-through' : 'text-white'
+                      }`}>
+                        {t.label}
+                      </p>
+                      {t.due && !t.done && (
+                        <span className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest">
+                          {t.due}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </motion.div>
+  )
+}
+
+// ─── uP Chat — full in-app conversation ─────────────────────────────────────
+interface ChatMsg {
+  id:   string
+  from: 'up' | 'me'
+  text?: string
+  /** Optional action-card embed */
+  card?: { title: string; sub: string; stat: string; accent: string }
+  ts:   string
+}
+
+const CHAT_HISTORY: ChatMsg[] = [
+  { id: '1', from: 'up', text: 'Morning. Three things on the table — want the rundown?', ts: '8:02 AM' },
+  { id: '2', from: 'me', text: 'Hit me.', ts: '8:03 AM' },
+  { id: '3', from: 'up',
+    text: '1. Drank In My Cup pitches went out — DJ Smoov (92K) replied 🔥.\n2. Meta ad ran $20, brought 412 listeners at $0.12/each.\n3. Spotify pitch is due Friday — I drafted it.',
+    ts: '8:03 AM' },
+  { id: '4', from: 'up',
+    card: { title: "Yesterday's Meta Campaign", sub: '412 new listeners · $0.12 / listener', stat: '+18%', accent: '#60A5FA' },
+    ts: '8:03 AM' },
+  { id: '5', from: 'me', text: 'Scale Meta to $75/day. And send the Spotify pitch.', ts: '8:05 AM' },
+  { id: '6', from: 'up', text: 'On it. Meta scaled, pitch queued for Friday 8AM. Want me to thank DJ Smoov too?', ts: '8:05 AM' },
+  { id: '7', from: 'me', text: 'Yeah — keep it short.', ts: '8:06 AM' },
+  { id: '8', from: 'up', text: 'Drafted: "Appreciate the love, Smoov — let me know when you want the next one early." Send?', ts: '8:06 AM' },
+]
+
+const QUICK_ACTIONS = [
+  'Plan next release',
+  'Pitch curators',
+  'Check stats',
+  'Run an ad',
+]
+
+function UpTab({ artistName, planId }: { artistName: string; planId: string }) {
+  const locked = planId === 'solo'   // Solo plan: uP iMessage disabled
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="px-4 pb-4"
+    >
+      {/* Chat header */}
+      <div className="flex items-center gap-3 px-1 mb-4">
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center"
+          style={{ background: '#FFD700', boxShadow: '0 0 16px rgba(255,215,0,0.4)' }}
+        >
+          <span className="text-black text-[11px] font-black tracking-tight">uP</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-white text-[14px] font-black tracking-tight leading-tight">uP</p>
+          <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#34c759] shadow-[0_0_6px_rgba(52,199,89,0.6)]" />
+            Active now
+          </p>
+        </div>
+      </div>
+
+      {/* Solo-tier lock overlay */}
+      {locked && (
+        <div className="relative">
+          <div className="absolute inset-0 z-10 rounded-2xl border border-[#FFD700]/30 bg-[#0A0A0A]/85 backdrop-blur-md flex flex-col items-center justify-center px-6 py-8 text-center"
+               style={{ minHeight: '380px' }}>
+            <div className="w-12 h-12 rounded-full bg-[#FFD700]/15 border border-[#FFD700]/40 flex items-center justify-center mb-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="2">
+                <rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
+              </svg>
+            </div>
+            <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.25em] mb-2">Pro feature</p>
+            <h3 className="text-white text-xl font-black tracking-tight mb-2">uP Chat is locked.</h3>
+            <p className="text-white/55 text-[12px] leading-snug max-w-[260px] mb-5">
+              Your AI music manager works the moment you upgrade. {artistName}, you're on Solo — upgrade for unlimited messaging.
+            </p>
+            <button
+              className="px-5 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest"
+              style={{ background:'#FFD700', color:'#000', boxShadow:'0 4px 14px rgba(255,215,0,0.35)' }}
+            >
+              Upgrade to Monthly →
+            </button>
+          </div>
+          {/* Blurred chat preview underneath */}
+          <ChatBubbles dimmed />
+        </div>
+      )}
+
+      {!locked && (
+        <>
+          {/* Conversation */}
+          <ChatBubbles />
+
+          {/* Quick actions */}
+          <div className="mt-4 mb-3 flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+            {QUICK_ACTIONS.map(a => (
+              <button
+                key={a}
+                className="shrink-0 px-3 py-1.5 rounded-full border border-white/10 bg-zinc-900 text-white/70 text-[11px] font-bold whitespace-nowrap hover:border-[#FFD700]/40 hover:text-white transition-colors"
+              >
+                {a}
+              </button>
+            ))}
+          </div>
+
+          {/* Input bar */}
+          <div className="flex items-center gap-2 p-2 rounded-full border border-white/10 bg-zinc-900/80">
+            <input
+              type="text"
+              placeholder="Message uP…"
+              className="flex-1 bg-transparent outline-none text-white text-[13px] px-3 placeholder:text-white/30"
+            />
+            <button
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ background: '#FFD700' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5">
+                <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+        </>
+      )}
+    </motion.div>
+  )
+}
+
+function ChatBubbles({ dimmed = false }: { dimmed?: boolean }) {
+  return (
+    <div className={`space-y-2.5 ${dimmed ? 'opacity-30 blur-[1.5px] pointer-events-none' : ''}`}>
+      {CHAT_HISTORY.map(m => {
+        const isUp = m.from === 'up'
+        if (m.card) {
+          return (
+            <div key={m.id} className="flex justify-start">
+              <div
+                className="max-w-[88%] p-3 rounded-2xl rounded-bl-md"
+                style={{
+                  background: 'rgba(255,215,0,0.07)',
+                  border:     '1px solid rgba(255,215,0,0.2)',
+                }}
+              >
+                <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest mb-1">{m.card.title}</p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-white text-[18px] font-black tracking-tight">{m.card.stat}</p>
+                  <p className="text-white/55 text-[11px] font-medium">{m.card.sub}</p>
+                </div>
+              </div>
+            </div>
+          )
+        }
+        return (
+          <div key={m.id} className={`flex ${isUp ? 'justify-start' : 'justify-end'}`}>
+            <div
+              className={`max-w-[80%] px-3.5 py-2.5 text-[12.5px] leading-snug whitespace-pre-line ${
+                isUp ? 'rounded-2xl rounded-bl-md text-white' : 'rounded-2xl rounded-br-md text-black font-semibold'
+              }`}
+              style={isUp
+                ? { background:'rgba(255,215,0,0.1)', border:'1px solid rgba(255,215,0,0.22)' }
+                : { background:'#FFD700' }
+              }
+            >
+              {m.text}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── Network — outreach list (drives freemium tension) ──────────────────────
+interface OutreachRow {
+  id:        string
+  name:      string
+  followers: string
+  initials:  string
+  accent:    string
+  status:    'replied' | 'pending' | 'opened' | 'queued'
+  preview:   string
+}
+
+const OUTREACH: OutreachRow[] = [
+  { id: 'o1', name: 'DJ Smoov',     followers: '92K', initials: 'DS', accent: '#FFD700',
+    status: 'replied', preview: '"Love this — adding to Late Night Vibes 🔥"' },
+  { id: 'o2', name: 'Curator Mara', followers: '480K', initials: 'CM', accent: '#A78BFA',
+    status: 'opened',  preview: 'Read 2h ago · No reply yet' },
+  { id: 'o3', name: 'Devon K',      followers: '210K', initials: 'DK', accent: '#60A5FA',
+    status: 'pending', preview: 'Sent yesterday' },
+]
+
+const BROWSE: OutreachRow[] = [
+  { id: 'b1', name: 'Soulful Vibes',  followers: '340K', initials: 'SV', accent: '#34D399', status: 'queued', preview: 'R&B · Indie' },
+  { id: 'b2', name: 'After Hours FM', followers: '210K', initials: 'AH', accent: '#F87171', status: 'queued', preview: 'Late Night · Curated' },
+  { id: 'b3', name: 'New Wave Pop',   followers: '580K', initials: 'NW', accent: '#FB923C', status: 'queued', preview: 'Pop · Editorial' },
+]
+
+function NetworkTab({ planId }: { planId: string }) {
+  const plan = PLAN_META[planId] ?? PLAN_META.solo
+  const cap  = plan.outreachCap
+  const used = 2                            // demo: artist already used 2 of 3
+  const atCap = cap !== null && used >= cap
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="px-5 pb-4"
+    >
+      <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-1">Network</p>
+      <h2 className="text-white text-2xl font-black tracking-tighter mb-5">Curator outreach.</h2>
+
+      {/* Quota tracker (only for capped plans) */}
+      {cap !== null && (
+        <div
+          className="p-4 rounded-2xl border mb-5"
+          style={{
+            background:  atCap ? 'rgba(239,68,68,0.06)' : 'rgba(255,215,0,0.06)',
+            borderColor: atCap ? 'rgba(239,68,68,0.25)' : 'rgba(255,215,0,0.2)',
+          }}
+        >
+          <div className="flex items-baseline justify-between mb-2">
+            <p className="text-white text-[12px] font-black uppercase tracking-wide">
+              Monthly Outreach
+            </p>
+            <p className="font-black text-lg">
+              <span className={atCap ? 'text-[#EF4444]' : 'text-[#FFD700]'}>{used}</span>
+              <span className="text-white/40 text-sm"> / {cap}</span>
+            </p>
+          </div>
+          <div className="h-1.5 rounded-full bg-white/8 overflow-hidden mb-2">
+            <div
+              className="h-full rounded-full transition-all"
+              style={{
+                width:      `${(used / cap) * 100}%`,
+                background: atCap ? '#EF4444' : '#FFD700',
+              }}
+            />
+          </div>
+          <p className="text-white/45 text-[10.5px] leading-snug">
+            {atCap
+              ? "You've used all 3 monthly pitches. Upgrade for unlimited."
+              : `${cap - used} pitch${cap - used === 1 ? '' : 'es'} left this month — refreshes June 30.`}
+          </p>
+          {(atCap || used === cap - 1) && (
+            <button
+              className="mt-3 w-full h-10 rounded-xl font-black text-[11px] uppercase tracking-widest"
+              style={{ background:'#FFD700', color:'#000', boxShadow:'0 4px 14px rgba(255,215,0,0.3)' }}
+            >
+              Upgrade for unlimited →
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Active conversations */}
+      <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-2.5">Active</p>
+      <div className="space-y-2 mb-6">
+        {OUTREACH.map(o => <OutreachCard key={o.id} row={o} />)}
+      </div>
+
+      {/* Browse list */}
+      <div className="flex items-center justify-between mb-2.5">
+        <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em]">Browse · 47 curators in your lane</p>
+      </div>
+      <div className="space-y-2">
+        {BROWSE.map(b => (
+          <div key={b.id} className="relative">
+            <OutreachCard row={b} />
+            {atCap && (
+              <div className="absolute inset-0 rounded-2xl bg-black/45 backdrop-blur-[2px] flex items-center justify-center">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-[#FFD700]/30 bg-[#FFD700]/15">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="2.5">
+                    <rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                  </svg>
+                  <span className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest">Upgrade to unlock</span>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  )
+}
+
+function OutreachCard({ row }: { row: OutreachRow }) {
+  const statusColors: Record<OutreachRow['status'], { dot: string; label: string; text: string }> = {
+    replied: { dot: '#34D399', label: 'Replied',     text: 'text-[#34D399]' },
+    opened:  { dot: '#A78BFA', label: 'Opened',      text: 'text-[#A78BFA]' },
+    pending: { dot: '#FFD700', label: 'Sent',        text: 'text-[#FFD700]' },
+    queued:  { dot: '#64748B', label: 'Available',   text: 'text-white/45' },
+  }
+  const s = statusColors[row.status]
+  return (
+    <div className="p-3 rounded-2xl border border-white/8 bg-zinc-900/60 flex items-center gap-3">
+      <div
+        className="w-10 h-10 rounded-full flex items-center justify-center font-black text-[11px] shrink-0 border"
+        style={{
+          background:  `${row.accent}20`,
+          borderColor: `${row.accent}50`,
+          color:       row.accent,
+        }}
+      >
+        {row.initials}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <p className="text-white text-[12px] font-black tracking-tight truncate">{row.name}</p>
+          <p className="text-white/35 text-[10px] font-bold shrink-0">{row.followers}</p>
+        </div>
+        <p className="text-white/55 text-[10.5px] leading-snug truncate">{row.preview}</p>
+      </div>
+      <div className="flex items-center gap-1.5 shrink-0">
+        <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.dot }} />
+        <span className={`text-[9px] font-black uppercase tracking-widest ${s.text}`}>{s.label}</span>
+      </div>
+    </div>
+  )
+}
+
+// ─── You — profile / plan / analytics / settings ────────────────────────────
+function YouTab({ artistName, planId }: { artistName: string; planId: string }) {
+  const plan = PLAN_META[planId] ?? PLAN_META.solo
+  const initials = artistName.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'A'
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="px-5 pb-4"
+    >
+      {/* Profile header */}
+      <div className="flex items-center gap-4 mb-6">
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center font-black text-xl"
+          style={{ background: '#FFD700', color: '#000', boxShadow: '0 0 20px rgba(255,215,0,0.3)' }}
+        >
+          {initials}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-white text-xl font-black tracking-tight leading-tight">{artistName}</p>
+          <div className="flex items-center gap-1.5 mt-1">
+            <span
+              className="px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest"
+              style={{
+                background:  `${plan.color}18`,
+                color:       plan.color,
+                border:      `1px solid ${plan.color}40`,
+              }}
+            >
+              {plan.label}
+            </span>
+            <span className="text-white/35 text-[10px] font-bold">· Indie Artist</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Analytics quick stats */}
+      <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-2.5">Your Career</p>
+      <div className="grid grid-cols-3 gap-2 mb-5">
+        <StatTile value="1.2k" label="Monthly listeners" trend="+18%" trendColor="#34D399" />
+        <StatTile value="42k"  label="Total streams"     trend="this mo" trendColor="rgba(255,255,255,0.4)" />
+        <StatTile value="3"    label="Releases live"     trend="2 upcoming" trendColor="rgba(255,255,255,0.4)" />
+      </div>
+
+      {/* Menu sections */}
+      <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-2.5">Account</p>
+      <div className="rounded-2xl border border-white/8 bg-zinc-900/50 overflow-hidden mb-4">
+        <MenuRow icon="◷" label="Plan & Billing"      detail={plan.label}  />
+        <MenuRow icon="↗" label="Full Analytics"      detail="Spotify · Meta" />
+        <MenuRow icon="◌" label="Knowledge Base"      detail="Videos + guides" />
+        <MenuRow icon="⊡" label="Connected Platforms" detail="Spotify · Meta · Stripe" />
+      </div>
+
+      <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-2.5">Preferences</p>
+      <div className="rounded-2xl border border-white/8 bg-zinc-900/50 overflow-hidden mb-4">
+        <MenuRow icon="◐" label="uP Notifications"   detail="Daily check-ins" />
+        <MenuRow icon="◫" label="Goals & Vision"     detail="Editable" />
+        <MenuRow icon="◇" label="Privacy"            detail="" />
+      </div>
+
+      <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-2.5">Support</p>
+      <div className="rounded-2xl border border-white/8 bg-zinc-900/50 overflow-hidden mb-6">
+        <MenuRow icon="?" label="Help & FAQ"         detail="" />
+        <MenuRow icon="✉" label="Contact uP team"    detail="" />
+        <MenuRow icon="★" label="Rate the app"        detail="" />
+      </div>
+
+      <button className="w-full h-12 rounded-2xl border border-white/10 bg-zinc-900 text-white/50 hover:text-white text-[11px] font-black uppercase tracking-widest transition-colors">
+        Sign out
+      </button>
+
+      <p className="text-white/20 text-[9px] text-center mt-4 font-bold tracking-widest uppercase">
+        GrounduP · v1.0
+      </p>
+    </motion.div>
+  )
+}
+
+function StatTile({ value, label, trend, trendColor }: { value: string; label: string; trend: string; trendColor: string }) {
+  return (
+    <div className="p-3 rounded-2xl border border-white/8 bg-zinc-900/50">
+      <p className="text-white text-xl font-black tracking-tight leading-none mb-1">{value}</p>
+      <p className="text-white/40 text-[9px] font-black uppercase tracking-widest leading-snug">{label}</p>
+      <p className="text-[9px] font-black mt-1.5" style={{ color: trendColor }}>{trend}</p>
+    </div>
+  )
+}
+
+function MenuRow({ icon, label, detail }: { icon: string; label: string; detail: string }) {
+  return (
+    <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/3 transition-colors border-b border-white/5 last:border-b-0">
+      <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-[#FFD700] text-sm">
+        {icon}
+      </div>
+      <p className="flex-1 text-left text-white text-[12px] font-bold tracking-tight">{label}</p>
+      {detail && <p className="text-white/35 text-[10px] font-bold">{detail}</p>}
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5">
+        <path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
   )
 }
 
