@@ -1383,7 +1383,7 @@ function PlanCard({
               transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
               className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.2em]"
             >
-              Tap again to start {title} →
+              Tap to start {title} →
             </motion.span>
           </motion.div>
         )}
