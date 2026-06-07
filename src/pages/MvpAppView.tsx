@@ -760,7 +760,7 @@ interface Tool {
 
 const TOOLS: Tool[] = [
   {
-    id: 'releases', icon: '◯', title: 'Releases', sub: 'Drop calendar + rollout',
+    id: 'releases', icon: '💿', title: 'Releases', sub: 'Drop calendar + rollout',
     ctaLabel: 'Preview a release plan',
     demo: {
       headline: 'Plan your next drop, end to end.',
@@ -773,7 +773,7 @@ const TOOLS: Tool[] = [
     },
   },
   {
-    id: 'campaigns', icon: '⏱', title: 'Campaigns', sub: 'Meta + TikTok ads',
+    id: 'campaigns', icon: '📣', title: 'Campaigns', sub: 'Meta + TikTok ads',
     ctaLabel: 'See ad results',
     demo: {
       headline: 'Run paid ads, no dashboards.',
@@ -786,7 +786,7 @@ const TOOLS: Tool[] = [
     },
   },
   {
-    id: 'influencer', icon: '⊕', title: 'Influencer Reach', sub: 'Curators + creators',
+    id: 'influencer', icon: '📈', title: 'Influencer Reach', sub: 'Curators + creators',
     ctaLabel: 'How it works',
     demo: {
       headline: 'Pitch curators, automatically.',
@@ -799,7 +799,7 @@ const TOOLS: Tool[] = [
     },
   },
   {
-    id: 'analytics', icon: '↗', title: 'Analytics', sub: 'Spotify + ad performance',
+    id: 'analytics', icon: '📊', title: 'Analytics', sub: 'Spotify + ad performance',
     ctaLabel: 'View live stats',
     demo: {
       headline: 'Track everything that matters.',
@@ -811,7 +811,7 @@ const TOOLS: Tool[] = [
     },
   },
   {
-    id: 'kb', icon: '◌', title: 'Knowledge Base', sub: 'Videos + playbooks',
+    id: 'kb', icon: '📖', title: 'Knowledge Base', sub: 'Videos + playbooks',
     ctaLabel: 'Browse the library',
     demo: {
       headline: 'Industry playbooks at your fingertips.',
@@ -824,7 +824,7 @@ const TOOLS: Tool[] = [
     },
   },
   {
-    id: 'chat', icon: '✦', title: 'uP Chat', sub: 'Your 24/7 AI manager',
+    id: 'chat', icon: 'orb', title: 'uP Chat', sub: 'Your 24/7 AI manager',
     ctaLabel: 'Read a real chat',
     demo: {
       headline: 'I\'m always one text away.',
@@ -870,15 +870,28 @@ function ToolsStep({ onContinue }: { onContinue: () => void }) {
             whileTap={{ scale: 0.97 }}
             className="p-4 rounded-2xl border border-white/10 bg-zinc-900/60 flex flex-col justify-between text-left hover:border-[#FFD700]/40 hover:bg-zinc-900 transition-all group"
           >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 text-[#FFD700] text-lg font-black"
-              style={{
-                background: 'rgba(255,215,0,0.10)',
-                border:     '1px solid rgba(255,215,0,0.25)',
-              }}
-            >
-              {t.icon}
-            </div>
+            {t.icon === 'orb' ? (
+              // uP Chat tile renders the actual brand orb with halo
+              <div
+                className="w-10 h-10 rounded-full overflow-hidden mb-3 relative"
+                style={{
+                  boxShadow:
+                    '0 0 6px rgba(255,215,0,0.75), 0 0 16px rgba(255,215,0,0.45), 0 0 36px rgba(255,215,0,0.22), inset 0 0 0 1px rgba(255,255,255,0.25)',
+                }}
+              >
+                <img src="/up-avatar.png" alt="uP" className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 text-xl"
+                style={{
+                  background: 'rgba(255,215,0,0.10)',
+                  border:     '1px solid rgba(255,215,0,0.25)',
+                }}
+              >
+                {t.icon}
+              </div>
+            )}
             <div>
               <p className="text-white text-[12px] font-black uppercase tracking-tight leading-tight mb-1">
                 {t.title}
