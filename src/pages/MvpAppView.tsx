@@ -16,8 +16,9 @@
  * No backend persistence yet — this is a UI/flow MVP. State stays in
  * component memory until the user opens iMessage.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useMvpAppState, type MvpAppStateAPI, type ChatMsg } from './mvp/useMvpAppState'
 
 // iMessage handoff is paused while we build the in-app flow.
 // When ready: re-add a constant for start.msg.new/<linkId> and wire it
@@ -219,7 +220,14 @@ export default function MvpAppView() {
               onPick={(p) => { setPlanId(p); goTo('app') }} />}
             {step === 'app'     && <AppShell    key="app"
               artistName={artistName || 'Artist'}
-              planId={planId} />}
+              planId={planId}
+              onboardingCtx={{
+                artistName: artistName || 'Artist',
+                genre,
+                goal: GOALS.find(g => g.id === goalId)?.label ?? null,
+                pains,
+              }}
+              onSignOut={() => goTo('splash')} />}
           </AnimatePresence>
 
           {/* Progress dots — only during the 8 onboarding question steps */}
@@ -1443,8 +1451,26 @@ const APP_TABS: TabDef[] = [
     glyph: <><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a8 8 0 0 1 16 0v1" strokeLinecap="round" /></> },
 ]
 
-function AppShell({ artistName, planId }: { artistName: string; planId: string }) {
+interface AppShellProps {
+  artistName:    string
+  planId:        string
+  onboardingCtx: { artistName: string; genre?: string | null; goal?: string | null; pains?: string[] }
+  onSignOut:     () => void
+}
+
+function AppShell({ artistName, planId, onboardingCtx, onSignOut }: AppShellProps) {
   const [tab, setTab] = useState<TabId>('home')
+  const state = useMvpAppState({
+    artistName: onboardingCtx.artistName,
+    genre:      onboardingCtx.genre,
+    goal:       onboardingCtx.goal,
+    pains:      onboardingCtx.pains,
+  })
+
+  function handleSignOut() {
+    state.resetAll()
+    onSignOut()
+  }
 
   return (
     <motion.div
@@ -1456,11 +1482,11 @@ function AppShell({ artistName, planId }: { artistName: string; planId: string }
       {/* Status bar already mounted by parent */}
       <div className="flex-1 overflow-y-auto pt-12 pb-24">
         <AnimatePresence mode="wait">
-          {tab === 'home'     && <HomeTab     key="home"     artistName={artistName} onJumpTo={setTab} />}
-          {tab === 'releases' && <ReleasesTab key="releases" />}
-          {tab === 'up'       && <UpTab       key="up"       artistName={artistName} planId={planId} />}
+          {tab === 'home'     && <HomeTab     key="home"     artistName={artistName} onJumpTo={setTab} state={state} />}
+          {tab === 'releases' && <ReleasesTab key="releases" state={state} />}
+          {tab === 'up'       && <UpTab       key="up"       artistName={artistName} planId={planId} state={state} />}
           {tab === 'network'  && <NetworkTab  key="network"  planId={planId} />}
-          {tab === 'you'      && <YouTab      key="you"      artistName={artistName} planId={planId} />}
+          {tab === 'you'      && <YouTab      key="you"      artistName={artistName} planId={planId} onSignOut={handleSignOut} />}
         </AnimatePresence>
       </div>
 
@@ -1522,7 +1548,10 @@ function AppShell({ artistName, planId }: { artistName: string; planId: string }
 }
 
 // ─── Tab: Home ───────────────────────────────────────────────────────────────
-function HomeTab({ artistName, onJumpTo }: { artistName: string; onJumpTo: (t: TabId) => void }) {
+function HomeTab({ artistName, onJumpTo, state }: { artistName: string; onJumpTo: (t: TabId) => void; state: MvpAppStateAPI }) {
+  const latest = state.latestUpMessage
+  const tasks  = state.upcomingTasks
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -1538,42 +1567,73 @@ function HomeTab({ artistName, onJumpTo }: { artistName: string; onJumpTo: (t: T
         Hey {artistName}.
       </h2>
 
-      {/* uP latest message preview — orb avatar w/ halo (matches website hero) */}
-      <button
-        onClick={() => onJumpTo('up')}
-        className="w-full p-4 rounded-2xl border border-[#FFD700]/25 bg-[#FFD700]/8 text-left flex items-start gap-3.5 mb-3 hover:bg-[#FFD700]/12 transition-colors"
-      >
-        <div
-          className="w-11 h-11 rounded-full overflow-hidden shrink-0 mt-0.5 relative"
-          style={{
-            boxShadow:
-              '0 0 6px rgba(255,215,0,0.75), 0 0 18px rgba(255,215,0,0.5), 0 0 44px rgba(255,215,0,0.3), 0 0 80px rgba(255,215,0,0.14), inset 0 0 0 1px rgba(255,255,255,0.28)',
-          }}
+      {/* uP latest message preview — live from chat state */}
+      {latest && (
+        <button
+          onClick={() => onJumpTo('up')}
+          className="w-full p-4 rounded-2xl border border-[#FFD700]/25 bg-[#FFD700]/8 text-left flex items-start gap-3.5 mb-3 hover:bg-[#FFD700]/12 transition-colors"
         >
-          <img src="/up-avatar.png" alt="uP" className="w-full h-full object-cover" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.2em] mb-1">uP · 2m ago</p>
-          <p className="text-white text-[12px] leading-snug">
-            Spotify pitch for your next drop is due Friday — I drafted it. Approve to send?
-          </p>
-        </div>
-      </button>
+          <div
+            className="w-11 h-11 rounded-full overflow-hidden shrink-0 mt-0.5 relative"
+            style={{
+              boxShadow:
+                '0 0 6px rgba(255,215,0,0.75), 0 0 18px rgba(255,215,0,0.5), 0 0 44px rgba(255,215,0,0.3), 0 0 80px rgba(255,215,0,0.14), inset 0 0 0 1px rgba(255,255,255,0.28)',
+            }}
+          >
+            <img src="/up-avatar.png" alt="uP" className="w-full h-full object-cover" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.2em] mb-1">uP · {latest.ts}</p>
+            <p className="text-white text-[12px] leading-snug line-clamp-3 whitespace-pre-line">
+              {latest.text}
+            </p>
+          </div>
+        </button>
+      )}
 
       {/* Quick stats */}
       <div className="grid grid-cols-2 gap-2.5 mb-5">
-        <Tile label="Monthly listeners"  value="1.2k"  trend="+18%" />
-        <Tile label="Active conversations" value="5"   trend="curators" />
+        <Tile label="Monthly listeners"    value="1.2k" trend="+18%" />
+        <Tile label="Active conversations" value="5"    trend="curators" />
       </div>
 
-      {/* Today's tasks */}
-      <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em] mb-3">
-        Today's tasks
-      </p>
+      {/* Today's tasks — pulled live from release state */}
+      <div className="flex items-baseline justify-between mb-3">
+        <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.25em]">
+          Today's tasks
+        </p>
+        <button
+          onClick={() => onJumpTo('releases')}
+          className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest hover:opacity-80 transition-opacity"
+        >
+          View all →
+        </button>
+      </div>
       <div className="space-y-2">
-        <TaskRow label="Approve Spotify pitch (Friday)"   icon="✓" />
-        <TaskRow label="Review DJ Smoov reply"            icon="◯" />
-        <TaskRow label="Confirm Meta budget bump → $75/d" icon="◯" />
+        {tasks.length === 0 ? (
+          <div className="p-4 rounded-2xl border border-white/8 bg-zinc-900/40 text-center">
+            <p className="text-white/40 text-[12px]">All caught up — nice work.</p>
+          </div>
+        ) : (
+          tasks.map(t => (
+            <button
+              key={`${t.releaseId}-${t.idx}`}
+              onClick={() => state.toggleTask(t.releaseId, t.idx)}
+              className="w-full flex items-center gap-3 p-3 rounded-xl border border-white/6 bg-zinc-900/40 hover:bg-zinc-900/70 transition-colors text-left"
+            >
+              <div className="w-4 h-4 rounded-full border border-white/30 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-white/85 text-[12px] leading-snug truncate">{t.label}</p>
+                <p className="text-white/35 text-[9px] font-bold uppercase tracking-widest mt-0.5">{t.releaseTitle}</p>
+              </div>
+              {t.due && (
+                <span className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest shrink-0">
+                  {t.due}
+                </span>
+              )}
+            </button>
+          ))
+        )}
       </div>
     </motion.div>
   )
@@ -1589,14 +1649,8 @@ function Tile({ label, value, trend }: { label: string; value: string; trend: st
   )
 }
 
-function TaskRow({ label, icon }: { label: string; icon: string }) {
-  return (
-    <div className="flex items-center gap-3 p-3 rounded-xl border border-white/6 bg-zinc-900/40">
-      <span className="text-[#FFD700] text-sm">{icon}</span>
-      <p className="text-white/75 text-[12px] flex-1">{label}</p>
-    </div>
-  )
-}
+// (Old static TaskRow removed — Home tab now reads upcomingTasks from
+// useMvpAppState and renders them as toggleable buttons.)
 
 // ════════════════════════════════════════════════════════════════════════════
 // Tab content — Releases · uP Chat · Network · You
@@ -1609,55 +1663,12 @@ const PLAN_META: Record<string, { label: string; color: string; outreachCap: num
   strategic: { label: 'Strategic Artist', color: '#A78BFA', outreachCap: null },
 }
 
-// ─── Releases — calendar + task list ────────────────────────────────────────
-interface ReleaseTask { label: string; done: boolean; due?: string }
-interface Release {
-  id:        string
-  title:     string
-  type:      'Single' | 'EP' | 'Album'
-  dropDate:  string             // ISO date
-  daysOut:   number
-  accent:    string
-  art:       string             // gradient string
-  tasks:     ReleaseTask[]
-}
+// ─── Releases — calendar + task list (releases live in MvpAppState) ────────
+// (Release / ReleaseTask types now re-exported from useMvpAppState.ts)
 
-const RELEASES: Release[] = [
-  {
-    id: 'r1', title: 'Drank In My Cup', type: 'Single', dropDate: '2026-06-19',
-    daysOut: 12, accent: '#FFD700',
-    art: 'linear-gradient(140deg, #2A1F0F 0%, #4A3416 40%, #FFD700 100%)',
-    tasks: [
-      { label: 'Final master locked',          done: true,  due: 'Mon' },
-      { label: 'Album art uploaded',           done: true,  due: 'Tue' },
-      { label: 'Distributor scheduled',        done: true,  due: 'Wed' },
-      { label: 'Spotify for Artists pitch',    done: true,  due: 'Thu' },
-      { label: 'Pre-save link generated',      done: true,  due: 'Fri' },
-      { label: 'Press release drafted',        done: true,  due: 'Mon' },
-      { label: 'TikTok teaser #1 posted',      done: true,  due: 'Wed' },
-      { label: 'Curator pitches sent (50)',    done: true,  due: 'Fri' },
-      { label: 'TikTok teaser #2 posted',      done: false, due: 'Sat' },
-      { label: 'Meta ad creative approved',    done: false, due: 'Mon' },
-      { label: 'Day-of pre-save push',         done: false, due: 'Thu' },
-      { label: 'Release day post + DMs',       done: false, due: 'Fri' },
-    ],
-  },
-  {
-    id: 'r2', title: 'Late Night Sessions', type: 'EP', dropDate: '2026-07-22',
-    daysOut: 45, accent: '#A78BFA',
-    art: 'linear-gradient(140deg, #1A1633 0%, #3D2966 50%, #A78BFA 100%)',
-    tasks: [
-      { label: 'Track 1 final mix',  done: true  },
-      { label: 'Track 2 final mix',  done: true  },
-      { label: 'Track 3 final mix',  done: true  },
-      { label: 'Track 4 vocals',     done: false },
-      { label: 'Album art briefing', done: false },
-    ],
-  },
-]
-
-function ReleasesTab() {
-  const [openId, setOpenId] = useState<string>(RELEASES[0].id)
+function ReleasesTab({ state }: { state: MvpAppStateAPI }) {
+  const releases = state.releases
+  const [openId, setOpenId] = useState<string>(releases[0]?.id ?? '')
 
   return (
     <motion.div
@@ -1715,7 +1726,7 @@ function ReleasesTab() {
 
       {/* Release cards */}
       <div className="space-y-3">
-        {RELEASES.map(r => {
+        {releases.map(r => {
           const isOpen   = openId === r.id
           const done     = r.tasks.filter(t => t.done).length
           const total    = r.tasks.length
@@ -1768,9 +1779,10 @@ function ReleasesTab() {
                   className="px-3 pb-3 space-y-1.5 border-t border-white/5"
                 >
                   {r.tasks.map((t, i) => (
-                    <div
+                    <button
                       key={i}
-                      className={`flex items-center gap-3 px-2 py-2 rounded-lg ${
+                      onClick={(e) => { e.stopPropagation(); state.toggleTask(r.id, i) }}
+                      className={`w-full flex items-center gap-3 px-2 py-2 rounded-lg text-left hover:bg-white/3 transition-colors ${
                         t.done ? 'opacity-50' : ''
                       }`}
                     >
@@ -1795,7 +1807,7 @@ function ReleasesTab() {
                           {t.due}
                         </span>
                       )}
-                    </div>
+                    </button>
                   ))}
                 </motion.div>
               )}
@@ -1808,29 +1820,8 @@ function ReleasesTab() {
 }
 
 // ─── uP Chat — full in-app conversation ─────────────────────────────────────
-interface ChatMsg {
-  id:   string
-  from: 'up' | 'me'
-  text?: string
-  /** Optional action-card embed */
-  card?: { title: string; sub: string; stat: string; accent: string }
-  ts:   string
-}
-
-const CHAT_HISTORY: ChatMsg[] = [
-  { id: '1', from: 'up', text: 'Morning. Three things on the table — want the rundown?', ts: '8:02 AM' },
-  { id: '2', from: 'me', text: 'Hit me.', ts: '8:03 AM' },
-  { id: '3', from: 'up',
-    text: '1. Drank In My Cup pitches went out — DJ Smoov (92K) replied 🔥.\n2. Meta ad ran $20, brought 412 listeners at $0.12/each.\n3. Spotify pitch is due Friday — I drafted it.',
-    ts: '8:03 AM' },
-  { id: '4', from: 'up',
-    card: { title: "Yesterday's Meta Campaign", sub: '412 new listeners · $0.12 / listener', stat: '+18%', accent: '#60A5FA' },
-    ts: '8:03 AM' },
-  { id: '5', from: 'me', text: 'Scale Meta to $75/day. And send the Spotify pitch.', ts: '8:05 AM' },
-  { id: '6', from: 'up', text: 'On it. Meta scaled, pitch queued for Friday 8AM. Want me to thank DJ Smoov too?', ts: '8:05 AM' },
-  { id: '7', from: 'me', text: 'Yeah — keep it short.', ts: '8:06 AM' },
-  { id: '8', from: 'up', text: 'Drafted: "Appreciate the love, Smoov — let me know when you want the next one early." Send?', ts: '8:06 AM' },
-]
+// ChatMsg type + seed data now live in mvp/useMvpAppState.ts
+// import type { ChatMsg } from './mvp/useMvpAppState'  (already imported above)
 
 const QUICK_ACTIONS = [
   'Plan next release',
@@ -1839,8 +1830,23 @@ const QUICK_ACTIONS = [
   'Run an ad',
 ]
 
-function UpTab({ artistName, planId }: { artistName: string; planId: string }) {
+function UpTab({ artistName, planId, state }: { artistName: string; planId: string; state: MvpAppStateAPI }) {
   const locked = planId === 'solo'   // Solo plan: uP iMessage disabled
+  const [input, setInput] = useState('')
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll to bottom whenever chat updates (new message or pending typing)
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+  }, [state.chat, state.chatPending])
+
+  function trySend(text: string) {
+    if (locked) return
+    const trimmed = text.trim()
+    if (!trimmed || state.chatPending) return
+    setInput('')
+    state.sendChat(trimmed)
+  }
 
   return (
     <motion.div
@@ -1891,53 +1897,72 @@ function UpTab({ artistName, planId }: { artistName: string; planId: string }) {
             </button>
           </div>
           {/* Blurred chat preview underneath */}
-          <ChatBubbles dimmed />
+          <ChatBubbles dimmed messages={state.chat} />
         </div>
       )}
 
       {!locked && (
         <>
-          {/* Conversation */}
-          <ChatBubbles />
+          {/* Conversation — live from state, scrollable */}
+          <div ref={scrollRef} className="max-h-[420px] overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
+            <ChatBubbles messages={state.chat} />
+            {state.chatPending && <TypingDots />}
+          </div>
 
-          {/* Quick actions */}
+          {/* Quick actions — pre-fill input on tap */}
           <div className="mt-4 mb-3 flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
             {QUICK_ACTIONS.map(a => (
               <button
                 key={a}
-                className="shrink-0 px-3 py-1.5 rounded-full border border-white/10 bg-zinc-900 text-white/70 text-[11px] font-bold whitespace-nowrap hover:border-[#FFD700]/40 hover:text-white transition-colors"
+                onClick={() => trySend(a)}
+                disabled={state.chatPending}
+                className="shrink-0 px-3 py-1.5 rounded-full border border-white/10 bg-zinc-900 text-white/70 text-[11px] font-bold whitespace-nowrap hover:border-[#FFD700]/40 hover:text-white transition-colors disabled:opacity-40"
               >
                 {a}
               </button>
             ))}
           </div>
 
-          {/* Input bar */}
-          <div className="flex items-center gap-2 p-2 rounded-full border border-white/10 bg-zinc-900/80">
+          {/* Input bar — real send */}
+          <form
+            onSubmit={(e) => { e.preventDefault(); trySend(input) }}
+            className="flex items-center gap-2 p-2 rounded-full border border-white/10 bg-zinc-900/80"
+          >
             <input
               type="text"
-              placeholder="Message uP…"
-              className="flex-1 bg-transparent outline-none text-white text-[13px] px-3 placeholder:text-white/30"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={state.chatPending ? 'uP is thinking…' : 'Message uP…'}
+              disabled={state.chatPending}
+              className="flex-1 bg-transparent outline-none text-white text-[13px] px-3 placeholder:text-white/30 disabled:opacity-50"
             />
             <button
-              className="w-8 h-8 rounded-full flex items-center justify-center"
+              type="submit"
+              disabled={!input.trim() || state.chatPending}
+              className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-40 transition-transform active:scale-90"
               style={{ background: '#FFD700' }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5">
                 <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
-          </div>
+          </form>
+
+          {/* Subtle context line under input */}
+          <p className="text-white/25 text-[10px] text-center mt-2">
+            uP knows {artistName.split(' ')[0]}'s genre, goal &amp; blocks
+          </p>
         </>
       )}
     </motion.div>
   )
 }
 
-function ChatBubbles({ dimmed = false }: { dimmed?: boolean }) {
+function ChatBubbles({ dimmed = false, messages }: { dimmed?: boolean; messages?: ChatMsg[] }) {
+  const msgs = messages ?? []  // Solo lock overlay passes no messages → empty fallback
   return (
     <div className={`space-y-2.5 ${dimmed ? 'opacity-30 blur-[1.5px] pointer-events-none' : ''}`}>
-      {CHAT_HISTORY.map(m => {
+      {msgs.map(m => {
         const isUp = m.from === 'up'
         if (m.card) {
           return (
@@ -1974,6 +1999,29 @@ function ChatBubbles({ dimmed = false }: { dimmed?: boolean }) {
           </div>
         )
       })}
+    </div>
+  )
+}
+
+function TypingDots() {
+  return (
+    <div className="flex justify-start mt-2.5">
+      <motion.div
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="flex items-center gap-1 px-4 py-2.5 rounded-2xl rounded-bl-md"
+        style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.22)' }}
+      >
+        {[0, 1, 2].map(i => (
+          <motion.span
+            key={i}
+            className="block w-1.5 h-1.5 rounded-full bg-[#FFD700]/70"
+            animate={{ y: [0, -4, 0] }}
+            transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.15, ease: 'easeInOut' }}
+          />
+        ))}
+      </motion.div>
     </div>
   )
 }
@@ -2129,7 +2177,7 @@ function OutreachCard({ row }: { row: OutreachRow }) {
 }
 
 // ─── You — profile / plan / analytics / settings ────────────────────────────
-function YouTab({ artistName, planId }: { artistName: string; planId: string }) {
+function YouTab({ artistName, planId, onSignOut }: { artistName: string; planId: string; onSignOut: () => void }) {
   const plan = PLAN_META[planId] ?? PLAN_META.solo
   const initials = artistName.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'A'
 
@@ -2196,7 +2244,10 @@ function YouTab({ artistName, planId }: { artistName: string; planId: string }) 
         <MenuRow icon="★" label="Rate the app"        detail="" />
       </div>
 
-      <button className="w-full h-12 rounded-2xl border border-white/10 bg-zinc-900 text-white/50 hover:text-white text-[11px] font-black uppercase tracking-widest transition-colors">
+      <button
+        onClick={onSignOut}
+        className="w-full h-12 rounded-2xl border border-white/10 bg-zinc-900 text-white/50 hover:text-white hover:border-white/30 text-[11px] font-black uppercase tracking-widest transition-colors"
+      >
         Sign out
       </button>
 
