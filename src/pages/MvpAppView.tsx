@@ -1143,7 +1143,7 @@ function PaywallStep({ onBack, onPick }: { onBack: () => void; onPick: (planId: 
       {(() => {
         const cards = [
           {
-            id: 'solo',     eyebrow: '1-month free trial',  title: 'Solo',     tagline: 'Limited entry tier',
+            id: 'solo',     eyebrow: '14-day free trial',   title: 'Solo',     tagline: 'Limited entry tier',
             price: '$4.99', per: '/ mo', afterTrial: 'Then $4.99 every month',
             compact: true,
             features: [
