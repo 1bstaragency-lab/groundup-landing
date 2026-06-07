@@ -1526,15 +1526,19 @@ function HomeTab({ artistName, onJumpTo }: { artistName: string; onJumpTo: (t: T
         Hey {artistName}.
       </h2>
 
-      {/* uP latest message preview */}
+      {/* uP latest message preview — orb avatar w/ halo (matches website hero) */}
       <button
         onClick={() => onJumpTo('up')}
-        className="w-full p-4 rounded-2xl border border-[#FFD700]/25 bg-[#FFD700]/8 text-left flex items-start gap-3 mb-3 hover:bg-[#FFD700]/12 transition-colors"
+        className="w-full p-4 rounded-2xl border border-[#FFD700]/25 bg-[#FFD700]/8 text-left flex items-start gap-3.5 mb-3 hover:bg-[#FFD700]/12 transition-colors"
       >
-        <div className="w-9 h-9 rounded-full bg-[#FFD700] flex items-center justify-center shrink-0 mt-0.5">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="black">
-            <path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-          </svg>
+        <div
+          className="w-11 h-11 rounded-full overflow-hidden shrink-0 mt-0.5 relative"
+          style={{
+            boxShadow:
+              '0 0 14px rgba(255,215,0,0.55), 0 0 36px rgba(255,215,0,0.25), inset 0 0 0 1px rgba(255,255,255,0.18)',
+          }}
+        >
+          <img src="/up-avatar.png" alt="uP" className="w-full h-full object-cover" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.2em] mb-1">uP · 2m ago</p>
@@ -1567,10 +1571,8 @@ function Tile({ label, value, trend }: { label: string; value: string; trend: st
   return (
     <div className="p-3.5 rounded-2xl border border-white/8 bg-zinc-900/60">
       <p className="text-white text-2xl font-black tracking-tight leading-none mb-1.5">{value}</p>
-      <div className="flex items-center justify-between">
-        <p className="text-white/40 text-[9px] font-black uppercase tracking-widest">{label}</p>
-        <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest">{trend}</p>
-      </div>
+      <p className="text-white/40 text-[9px] font-black uppercase tracking-widest leading-snug">{label}</p>
+      <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest mt-1">{trend}</p>
     </div>
   )
 }
@@ -1834,13 +1836,16 @@ function UpTab({ artistName, planId }: { artistName: string; planId: string }) {
       transition={{ duration: 0.25 }}
       className="px-4 pb-4"
     >
-      {/* Chat header */}
+      {/* Chat header — orb avatar w/ halo, matching website hero */}
       <div className="flex items-center gap-3 px-1 mb-4">
         <div
-          className="w-10 h-10 rounded-full flex items-center justify-center"
-          style={{ background: '#FFD700', boxShadow: '0 0 16px rgba(255,215,0,0.4)' }}
+          className="w-11 h-11 rounded-full overflow-hidden relative"
+          style={{
+            boxShadow:
+              '0 0 16px rgba(255,215,0,0.5), 0 0 36px rgba(255,215,0,0.22), inset 0 0 0 1px rgba(255,255,255,0.18)',
+          }}
         >
-          <span className="text-black text-[11px] font-black tracking-tight">uP</span>
+          <img src="/up-avatar.png" alt="uP" className="w-full h-full object-cover" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-white text-[14px] font-black tracking-tight leading-tight">uP</p>
