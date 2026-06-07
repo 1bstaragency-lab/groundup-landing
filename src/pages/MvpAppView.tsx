@@ -1852,10 +1852,10 @@ function UpTab({ artistName, planId, state }: { artistName: string; planId: stri
     <motion.div
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="px-4 pb-4"
+      className="h-full flex flex-col px-4 pb-2"
     >
       {/* Chat header — orb avatar w/ multi-layer halo matching website hero */}
-      <div className="flex items-center gap-3 px-1 mb-4">
+      <div className="flex items-center gap-3 px-1 mb-4 shrink-0">
         <div
           className="w-12 h-12 rounded-full overflow-hidden relative"
           style={{
@@ -1903,55 +1903,62 @@ function UpTab({ artistName, planId, state }: { artistName: string; planId: stri
 
       {!locked && (
         <>
-          {/* Conversation — live from state, scrollable */}
-          <div ref={scrollRef} className="max-h-[420px] overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
+          {/* Conversation — flex-1 takes remaining vertical space, only this scrolls */}
+          <div
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto pr-1 -mr-1"
+            style={{ scrollbarWidth: 'none' }}
+          >
             <ChatBubbles messages={state.chat} />
             {state.chatPending && <TypingDots />}
           </div>
 
-          {/* Quick actions — pre-fill input on tap */}
-          <div className="mt-4 mb-3 flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-            {QUICK_ACTIONS.map(a => (
-              <button
-                key={a}
-                onClick={() => trySend(a)}
-                disabled={state.chatPending}
-                className="shrink-0 px-3 py-1.5 rounded-full border border-white/10 bg-zinc-900 text-white/70 text-[11px] font-bold whitespace-nowrap hover:border-[#FFD700]/40 hover:text-white transition-colors disabled:opacity-40"
-              >
-                {a}
-              </button>
-            ))}
-          </div>
+          {/* Composer pinned to bottom */}
+          <div className="shrink-0 pt-3">
+            {/* Quick actions — pre-fill input on tap */}
+            <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+              {QUICK_ACTIONS.map(a => (
+                <button
+                  key={a}
+                  onClick={() => trySend(a)}
+                  disabled={state.chatPending}
+                  className="shrink-0 px-3 py-1.5 rounded-full border border-white/10 bg-zinc-900 text-white/70 text-[11px] font-bold whitespace-nowrap hover:border-[#FFD700]/40 hover:text-white transition-colors disabled:opacity-40"
+                >
+                  {a}
+                </button>
+              ))}
+            </div>
 
-          {/* Input bar — real send */}
-          <form
-            onSubmit={(e) => { e.preventDefault(); trySend(input) }}
-            className="flex items-center gap-2 p-2 rounded-full border border-white/10 bg-zinc-900/80"
-          >
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={state.chatPending ? 'uP is thinking…' : 'Message uP…'}
-              disabled={state.chatPending}
-              className="flex-1 bg-transparent outline-none text-white text-[13px] px-3 placeholder:text-white/30 disabled:opacity-50"
-            />
-            <button
-              type="submit"
-              disabled={!input.trim() || state.chatPending}
-              className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-40 transition-transform active:scale-90"
-              style={{ background: '#FFD700' }}
+            {/* Input bar — real send */}
+            <form
+              onSubmit={(e) => { e.preventDefault(); trySend(input) }}
+              className="flex items-center gap-2 p-2 rounded-full border border-white/10 bg-zinc-900/80"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5">
-                <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          </form>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={state.chatPending ? 'uP is thinking…' : 'Message uP…'}
+                disabled={state.chatPending}
+                className="flex-1 bg-transparent outline-none text-white text-[13px] px-3 placeholder:text-white/30 disabled:opacity-50"
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || state.chatPending}
+                className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-40 transition-transform active:scale-90"
+                style={{ background: '#FFD700' }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5">
+                  <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </form>
 
-          {/* Subtle context line under input */}
-          <p className="text-white/25 text-[10px] text-center mt-2">
-            uP knows {artistName.split(' ')[0]}'s genre, goal &amp; blocks
-          </p>
+            {/* Subtle context line under input */}
+            <p className="text-white/25 text-[10px] text-center mt-2">
+              uP knows {artistName.split(' ')[0]}'s genre, goal &amp; blocks
+            </p>
+          </div>
         </>
       )}
     </motion.div>
