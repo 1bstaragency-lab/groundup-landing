@@ -21,7 +21,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const IMESSAGE_LINK = 'https://start.msg.new/EEHfxKYWDk'
 
-type StepId = 'splash' | 'welcome' | 'name' | 'genre' | 'stage' | 'goal' | 'done'
+type StepId =
+  | 'splash' | 'welcome' | 'name' | 'genre' | 'stage' | 'goal'
+  | 'ready'        // "all set, [name]" celebration before the tour
+  | 'tools'        // feature grid — show what they get inside the app
+  | 'handoff'      // "all of this runs through iMessage" + the iMessage CTA
 
 const GENRES = ['Hip-Hop', 'R&B', 'Pop', 'Indie', 'Electronic', 'Rock', 'Country', 'Latin', 'Afrobeats', 'Other']
 const STAGES = [
@@ -108,16 +112,21 @@ export default function MvpAppView() {
               question="What should uP help with first?"
               options={GOALS.map(g => ({ id: g.id, label: g.label, emoji: g.emoji }))}
               selected={goalId}
-              onSelect={(v) => { setGoalId(v); goTo('done') }}
+              onSelect={(v) => { setGoalId(v); goTo('ready') }}
               onBack={() => goTo('stage')}
               stacked />}
-            {step === 'done'    && <DoneStep    key="done"
+
+            {step === 'ready'   && <ReadyStep   key="ready"
               name={artistName || 'Artist'}
+              onContinue={() => goTo('tools')} />}
+            {step === 'tools'   && <ToolsStep   key="tools"
+              onContinue={() => goTo('handoff')} />}
+            {step === 'handoff' && <HandoffStep key="handoff"
               goal={GOALS.find(g => g.id === goalId)?.label} />}
           </AnimatePresence>
 
-          {/* Progress dots — hidden on splash + welcome + done */}
-          {step !== 'splash' && step !== 'welcome' && step !== 'done' && (
+          {/* Progress dots — only during the 4 onboarding question steps */}
+          {(step === 'name' || step === 'genre' || step === 'stage' || step === 'goal') && (
             <ProgressDots step={step} />
           )}
         </div>
@@ -495,20 +504,20 @@ function ChipStep({
   )
 }
 
-// ─── Step 7: Done ───────────────────────────────────────────────────────────
-function DoneStep({ name, goal }: { name: string; goal?: string }) {
+// ─── Step 7a: Ready — celebrate, intro the tour ─────────────────────────────
+function ReadyStep({ name, onContinue }: { name: string; onContinue: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.45 }}
+      exit={{ opacity: 0, y: -16 }}
+      transition={{ duration: 0.4 }}
       className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center"
     >
       <motion.div
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+        transition={{ type: 'spring', stiffness: 220, damping: 18 }}
         className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
         style={{
           background: '#FFD700',
@@ -525,10 +534,142 @@ function DoneStep({ name, goal }: { name: string; goal?: string }) {
       <h2 className="text-white text-3xl font-black tracking-tighter leading-tight mb-3">
         Welcome to uP,<br />{name}.
       </h2>
-      <p className="text-white/50 text-sm leading-relaxed max-w-[280px] mb-8">
-        {goal ? <>I'm on it — first task: <span className="text-[#FFD700] font-bold">{goal.toLowerCase()}</span>. </> : null}
-        Tap below to open iMessage and I'll text you the first step.
+      <p className="text-white/50 text-sm leading-relaxed max-w-[280px] mb-10">
+        Here's your full Artist OS — every tool you need to run your career.
       </p>
+      <button
+        onClick={onContinue}
+        className="w-full max-w-[280px] h-14 rounded-2xl font-black text-[13px] uppercase tracking-widest flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+        style={{
+          background:'#FFD700',
+          color:'#000',
+          boxShadow:'0 8px 24px rgba(255,215,0,0.35), inset 0 1px 0 rgba(255,255,255,0.4)',
+        }}
+      >
+        See My Tools →
+      </button>
+    </motion.div>
+  )
+}
+
+// ─── Step 7b: Tools — what they get inside the Artist OS ────────────────────
+const TOOLS: { icon: string; title: string; sub: string }[] = [
+  { icon: '◯', title: 'Releases',          sub: 'Drop calendar + rollout' },
+  { icon: '⏱', title: 'Campaigns',         sub: 'Meta + TikTok ads' },
+  { icon: '⊕', title: 'Influencer Reach',  sub: 'Curators + creators' },
+  { icon: '↗', title: 'Analytics',         sub: 'Spotify + ad performance' },
+  { icon: '◌', title: 'Knowledge Base',    sub: 'Videos + playbooks' },
+  { icon: '✦', title: 'uP Chat',           sub: 'Your 24/7 AI manager' },
+]
+
+function ToolsStep({ onContinue }: { onContinue: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -24 }}
+      transition={{ duration: 0.4 }}
+      className="absolute inset-0 flex flex-col px-6 pt-16 pb-8"
+    >
+      <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-3 px-2">
+        Your Artist OS
+      </p>
+      <h2 className="text-white text-3xl font-black tracking-tighter leading-tight mb-2 px-2">
+        Everything you need.
+      </h2>
+      <p className="text-white/40 text-sm font-medium mb-6 px-2">
+        Six tools, one platform — built for indie artists.
+      </p>
+
+      <div className="grid grid-cols-2 gap-2.5 flex-1">
+        {TOOLS.map((t, i) => (
+          <motion.div
+            key={t.title}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: i * 0.06 }}
+            className="p-4 rounded-2xl border border-white/10 bg-zinc-900/60 flex flex-col justify-between hover:border-[#FFD700]/40 transition-colors"
+          >
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 text-[#FFD700] text-lg font-black"
+              style={{
+                background: 'rgba(255,215,0,0.10)',
+                border:     '1px solid rgba(255,215,0,0.25)',
+              }}
+            >
+              {t.icon}
+            </div>
+            <div>
+              <p className="text-white text-[12px] font-black uppercase tracking-tight leading-tight mb-1">
+                {t.title}
+              </p>
+              <p className="text-white/40 text-[10px] font-medium leading-snug">
+                {t.sub}
+              </p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <button
+        onClick={onContinue}
+        className="w-full h-14 rounded-2xl font-black text-[13px] uppercase tracking-widest flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98] mt-4"
+        style={{
+          background:'#FFD700',
+          color:'#000',
+          boxShadow:'0 8px 24px rgba(255,215,0,0.35), inset 0 1px 0 rgba(255,255,255,0.4)',
+        }}
+      >
+        Continue →
+      </button>
+    </motion.div>
+  )
+}
+
+// ─── Step 7c: Handoff — "all of this runs through iMessage" ─────────────────
+function HandoffStep({ goal }: { goal?: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+      className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center"
+    >
+      {/* iMessage bubble visual */}
+      <motion.div
+        initial={{ scale: 0.5, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 220, damping: 18 }}
+        className="relative mb-6"
+      >
+        {/* Soft green iMessage-style gradient bubble */}
+        <div
+          className="w-24 h-24 rounded-[2rem] flex items-center justify-center"
+          style={{
+            background:'linear-gradient(160deg, #34c759 0%, #25a043 100%)',
+            boxShadow: '0 0 60px rgba(52,199,89,0.45), inset 0 1px 0 rgba(255,255,255,0.4)',
+          }}
+        >
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="white">
+            <path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 12H6l-2 2V4h16v10z" />
+          </svg>
+        </div>
+      </motion.div>
+
+      <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-3">
+        One Channel · All Tools
+      </p>
+      <h2 className="text-white text-3xl font-black tracking-tighter leading-tight mb-4">
+        It all runs through<br />iMessage.
+      </h2>
+      <p className="text-white/55 text-sm leading-relaxed max-w-[300px] mb-8">
+        Every tool you just saw — releases, ads, curators, analytics — happens by texting{' '}
+        <span className="text-[#FFD700] font-bold">uP</span>.{' '}
+        {goal && <>Your first ask: <span className="text-[#FFD700] font-bold">{goal.toLowerCase()}</span>. </>}
+        No more dashboards. Just message uP.
+      </p>
+
       <a
         href={IMESSAGE_LINK}
         className="w-full max-w-[280px] h-14 rounded-2xl font-black text-[13px] uppercase tracking-widest flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98]"
@@ -538,7 +679,7 @@ function DoneStep({ name, goal }: { name: string; goal?: string }) {
           boxShadow:'0 8px 24px rgba(255,215,0,0.35), inset 0 1px 0 rgba(255,255,255,0.4)',
         }}
       >
-        Open iMessage →
+        Message uP →
       </a>
       <p className="text-white/30 text-[11px] mt-4">uP · +1 (310) 919-9037</p>
     </motion.div>
