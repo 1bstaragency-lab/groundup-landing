@@ -11,7 +11,6 @@
  *   Tickets — support tickets submitted from the app
  */
 import { useEffect, useMemo, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface AdminUser {
@@ -115,8 +114,6 @@ function dateShort(s: string | null) {
 }
 
 export function AdminDashboard() {
-  const [authed, setAuthed]   = useState(false)
-  const [token, setToken]     = useState<string | null>(null)
   const [data, setData]       = useState<AdminData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState('')
@@ -124,75 +121,25 @@ export function AdminDashboard() {
   const [search, setSearch]   = useState('')
   const [sort, setSort]       = useState<{ col: keyof AdminUser; dir: 1 | -1 }>({ col: 'joined_at', dir: -1 })
 
-  // login form
-  const [email, setEmail]         = useState('')
-  const [password, setPassword]   = useState('')
-  const [signingIn, setSigningIn] = useState(false)
-
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      const t = data.session?.access_token ?? null
-      if (t) { setToken(t); setAuthed(true) }
-      else   { setLoading(false) }
-    })
-  }, [])
-
-  useEffect(() => {
-    if (!token) return
     setLoading(true)
-    fetch('/.netlify/functions/admin-data', { headers: { Authorization: `Bearer ${token}` } })
+    // Fetch without auth for development
+    fetch('/.netlify/functions/admin-data')
       .then(async r => {
-        if (r.status === 403) throw new Error('This account is not on the admin allowlist.')
-        if (r.status === 401) throw new Error('Session expired — sign in again.')
         if (!r.ok) throw new Error('Failed to load admin data.')
         return r.json()
       })
       .then(setData)
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
-  }, [token])
-
-  async function signIn(e: React.FormEvent) {
-    e.preventDefault()
-    setSigningIn(true); setError('')
-    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
-    setSigningIn(false)
-    if (error) { setError(error.message); return }
-    const t = data.session?.access_token ?? null
-    if (t) { setToken(t); setAuthed(true) }
-  }
-
-  async function signOut() {
-    await supabase.auth.signOut()
-    setAuthed(false); setToken(null); setData(null); setError('')
-  }
-
-  // ── Login screen ──────────────────────────────────────────────────────────
-  if (!authed) {
-    return (
-      <div style={S.shell}>
-        <form onSubmit={signIn} style={S.loginCard}>
-          <div style={S.logoRow}><span style={S.logoG}>G</span><h1 style={S.logoText}>Admin</h1></div>
-          <p style={S.loginSub}>Operator access only.</p>
-          <input style={S.input} type="email" placeholder="Email" value={email}
-                 onChange={e => setEmail(e.target.value)} autoComplete="email" />
-          <input style={S.input} type="password" placeholder="Password" value={password}
-                 onChange={e => setPassword(e.target.value)} autoComplete="current-password" />
-          {error && <div style={S.errMsg}>{error}</div>}
-          <button style={S.signInBtn} disabled={signingIn} type="submit">
-            {signingIn ? 'Signing in…' : 'Sign In'}
-          </button>
-        </form>
-      </div>
-    )
-  }
+  }, [])
 
   if (loading) return <div style={S.shell}><div style={S.center}>Loading…</div></div>
-  if (error)   return <div style={S.shell}><div style={S.center}>{error}<br/><button style={S.linkBtn} onClick={signOut}>Sign out</button></div></div>
+  if (error)   return <div style={S.shell}><div style={S.center}>{error}</div></div>
   if (!data)   return null
 
   return <Dashboard data={data} tab={tab} setTab={setTab} search={search} setSearch={setSearch}
-                    sort={sort} setSort={setSort} onSignOut={signOut} GOLD={GOLD} />
+                    sort={sort} setSort={setSort} onSignOut={() => {}} GOLD={GOLD} />
 }
 
 // ── Dashboard body ────────────────────────────────────────────────────────────
