@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, ArrowRight, Loader2, Zap, Users, TrendingUp, Music, Smartphone, Star } from 'lucide-react'
+import { MeshGradient } from '@paper-design/shaders-react'
+import { useIsMobile } from '../hooks/useIsMobile'
 
 const PLATFORMS = ['TikTok', 'Instagram', 'YouTube', 'X / Twitter', 'Other']
 const FOLLOWER_RANGES = ['Under 10K', '10K – 50K', '50K – 250K', '250K – 1M', '1M+']
@@ -32,6 +34,7 @@ const BENEFITS = [
 type FormState = { name: string; email: string; platform: string; followers: string; handle: string; notes: string }
 
 export function CreatorOnboarding() {
+  const isMobile = useIsMobile()
   const [form, setForm] = useState<FormState>({ name: '', email: '', platform: '', followers: '', handle: '', notes: '' })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -66,19 +69,37 @@ export function CreatorOnboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] text-white font-sans">
+    <div className="min-h-screen bg-black text-white font-sans relative overflow-x-hidden">
 
-      {/* Background glows */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[10%] w-[500px] h-[500px] bg-[#FFD700]/6 blur-[140px] rounded-full" />
-        <div className="absolute bottom-[20%] right-[-5%] w-[400px] h-[400px] bg-[#FFD700]/4 blur-[120px] rounded-full" />
+      {/* Hero background — matches main landing page exactly */}
+      <div className="fixed inset-0 pointer-events-none">
+        {isMobile ? (
+          <>
+            <div className="absolute inset-0 w-full h-full"
+              style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(184,134,11,0.18) 0%, rgba(255,215,0,0.07) 40%, transparent 70%)' }} />
+            <div className="absolute inset-0 w-full h-full opacity-30"
+              style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 60%, rgba(255,215,0,0.12) 0%, transparent 65%)' }} />
+          </>
+        ) : (
+          <>
+            <MeshGradient
+              className="absolute inset-0 w-full h-full"
+              colors={['#000000', '#FFD700', '#B8860B', '#1A1A1A', '#000000']}
+              speed={0.3}
+            />
+            <MeshGradient
+              className="absolute inset-0 w-full h-full opacity-30"
+              colors={['#000000', '#ffffff', '#FFD700', '#000000']}
+              speed={0.2}
+            />
+          </>
+        )}
       </div>
 
       {/* Nav */}
       <nav className="relative z-10 flex items-center justify-between px-6 py-5 max-w-5xl mx-auto">
         <a href="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 bg-[#FFD700] rounded-lg flex items-center justify-center font-black text-black text-base">G</div>
-          <span className="font-black text-base tracking-tight text-white/80 group-hover:text-white transition-colors">GrounduP</span>
+          <img src="/logo.webp" alt="GrounduP" className="h-10 opacity-80 group-hover:opacity-100 transition-opacity" />
         </a>
         <a href="/" className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white/60 transition-colors">
           groundupapp.com ↗
@@ -143,7 +164,7 @@ export function CreatorOnboarding() {
               { value: '3', label: 'Plans — Starter to Label' },
               { value: '∞', label: 'Upside for creators' },
             ].map(s => (
-              <div key={s.label} className="bg-white/4 border border-white/8 rounded-2xl p-5">
+              <div key={s.label} className="bg-white/4 border border-white/8 rounded-2xl p-5 backdrop-blur-sm">
                 <div className="text-3xl font-black text-[#FFD700] tracking-tighter mb-1">{s.value}</div>
                 <div className="text-white/40 text-xs font-bold uppercase tracking-wide">{s.label}</div>
               </div>
@@ -165,7 +186,7 @@ export function CreatorOnboarding() {
 
         <div className="grid sm:grid-cols-3 gap-4">
           {CONTENT_IDEAS.map(idea => (
-            <div key={idea.title} className="bg-white/4 border border-white/8 rounded-2xl p-6 hover:border-[#FFD700]/30 transition-colors">
+            <div key={idea.title} className="bg-white/4 border border-white/8 rounded-2xl p-6 hover:border-[#FFD700]/30 transition-colors backdrop-blur-sm">
               <div className="w-10 h-10 bg-[#FFD700]/10 border border-[#FFD700]/20 rounded-xl flex items-center justify-center text-[#FFD700] mb-5">
                 {idea.icon}
               </div>
@@ -175,7 +196,7 @@ export function CreatorOnboarding() {
           ))}
         </div>
 
-        <div className="mt-8 bg-[#FFD700]/6 border border-[#FFD700]/15 rounded-2xl p-6">
+        <div className="mt-8 bg-[#FFD700]/6 border border-[#FFD700]/15 rounded-2xl p-6 backdrop-blur-sm">
           <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-widest mb-2">Your CTA</p>
           <p className="text-white/70 text-sm leading-relaxed">
             Every piece of content should drive viewers to <strong className="text-white">groundupapp.com</strong> or the iOS app. Use your unique ref link so every sign-up is tracked back to you.
@@ -196,7 +217,7 @@ export function CreatorOnboarding() {
 
         <div className="grid sm:grid-cols-3 gap-4">
           {BENEFITS.map(b => (
-            <div key={b.label} className="flex flex-col items-center text-center bg-white/4 border border-white/8 rounded-2xl p-8 hover:border-[#FFD700]/30 transition-colors">
+            <div key={b.label} className="flex flex-col items-center text-center bg-white/4 border border-white/8 rounded-2xl p-8 hover:border-[#FFD700]/30 transition-colors backdrop-blur-sm">
               <div className="w-12 h-12 bg-[#FFD700]/10 border border-[#FFD700]/20 rounded-2xl flex items-center justify-center text-[#FFD700] mb-5">
                 {b.icon}
               </div>
@@ -235,7 +256,7 @@ export function CreatorOnboarding() {
               <p className="text-white/40 text-sm mb-8">
                 We'll review your application and reach out within 48 hours. Here's your referral code for when you're approved:
               </p>
-              <div className="bg-white/4 border border-[#FFD700]/30 rounded-2xl p-6 mb-6">
+              <div className="bg-white/4 border border-[#FFD700]/30 rounded-2xl p-6 mb-6 backdrop-blur-sm">
                 <div className="text-[#FFD700] text-[10px] font-black uppercase tracking-widest mb-2">Your Ref Code</div>
                 <div className="font-mono text-white text-2xl font-black tracking-wider">{refCode}</div>
               </div>
@@ -251,7 +272,7 @@ export function CreatorOnboarding() {
                   onChange={e => set('name', e.target.value)}
                   placeholder="Your name"
                   required
-                  className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-[#FFD700]/40 transition-colors"
+                  className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-[#FFD700]/40 transition-colors backdrop-blur-sm"
                 />
               </div>
 
@@ -263,7 +284,7 @@ export function CreatorOnboarding() {
                   onChange={e => set('email', e.target.value)}
                   placeholder="your@email.com"
                   required
-                  className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-[#FFD700]/40 transition-colors"
+                  className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-[#FFD700]/40 transition-colors backdrop-blur-sm"
                 />
               </div>
 
@@ -275,8 +296,8 @@ export function CreatorOnboarding() {
                   required
                   className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm font-medium focus:outline-none focus:border-[#FFD700]/40 transition-colors"
                 >
-                  <option value="" disabled className="bg-[#0A0A0F]">Select platform…</option>
-                  {PLATFORMS.map(p => <option key={p} value={p} className="bg-[#0A0A0F]">{p}</option>)}
+                  <option value="" disabled className="bg-black">Select platform…</option>
+                  {PLATFORMS.map(p => <option key={p} value={p} className="bg-black">{p}</option>)}
                 </select>
               </div>
 
@@ -287,8 +308,8 @@ export function CreatorOnboarding() {
                   onChange={e => set('followers', e.target.value)}
                   className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm font-medium focus:outline-none focus:border-[#FFD700]/40 transition-colors"
                 >
-                  <option value="" className="bg-[#0A0A0F]">Select range…</option>
-                  {FOLLOWER_RANGES.map(r => <option key={r} value={r} className="bg-[#0A0A0F]">{r}</option>)}
+                  <option value="" className="bg-black">Select range…</option>
+                  {FOLLOWER_RANGES.map(r => <option key={r} value={r} className="bg-black">{r}</option>)}
                 </select>
               </div>
 
@@ -301,7 +322,7 @@ export function CreatorOnboarding() {
                     value={form.handle}
                     onChange={e => set('handle', e.target.value)}
                     placeholder="yourhandle"
-                    className="w-full h-12 bg-white/5 border border-white/10 rounded-xl pl-8 pr-4 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-[#FFD700]/40 transition-colors"
+                    className="w-full h-12 bg-white/5 border border-white/10 rounded-xl pl-8 pr-4 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-[#FFD700]/40 transition-colors backdrop-blur-sm"
                   />
                 </div>
               </div>
@@ -315,7 +336,7 @@ export function CreatorOnboarding() {
                   onChange={e => set('notes', e.target.value)}
                   placeholder="Tell us about your audience and why you're a good fit…"
                   rows={3}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-[#FFD700]/40 transition-colors resize-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-[#FFD700]/40 transition-colors resize-none backdrop-blur-sm"
                 />
               </div>
 
@@ -345,6 +366,9 @@ export function CreatorOnboarding() {
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-white/6 py-8 px-6 text-center">
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <img src="/logo.webp" alt="GrounduP" className="h-7 opacity-40" />
+        </div>
         <p className="text-white/20 text-xs font-medium">
           © {new Date().getFullYear()} GrounduP ·{' '}
           <a href="/privacy" className="hover:text-white/40 transition-colors">Privacy Policy</a>
