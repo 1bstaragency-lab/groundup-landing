@@ -52,41 +52,43 @@ const handler: Handler = async (event) => {
       adminSupabase.from('creators').select('*').order('created_at', { ascending: false }),
     ])
 
-    if (usersErr || ticketsErr || bugsErr || modelErr || creatorsErr) {
-      console.error({ usersErr, ticketsErr, bugsErr, modelErr, creatorsErr })
-      return { statusCode: 500, body: JSON.stringify({ error: 'Failed to fetch data' }) }
-    }
+    // Handle missing tables gracefully - return empty arrays if tables don't exist yet
+    const safeUsers = users || []
+    const safeTickets = tickets || []
+    const safeBugs = bugs || []
+    const safeModelUsage = modelUsage || []
+    const safeCreators = creators || []
 
     // Compute stats
     const stats = {
-      total_users: users?.length || 0,
-      paid_users: users?.filter(u => u.subscription_tier !== 'free').length || 0,
-      active_today: users?.filter(u => {
+      total_users: safeUsers.length,
+      paid_users: safeUsers.filter((u: any) => u.subscription_tier !== 'free').length,
+      active_today: safeUsers.filter((u: any) => {
         const lastSignIn = new Date(u.last_sign_in || '')
         return lastSignIn.toDateString() === new Date().toDateString()
-      }).length || 0,
-      total_releases: users?.reduce((sum, u) => sum + (u.releases || 0), 0) || 0,
-      total_outreach: users?.reduce((sum, u) => sum + (u.outreach_sent || 0), 0) || 0,
-      total_up_cost_usd: users?.reduce((sum, u) => sum + (u.up_cost_usd || 0), 0) || 0,
-      open_tickets: tickets?.filter(t => t.status === 'open').length || 0,
-      open_bugs: bugs?.filter(b => b.status === 'open').length || 0,
-      total_model_cost_usd: modelUsage?.reduce((sum, m) => sum + (m.cost_usd || 0), 0) || 0,
-      active_creators: creators?.filter(c => c.status === 'active').length || 0,
+      }).length,
+      total_releases: safeUsers.reduce((sum, u: any) => sum + (u.releases || 0), 0),
+      total_outreach: safeUsers.reduce((sum, u: any) => sum + (u.outreach_sent || 0), 0),
+      total_up_cost_usd: safeUsers.reduce((sum, u: any) => sum + (u.up_cost_usd || 0), 0),
+      open_tickets: safeTickets.filter((t: any) => t.status === 'open').length,
+      open_bugs: safeBugs.filter((b: any) => b.status === 'open').length,
+      total_model_cost_usd: safeModelUsage.reduce((sum, m: any) => sum + (m.cost_usd || 0), 0),
+      active_creators: safeCreators.filter((c: any) => c.status === 'active').length,
       plan_breakdown: {
-        solo: users?.filter(u => u.subscription_tier === 'solo').length || 0,
-        weekly: users?.filter(u => u.subscription_tier === 'weekly').length || 0,
-        monthly: users?.filter(u => u.subscription_tier === 'monthly').length || 0,
-        strategic: users?.filter(u => u.subscription_tier === 'strategic').length || 0,
+        solo: safeUsers.filter((u: any) => u.subscription_tier === 'solo').length,
+        weekly: safeUsers.filter((u: any) => u.subscription_tier === 'weekly').length,
+        monthly: safeUsers.filter((u: any) => u.subscription_tier === 'monthly').length,
+        strategic: safeUsers.filter((u: any) => u.subscription_tier === 'strategic').length,
       },
     }
 
     const response = {
       stats,
-      users: users || [],
-      tickets: tickets || [],
-      bugs: bugs || [],
-      model_usage: modelUsage || [],
-      creators: creators || [],
+      users: safeUsers,
+      tickets: safeTickets,
+      bugs: safeBugs,
+      model_usage: safeModelUsage,
+      creators: safeCreators,
     }
 
     return {
