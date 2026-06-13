@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence, PanInfo } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import type { PanInfo, Variants } from 'framer-motion'
 import { CheckCircle, ArrowRight, ArrowLeft, Loader2, Zap, Users, TrendingUp, Music, Smartphone, Star, X, Check } from 'lucide-react'
 import { MeshGradient } from '@paper-design/shaders-react'
 import { useIsMobile } from '../hooks/useIsMobile'
@@ -56,6 +57,12 @@ const BENEFITS = [
 ]
 
 type FormState = { name: string; email: string; platform: string; followers: string; handle: string; notes: string }
+
+const slideVariants: Variants = {
+  enter: (direction: number) => ({ x: direction > 0 ? 60 : -60, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (direction: number) => ({ x: direction > 0 ? -60 : 60, opacity: 0 }),
+}
 
 export function CreatorOnboarding() {
   const isMobile = useIsMobile()
@@ -230,9 +237,10 @@ export function CreatorOnboarding() {
                   <motion.div
                     key={step}
                     custom={dir}
-                    initial={d => ({ x: d > 0 ? 60 : -60, opacity: 0 })}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={d => ({ x: d > 0 ? -60 : 60, opacity: 0 })}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
                     transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
                     className="px-7 pb-6 relative"
                   >
