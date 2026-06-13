@@ -4,6 +4,16 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # The Expo web build under public/mvp/ is a downloadable client bundle —
+  # it legitimately embeds the PUBLIC Supabase project URL + publishable
+  # key (Row-Level Security protects the data, not key secrecy, exactly
+  # like every Supabase client app). Scanning a client bundle for env-var
+  # values is a category error, so exempt that path. We also whitelist the
+  # public Supabase var names (mirrors the intended VITE_ exposure on the
+  # landing app). Genuine server secrets (ANTHROPIC_API_KEY, Stripe, Blooio)
+  # never enter the client bundle and stay fully scanned.
+  SECRETS_SCAN_OMIT_PATHS = "public/mvp/**,dist/mvp/**"
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL,SUPABASE_ANON_KEY,VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY"
 
 [functions]
   node_bundler = "esbuild"
@@ -20,6 +30,12 @@
 # Poll Blooio for inbound messages every minute — fallback for webhook delivery issues
 [functions."blooio-poller"]
   schedule = "* * * * *"
+
+# Drip outreach: text 5 uncontacted app_waitlist contacts every 15 minutes
+# = 20/hour, ~480/day max — well under iMessage spam thresholds.
+# Toggle off without redeploying: set OUTREACH_KILL_SWITCH=1 in Netlify env.
+[functions."outreach-drip"]
+  schedule = "*/15 * * * *"
 
 # Short-link redirector — groundupapp.com/go/:code → function handles redirect
 [[redirects]]
