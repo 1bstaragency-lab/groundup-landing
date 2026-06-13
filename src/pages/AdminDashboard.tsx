@@ -10,8 +10,7 @@
  *   Users   — every account: plan, activity, uP cost, releases, outreach
  *   Tickets — support tickets submitted from the app
  */
-import { useEffect, useMemo, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { useMemo, useState } from 'react'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface AdminUser {
