@@ -1,160 +1,109 @@
-/**
- * Admin data API — returns full customer + usage data for the Dashwise panel.
- * Only accessible to emails in ADMIN_EMAILS. Uses service role key server-side.
- *
- * GET /.netlify/functions/admin-data
- * Authorization: Bearer <supabase_access_token>
- */
-import type { Handler } from '@netlify/functions'
+import { Handler } from '@netlify/functions'
 import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL         ?? ''
-const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
+// Admin email allowlist — add your admin emails here
+const ADMIN_EMAILS = ['joseph@groundup.app', '1bstaragency@gmail.com']
 
-export const handler: Handler = async (event) => {
-  const cors = {
-    'Access-Control-Allow-Origin':  '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  }
+const handler: Handler = async (event) => {
+  try {
+    // Get the Bearer token from the request
+    const authHeader = event.headers.authorization || ''
+    const token = authHeader.replace('Bearer ', '')
 
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: cors, body: '' }
-
-  // ── Service-role client (bypasses RLS) ───────────────────────────────────────
-  const db = createClient(SUPABASE_URL, SERVICE_KEY)
-
-  const today = new Date().toISOString().slice(0, 10)
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString()
-
-  // Run all queries in parallel
-  const [
-    usersRes,
-    prefsRes,
-    profilesRes,
-    convCountRes,
-    todayConvRes,
-    apiUsageRes,
-    guestRes,
-    dailyRes,
-  ] = await Promise.all([
-    // All auth users
-    db.auth.admin.listUsers({ perPage: 1000 }),
-
-    // Plan tiers + stripe info
-    db.from('artist_preferences').select('user_id, plan_tier, bio, stripe_customer_id, created_at'),
-
-    // Artist profiles (name + phone)
-    db.from('artist_profiles').select('user_id, artist_name, phone_number, created_at'),
-
-    // Total message count per user (all time)
-    db.from('up_conversations')
-      .select('user_id', { count: 'exact', head: false })
-      .eq('role', 'user'),
-
-    // Messages sent today
-    db.from('up_conversations')
-      .select('user_id', { count: 'exact', head: false })
-      .eq('role', 'user')
-      .gte('created_at', today),
-
-    // API usage per user
-    db.from('api_usage')
-      .select('user_id, phone_number, input_tokens, output_tokens, cost_usd, created_at'),
-
-    // Guest profiles (onboarding funnel)
-    db.from('guest_profiles')
-      .select('phone_number, artist_name, onboarding_step, message_count, created_at'),
-
-    // Daily message counts for last 30 days
-    db.rpc('admin_daily_messages', { since: thirtyDaysAgo }).maybeSingle(),
-  ])
-
-  // ── Aggregate per-user message counts ───────────────────────────────────────
-  const msgByUser: Record<string, number> = {}
-  for (const row of (convCountRes.data ?? [])) {
-    msgByUser[row.user_id] = (msgByUser[row.user_id] ?? 0) + 1
-  }
-
-  const todayByUser: Record<string, number> = {}
-  for (const row of (todayConvRes.data ?? [])) {
-    todayByUser[row.user_id] = (todayByUser[row.user_id] ?? 0) + 1
-  }
-
-  // ── Aggregate API cost per user ──────────────────────────────────────────────
-  const costByUser: Record<string, number> = {}
-  const costByPhone: Record<string, number> = {}
-  let totalCost = 0
-  for (const row of (apiUsageRes.data ?? [])) {
-    const c = Number(row.cost_usd)
-    totalCost += c
-    if (row.user_id) costByUser[row.user_id] = (costByUser[row.user_id] ?? 0) + c
-    if (row.phone_number) costByPhone[row.phone_number] = (costByPhone[row.phone_number] ?? 0) + c
-  }
-
-  // ── Build profile lookups ────────────────────────────────────────────────────
-  const prefsByUser: Record<string, { plan_tier: string; stripe_customer_id: string | null }> = {}
-  for (const p of (prefsRes.data ?? [])) {
-    prefsByUser[p.user_id] = { plan_tier: p.plan_tier ?? 'free', stripe_customer_id: p.stripe_customer_id ?? null }
-  }
-
-  const artistByUser: Record<string, { artist_name: string; phone_number: string | null }> = {}
-  for (const p of (profilesRes.data ?? [])) {
-    artistByUser[p.user_id] = { artist_name: p.artist_name ?? '', phone_number: p.phone_number ?? null }
-  }
-
-  // ── Compile users list ───────────────────────────────────────────────────────
-  const users = (usersRes.data?.users ?? []).map(u => {
-    const prefs  = prefsByUser[u.id]  ?? { plan_tier: 'free', stripe_customer_id: null }
-    const artist = artistByUser[u.id] ?? { artist_name: '', phone_number: null }
-    return {
-      user_id:         u.id,
-      email:           u.email ?? '',
-      artist_name:     artist.artist_name,
-      phone_number:    artist.phone_number,
-      plan_tier:       prefs.plan_tier,
-      has_stripe:      !!prefs.stripe_customer_id,
-      messages_total:  msgByUser[u.id] ?? 0,
-      messages_today:  todayByUser[u.id] ?? 0,
-      api_cost_usd:    +(costByUser[u.id] ?? 0).toFixed(4),
-      joined_at:       u.created_at,
-      last_sign_in:    u.last_sign_in_at ?? null,
-      confirmed:       !!u.confirmed_at,
+    if (!token) {
+      return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) }
     }
-  }).sort((a, b) => new Date(b.joined_at).getTime() - new Date(a.joined_at).getTime())
 
-  // ── Guest funnel breakdown ───────────────────────────────────────────────────
-  const funnelMap: Record<number, number> = {}
-  for (const g of (guestRes.data ?? [])) {
-    const s = g.onboarding_step ?? 0
-    funnelMap[s] = (funnelMap[s] ?? 0) + 1
-  }
-  const guestFunnel = [0, 1, 2, 3, 4].map(step => ({ step, count: funnelMap[step] ?? 0 }))
+    // Create Supabase client with the user's token
+    const supabase = createClient(
+      process.env.VITE_SUPABASE_URL || '',
+      process.env.VITE_SUPABASE_ANON_KEY || '',
+      { global: { headers: { Authorization: `Bearer ${token}` } } }
+    )
 
-  // ── Summary stats ────────────────────────────────────────────────────────────
-  const totalUsers    = users.length
-  const activeToday   = users.filter(u => u.messages_today > 0).length
-  const totalMessages = users.reduce((s, u) => s + u.messages_total, 0)
-  const planBreakdown = users.reduce((acc: Record<string, number>, u) => {
-    acc[u.plan_tier] = (acc[u.plan_tier] ?? 0) + 1
-    return acc
-  }, {})
+    // Verify the user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-  return {
-    statusCode: 200,
-    headers: { ...cors, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      stats: {
-        total_users:     totalUsers,
-        active_today:    activeToday,
-        total_messages:  totalMessages,
-        total_cost_usd:  +totalCost.toFixed(4),
-        guests_in_funnel: guestRes.data?.length ?? 0,
-        plan_breakdown:  planBreakdown,
+    if (authError || !user) {
+      return { statusCode: 401, body: JSON.stringify({ error: 'Session expired' }) }
+    }
+
+    // Check if user is in admin allowlist
+    if (!ADMIN_EMAILS.includes(user.email || '')) {
+      return { statusCode: 403, body: JSON.stringify({ error: 'Not authorized as admin' }) }
+    }
+
+    // Create service role client for admin queries (bypasses RLS)
+    const adminSupabase = createClient(
+      process.env.VITE_SUPABASE_URL || '',
+      process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+      { auth: { persistSession: false } }
+    )
+
+    // Fetch all admin data in parallel
+    const [
+      { data: users, error: usersErr },
+      { data: tickets, error: ticketsErr },
+      { data: bugs, error: bugsErr },
+      { data: modelUsage, error: modelErr },
+      { data: creators, error: creatorsErr },
+    ] = await Promise.all([
+      adminSupabase.from('users').select('*').order('created_at', { ascending: false }),
+      adminSupabase.from('support_tickets').select('*').order('created_at', { ascending: false }),
+      adminSupabase.from('bugs').select('*').order('created_at', { ascending: false }),
+      adminSupabase.from('model_usage').select('*').order('created_at', { ascending: false }),
+      adminSupabase.from('creators').select('*').order('created_at', { ascending: false }),
+    ])
+
+    if (usersErr || ticketsErr || bugsErr || modelErr || creatorsErr) {
+      console.error({ usersErr, ticketsErr, bugsErr, modelErr, creatorsErr })
+      return { statusCode: 500, body: JSON.stringify({ error: 'Failed to fetch data' }) }
+    }
+
+    // Compute stats
+    const stats = {
+      total_users: users?.length || 0,
+      paid_users: users?.filter(u => u.subscription_tier !== 'free').length || 0,
+      active_today: users?.filter(u => {
+        const lastSignIn = new Date(u.last_sign_in || '')
+        return lastSignIn.toDateString() === new Date().toDateString()
+      }).length || 0,
+      total_releases: users?.reduce((sum, u) => sum + (u.releases || 0), 0) || 0,
+      total_outreach: users?.reduce((sum, u) => sum + (u.outreach_sent || 0), 0) || 0,
+      total_up_cost_usd: users?.reduce((sum, u) => sum + (u.up_cost_usd || 0), 0) || 0,
+      open_tickets: tickets?.filter(t => t.status === 'open').length || 0,
+      open_bugs: bugs?.filter(b => b.status === 'open').length || 0,
+      total_model_cost_usd: modelUsage?.reduce((sum, m) => sum + (m.cost_usd || 0), 0) || 0,
+      active_creators: creators?.filter(c => c.status === 'active').length || 0,
+      plan_breakdown: {
+        solo: users?.filter(u => u.subscription_tier === 'solo').length || 0,
+        weekly: users?.filter(u => u.subscription_tier === 'weekly').length || 0,
+        monthly: users?.filter(u => u.subscription_tier === 'monthly').length || 0,
+        strategic: users?.filter(u => u.subscription_tier === 'strategic').length || 0,
       },
-      users,
-      guest_funnel: guestFunnel,
-      guests:       (guestRes.data ?? []).sort((a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      ),
-    }),
+    }
+
+    const response = {
+      stats,
+      users: users || [],
+      tickets: tickets || [],
+      bugs: bugs || [],
+      model_usage: modelUsage || [],
+      creators: creators || [],
+    }
+
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(response),
+    }
+  } catch (error) {
+    console.error('Admin data error:', error)
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Internal server error' }),
+    }
   }
 }
+
+export { handler }
