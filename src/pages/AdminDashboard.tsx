@@ -10,7 +10,8 @@
  *   Users   — every account: plan, activity, uP cost, releases, outreach
  *   Tickets — support tickets submitted from the app
  */
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { supabase } from '../lib/supabaseClient'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface AdminUser {
@@ -113,59 +114,85 @@ function dateShort(s: string | null) {
   return new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })
 }
 
-// Mock data for development/demo
-const MOCK_DATA: AdminData = {
-  stats: {
-    total_users: 342,
-    paid_users: 127,
-    active_today: 89,
-    total_releases: 1204,
-    total_outreach: 5632,
-    total_up_cost_usd: 2847.50,
-    open_tickets: 3,
-    open_bugs: 2,
-    total_model_cost_usd: 1204.32,
-    active_creators: 12,
-    plan_breakdown: { solo: 145, weekly: 98, monthly: 72, strategic: 27 },
-  },
-  users: [
-    { user_id: '1', email: 'artist1@example.com', artist_name: 'Luna Sound', genre: 'Pop', plan_tier: 'monthly', streak: 15, referrals: 3, has_avatar: true, onboarded: true, releases: 8, up_messages: 342, messages_today: 12, outreach_sent: 24, placements: 3, up_cost_usd: 89.50, tokens_in: 145000, tokens_out: 98000, joined_at: '2024-01-15', last_sign_in: '2024-06-12', confirmed: true },
-    { user_id: '2', email: 'artist2@example.com', artist_name: 'The Synth Collective', genre: 'Electronic', plan_tier: 'weekly', streak: 7, referrals: 1, has_avatar: true, onboarded: true, releases: 12, up_messages: 567, messages_today: 24, outreach_sent: 45, placements: 8, up_cost_usd: 156.20, tokens_in: 234000, tokens_out: 167000, joined_at: '2023-11-20', last_sign_in: '2024-06-13', confirmed: true },
-    { user_id: '3', email: 'artist3@example.com', artist_name: 'Jazz Minds', genre: 'Jazz', plan_tier: 'solo', streak: 0, referrals: 0, has_avatar: false, onboarded: false, releases: 2, up_messages: 45, messages_today: 3, outreach_sent: 5, placements: 0, up_cost_usd: 12.30, tokens_in: 23000, tokens_out: 15000, joined_at: '2024-05-01', last_sign_in: '2024-06-11', confirmed: true },
-  ],
-  tickets: [
-    { id: '1', user_id: '1', category: 'Feature Request', subject: 'Playlist pitch templates', body: 'Would love to have pre-made templates for common playlist pitches.', status: 'open', created_at: '2024-06-10' },
-    { id: '2', user_id: '2', category: 'Bug', subject: 'Messages not syncing', body: 'My release plan messages sometimes fail to save.', status: 'open', created_at: '2024-06-12' },
-    { id: '3', user_id: null, category: 'General', subject: 'Pricing inquiry', body: 'What happens if I downgrade mid-month?', status: 'resolved', created_at: '2024-06-08' },
-  ],
-  bugs: [
-    { id: '1', user_id: '1', title: 'Outreach form validation broken', description: 'Email field allows invalid formats in creator outreach modal', severity: 'high', status: 'open', created_at: '2024-06-12', updated_at: '2024-06-12' },
-    { id: '2', user_id: '2', title: 'Release plan duplication crash', description: 'App crashes when duplicating a release plan with >50 contacts', severity: 'critical', status: 'in_progress', created_at: '2024-06-11', updated_at: '2024-06-13' },
-    { id: '3', user_id: '1', title: 'Mobile: text wrapping issue', description: 'Long artist names wrap incorrectly on small screens', severity: 'low', status: 'resolved', created_at: '2024-06-05', updated_at: '2024-06-10' },
-  ],
-  model_usage: [
-    { id: '1', user_id: '1', model_name: 'gpt-4-turbo', tokens_input: 45000, tokens_output: 12000, cost_usd: 2.34, created_at: '2024-06-13' },
-    { id: '2', user_id: '2', model_name: 'gpt-4-turbo', tokens_input: 78000, tokens_output: 34000, cost_usd: 5.67, created_at: '2024-06-13' },
-    { id: '3', user_id: '1', model_name: 'claude-3-sonnet', tokens_input: 23000, tokens_output: 8000, cost_usd: 0.89, created_at: '2024-06-12' },
-    { id: '4', user_id: '3', model_name: 'gpt-4-turbo', tokens_input: 12000, tokens_output: 4000, cost_usd: 0.78, created_at: '2024-06-12' },
-  ],
-  creators: [
-    { id: '1', name: 'Alex Chen', email: 'alex@tiktok.example.com', platform: 'TikTok', followers: '250K – 1M', status: 'active', ref_code: 'alexchen-8f3e', referrals_count: 47, created_at: '2024-04-20' },
-    { id: '2', name: 'Mia Rodriguez', email: 'mia@instagram.example.com', platform: 'Instagram', followers: '50K – 250K', status: 'active', ref_code: 'miarodz-4b2c', referrals_count: 23, created_at: '2024-05-10' },
-    { id: '3', name: 'Jordan Lee', email: 'jordan@youtube.example.com', platform: 'YouTube', followers: '1M+', status: 'approved', ref_code: 'jordanlee-9k1w', referrals_count: 0, created_at: '2024-06-01' },
-    { id: '4', name: 'Sam Patel', email: 'sam@twitter.example.com', platform: 'X / Twitter', followers: '10K – 50K', status: 'pending', ref_code: 'sampatel-5d7f', referrals_count: 0, created_at: '2024-06-12' },
-  ],
-}
-
 export function AdminDashboard() {
+  const [authed, setAuthed]   = useState(false)
+  const [token, setToken]     = useState<string | null>(null)
+  const [data, setData]       = useState<AdminData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState('')
   const [tab, setTab]         = useState<'users' | 'tickets' | 'bugs' | 'costs' | 'creators'>('users')
   const [search, setSearch]   = useState('')
   const [sort, setSort]       = useState<{ col: keyof AdminUser; dir: 1 | -1 }>({ col: 'joined_at', dir: -1 })
 
-  const onSignOut = () => { /* demo — no-op */ }
+  // login form
+  const [email, setEmail]         = useState('')
+  const [password, setPassword]   = useState('')
+  const [signingIn, setSigningIn] = useState(false)
 
-  return <Dashboard data={MOCK_DATA} tab={tab} setTab={setTab} search={search} setSearch={setSearch}
-                    sort={sort} setSort={setSort} onSignOut={onSignOut} GOLD={GOLD} />
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      const t = data.session?.access_token ?? null
+      if (t) { setToken(t); setAuthed(true) }
+      else   { setLoading(false) }
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!token) return
+    setLoading(true)
+    fetch('/.netlify/functions/admin-data', { headers: { Authorization: `Bearer ${token}` } })
+      .then(async r => {
+        if (r.status === 403) throw new Error('This account is not on the admin allowlist.')
+        if (r.status === 401) throw new Error('Session expired — sign in again.')
+        if (!r.ok) throw new Error('Failed to load admin data.')
+        return r.json()
+      })
+      .then(setData)
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [token])
+
+  async function signIn(e: React.FormEvent) {
+    e.preventDefault()
+    setSigningIn(true); setError('')
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
+    setSigningIn(false)
+    if (error) { setError(error.message); return }
+    const t = data.session?.access_token ?? null
+    if (t) { setToken(t); setAuthed(true) }
+  }
+
+  async function signOut() {
+    await supabase.auth.signOut()
+    setAuthed(false); setToken(null); setData(null); setError('')
+  }
+
+  // ── Login screen ──────────────────────────────────────────────────────────
+  if (!authed) {
+    return (
+      <div style={S.shell}>
+        <form onSubmit={signIn} style={S.loginCard}>
+          <div style={S.logoRow}><span style={S.logoG}>G</span><h1 style={S.logoText}>Admin</h1></div>
+          <p style={S.loginSub}>Operator access only.</p>
+          <input style={S.input} type="email" placeholder="Email" value={email}
+                 onChange={e => setEmail(e.target.value)} autoComplete="email" />
+          <input style={S.input} type="password" placeholder="Password" value={password}
+                 onChange={e => setPassword(e.target.value)} autoComplete="current-password" />
+          {error && <div style={S.errMsg}>{error}</div>}
+          <button style={S.signInBtn} disabled={signingIn} type="submit">
+            {signingIn ? 'Signing in…' : 'Sign In'}
+          </button>
+        </form>
+      </div>
+    )
+  }
+
+  if (loading) return <div style={S.shell}><div style={S.center}>Loading…</div></div>
+  if (error)   return <div style={S.shell}><div style={S.center}>{error}<br/><button style={S.linkBtn} onClick={signOut}>Sign out</button></div></div>
+  if (!data)   return null
+
+  return <Dashboard data={data} tab={tab} setTab={setTab} search={search} setSearch={setSearch}
+                    sort={sort} setSort={setSort} onSignOut={signOut} GOLD={GOLD} />
 }
 
 // ── Dashboard body ────────────────────────────────────────────────────────────
