@@ -8,7 +8,6 @@ import { HomeSection } from './pages/dashboard/HomeSection';
 // import { CuratorSection }  from './components/dashboard/CuratorSection';
 import { LearnSection }    from './components/dashboard/LearnSection';
 import { MvpPreviewPage }  from './pages/dashboard/MvpPreviewPage';
-import MvpAppView from './pages/MvpAppView';
 import { SchedulerSection } from './components/dashboard/SchedulerSection';
 import { StudioSection } from './components/dashboard/StudioSection';
 import { ProfileSection } from './components/dashboard/ProfileSection';
@@ -702,8 +701,10 @@ function App() {
       {/* Email waitlist — same iMessage mock visual, captures email */}
       <Route path="/waitlist" element={<WaitlistPage />} />
 
-      {/* Mobile app MVP — phone-frame onboarding flow preview */}
-      <Route path="/mvp" element={<MvpAppView />} />
+      {/* /mvp is now the REAL app (Expo web build) served as static
+          files from public/mvp — see public/_redirects. The old
+          simulated MvpAppView is retired; its source remains in
+          src/pages/MvpAppView.tsx for reference. */}
 
       {/* Offer landing pages — all funnel to iMessage onboarding */}
       <Route path="/free"      element={<OfferPage offerId="free" />} />

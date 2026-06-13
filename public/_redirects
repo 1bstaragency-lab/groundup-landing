@@ -1,1 +1,4 @@
+# Real app (Expo web build) lives under /mvp — deep links + refreshes
+/mvp/*    /mvp/index.html    200
+
 /*    /index.html    200
