@@ -66,6 +66,7 @@ import { ForgotPasswordPage } from './pages/ForgotPassword';
 import { ResetPasswordPage } from './pages/ResetPassword';
 import { ContactCardPage } from './pages/ContactCard';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { CreatorOnboarding } from './pages/CreatorOnboarding';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import { WaitlistPage } from './pages/WaitlistPage';
 import { OfferPage } from './pages/offers/OfferPage';
@@ -695,6 +696,8 @@ function App() {
       <Route path="/contact" element={<ContactCardPage />} />
       {/* Internal admin dashboard — email-gated server-side */}
       <Route path="/admin" element={<AdminDashboard />} />
+      {/* UGC creator / influencer onboarding — public link to send to creators */}
+      <Route path="/creators" element={<CreatorOnboarding />} />
       {/* Legal */}
       <Route path="/privacy" element={<PrivacyPolicy />} />
 
