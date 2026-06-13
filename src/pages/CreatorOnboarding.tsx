@@ -1,27 +1,54 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, ArrowRight, Loader2, Zap, Users, TrendingUp, Music, Smartphone, Star } from 'lucide-react'
+import { CheckCircle, ArrowRight, ArrowLeft, Loader2, Zap, Users, TrendingUp, Music, Smartphone, Star, X } from 'lucide-react'
 import { MeshGradient } from '@paper-design/shaders-react'
 import { useIsMobile } from '../hooks/useIsMobile'
 
 const PLATFORMS = ['TikTok', 'Instagram', 'YouTube', 'X / Twitter', 'Other']
 const FOLLOWER_RANGES = ['Under 10K', '10K – 50K', '50K – 250K', '250K – 1M', '1M+']
 
-const CONTENT_IDEAS = [
+const STEPS = [
   {
-    icon: <Smartphone size={22} />,
-    title: 'App Walkthroughs',
-    desc: 'Show your audience how you use GrounduP to plan releases, pitch playlists, and run outreach — real workflow, real results.',
+    num: '01',
+    icon: <Smartphone size={28} />,
+    label: 'App Walkthroughs',
+    headline: 'Show Them How You Work',
+    body: 'Your audience wants to see real workflows, not ads. Walk them through exactly how you use GrounduP — the more specific, the better.',
+    ideas: [
+      '"How I pitched 50 playlists in 20 minutes with AI"',
+      '"My full release planning process inside GrounduP"',
+      '"Setting up a curator outreach campaign from scratch"',
+      '"Day in the life of an indie artist using GrounduP"',
+    ],
+    tip: 'Screen recordings perform best. Show real data — real streams, real curator responses, real results.',
   },
   {
-    icon: <TrendingUp size={22} />,
-    title: 'Before & After',
-    desc: 'Document your journey — where you were before GrounduP vs. your streams, placements, and growth after 30 days.',
+    num: '02',
+    icon: <TrendingUp size={28} />,
+    label: 'Before & After',
+    headline: 'Document the Journey',
+    body: 'Nothing converts like proof. Show where you started and where GrounduP took you. Raw and authentic beats polished every time.',
+    ideas: [
+      'Spotify stats side-by-side — before and after 30 days',
+      '"I got 3 playlist placements in my first week — here\'s how"',
+      '30-day challenge series — daily short-form updates',
+      '"What happened when I let AI run my music marketing"',
+    ],
+    tip: 'Start filming now, even before big results. The journey content is what builds trust before the payoff.',
   },
   {
-    icon: <Music size={22} />,
-    title: 'Tips for Artists',
-    desc: 'Create educational content around music marketing with GrounduP as your tool — "how I got 10 playlist placements in 2 weeks."',
+    num: '03',
+    icon: <Music size={28} />,
+    label: 'Tips for Artists',
+    headline: 'Teach, Don\'t Sell',
+    body: 'Educational content drives the most sign-ups. Help artists understand the game — with GrounduP as the tool that makes it all possible.',
+    ideas: [
+      '"5 playlist pitching mistakes indie artists make"',
+      '"How to plan your entire EP campaign in one afternoon"',
+      '"The curator outreach strategy that actually works in 2025"',
+      '"Why most indie artists plateau — and how to break through"',
+    ],
+    tip: 'Make it evergreen. Content that\'s still valuable in 6 months compounds. Skills + GrounduP = unstoppable.',
   },
 ]
 
@@ -33,14 +60,52 @@ const BENEFITS = [
 
 type FormState = { name: string; email: string; platform: string; followers: string; handle: string; notes: string }
 
+const slideVariants = {
+  enter: (dir: number) => ({ x: dir > 0 ? 80 : -80, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir: number) => ({ x: dir > 0 ? -80 : 80, opacity: 0 }),
+}
+
 export function CreatorOnboarding() {
   const isMobile = useIsMobile()
+
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false)
+  const [step, setStep] = useState(0)
+  const [dir, setDir] = useState(1)
+
+  // Form state
   const [form, setForm] = useState<FormState>({ name: '', email: '', platform: '', followers: '', handle: '', notes: '' })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [refCode, setRefCode] = useState<string | null>(null)
 
-  function set(field: keyof FormState, value: string) {
+  function openModal() {
+    setStep(0)
+    setDir(1)
+    setModalOpen(true)
+  }
+
+  function next() {
+    if (step < STEPS.length - 1) {
+      setDir(1)
+      setStep(s => s + 1)
+    } else {
+      setModalOpen(false)
+      setTimeout(() => {
+        document.getElementById('apply')?.scrollIntoView({ behavior: 'smooth' })
+      }, 200)
+    }
+  }
+
+  function prev() {
+    if (step > 0) {
+      setDir(-1)
+      setStep(s => s - 1)
+    }
+  }
+
+  function setField(field: keyof FormState, value: string) {
     setForm(f => ({ ...f, [field]: value }))
     setError('')
   }
@@ -68,10 +133,13 @@ export function CreatorOnboarding() {
     setSubmitting(false)
   }
 
+  const currentStep = STEPS[step]
+  const isLast = step === STEPS.length - 1
+
   return (
     <div className="min-h-screen bg-black text-white font-sans relative overflow-x-hidden">
 
-      {/* Hero background — matches main landing page exactly */}
+      {/* Hero background */}
       <div className="fixed inset-0 pointer-events-none">
         {isMobile ? (
           <>
@@ -95,6 +163,121 @@ export function CreatorOnboarding() {
           </>
         )}
       </div>
+
+      {/* ── 3-Step Content Modal ── */}
+      <AnimatePresence>
+        {modalOpen && (
+          <motion.div
+            key="modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}
+          >
+            <motion.div
+              key="modal-panel"
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="relative w-full max-w-lg rounded-3xl overflow-hidden"
+              style={{ background: 'rgba(10,10,15,0.95)', border: '1px solid rgba(255,215,0,0.15)' }}
+            >
+              {/* Top bar */}
+              <div className="flex items-center justify-between px-7 pt-6 pb-4 border-b border-white/6">
+                {/* Step dots */}
+                <div className="flex items-center gap-2">
+                  {STEPS.map((_, i) => (
+                    <div
+                      key={i}
+                      className="rounded-full transition-all duration-300"
+                      style={{
+                        width: i === step ? 24 : 6,
+                        height: 6,
+                        background: i === step ? '#FFD700' : i < step ? 'rgba(255,215,0,0.4)' : 'rgba(255,255,255,0.12)',
+                      }}
+                    />
+                  ))}
+                </div>
+                <button
+                  onClick={() => setModalOpen(false)}
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-white/30 hover:text-white/70 hover:bg-white/8 transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+
+              {/* Slide content */}
+              <div className="px-7 py-7 min-h-[420px] flex flex-col">
+                <AnimatePresence mode="wait" custom={dir}>
+                  <motion.div
+                    key={step}
+                    custom={dir}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.28, ease: 'easeInOut' }}
+                    className="flex flex-col flex-1"
+                  >
+                    {/* Step number + icon */}
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[#FFD700]"
+                        style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.2)' }}>
+                        {currentStep.icon}
+                      </div>
+                      <div>
+                        <div className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest">{currentStep.num} / 03 — {currentStep.label}</div>
+                        <h2 className="text-xl font-black uppercase tracking-tighter leading-tight mt-0.5">{currentStep.headline}</h2>
+                      </div>
+                    </div>
+
+                    <p className="text-white/55 text-sm leading-relaxed mb-5">{currentStep.body}</p>
+
+                    {/* Ideas */}
+                    <div className="space-y-2.5 mb-5 flex-1">
+                      {currentStep.ideas.map((idea, i) => (
+                        <div key={i} className="flex items-start gap-3">
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#FFD700] mt-1.5 shrink-0" />
+                          <p className="text-white/70 text-sm leading-snug">{idea}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Pro tip */}
+                    <div className="rounded-2xl px-4 py-3.5" style={{ background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.12)' }}>
+                      <span className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest mr-2">Pro Tip</span>
+                      <span className="text-white/50 text-xs leading-relaxed">{currentStep.tip}</span>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Nav buttons */}
+              <div className="flex items-center justify-between px-7 pb-7 gap-3">
+                <button
+                  onClick={prev}
+                  disabled={step === 0}
+                  className="flex items-center gap-1.5 text-white/30 text-xs font-black uppercase tracking-widest hover:text-white/60 transition-colors disabled:opacity-0"
+                >
+                  <ArrowLeft size={12} /> Back
+                </button>
+                <button
+                  onClick={next}
+                  className="flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-colors"
+                  style={{ background: '#FFD700', color: '#000' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#ffe033')}
+                  onMouseLeave={e => (e.currentTarget.style.background = '#FFD700')}
+                >
+                  {isLast ? 'Start My Application' : 'Next'} <ArrowRight size={13} />
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Nav */}
       <nav className="relative z-10 flex items-center justify-between px-6 py-5 max-w-5xl mx-auto">
@@ -127,12 +310,12 @@ export function CreatorOnboarding() {
           Partner with GrounduP and get rewarded for bringing independent artists onto the platform that's changing how music careers are built.
         </p>
 
-        <a
-          href="#apply"
+        <button
+          onClick={openModal}
           className="inline-flex items-center gap-2 px-8 py-4 bg-[#FFD700] text-black font-black text-[11px] uppercase tracking-widest rounded-2xl hover:bg-yellow-300 transition-colors"
         >
           Apply Now <ArrowRight size={14} />
-        </a>
+        </button>
       </motion.section>
 
       {/* What is GrounduP */}
@@ -185,13 +368,13 @@ export function CreatorOnboarding() {
         <h2 className="text-3xl font-black uppercase tracking-tighter text-center mb-12">Content That Converts</h2>
 
         <div className="grid sm:grid-cols-3 gap-4">
-          {CONTENT_IDEAS.map(idea => (
-            <div key={idea.title} className="bg-white/4 border border-white/8 rounded-2xl p-6 hover:border-[#FFD700]/30 transition-colors backdrop-blur-sm">
+          {STEPS.map((step, i) => (
+            <div key={step.label} className="bg-white/4 border border-white/8 rounded-2xl p-6 hover:border-[#FFD700]/30 transition-colors backdrop-blur-sm">
               <div className="w-10 h-10 bg-[#FFD700]/10 border border-[#FFD700]/20 rounded-xl flex items-center justify-center text-[#FFD700] mb-5">
-                {idea.icon}
+                {[<Smartphone size={22} />, <TrendingUp size={22} />, <Music size={22} />][i]}
               </div>
-              <h3 className="font-black text-base uppercase tracking-tight mb-3">{idea.title}</h3>
-              <p className="text-white/45 text-sm leading-relaxed">{idea.desc}</p>
+              <h3 className="font-black text-base uppercase tracking-tight mb-3">{step.label}</h3>
+              <p className="text-white/45 text-sm leading-relaxed">{step.body}</p>
             </div>
           ))}
         </div>
@@ -269,7 +452,7 @@ export function CreatorOnboarding() {
                 <input
                   type="text"
                   value={form.name}
-                  onChange={e => set('name', e.target.value)}
+                  onChange={e => setField('name', e.target.value)}
                   placeholder="Your name"
                   required
                   className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-[#FFD700]/40 transition-colors backdrop-blur-sm"
@@ -281,7 +464,7 @@ export function CreatorOnboarding() {
                 <input
                   type="email"
                   value={form.email}
-                  onChange={e => set('email', e.target.value)}
+                  onChange={e => setField('email', e.target.value)}
                   placeholder="your@email.com"
                   required
                   className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-[#FFD700]/40 transition-colors backdrop-blur-sm"
@@ -292,7 +475,7 @@ export function CreatorOnboarding() {
                 <label className="block text-white/30 text-[10px] font-black uppercase tracking-widest mb-2">Primary Platform *</label>
                 <select
                   value={form.platform}
-                  onChange={e => set('platform', e.target.value)}
+                  onChange={e => setField('platform', e.target.value)}
                   required
                   className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm font-medium focus:outline-none focus:border-[#FFD700]/40 transition-colors"
                 >
@@ -305,7 +488,7 @@ export function CreatorOnboarding() {
                 <label className="block text-white/30 text-[10px] font-black uppercase tracking-widest mb-2">Follower Count</label>
                 <select
                   value={form.followers}
-                  onChange={e => set('followers', e.target.value)}
+                  onChange={e => setField('followers', e.target.value)}
                   className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm font-medium focus:outline-none focus:border-[#FFD700]/40 transition-colors"
                 >
                   <option value="" className="bg-black">Select range…</option>
@@ -320,7 +503,7 @@ export function CreatorOnboarding() {
                   <input
                     type="text"
                     value={form.handle}
-                    onChange={e => set('handle', e.target.value)}
+                    onChange={e => setField('handle', e.target.value)}
                     placeholder="yourhandle"
                     className="w-full h-12 bg-white/5 border border-white/10 rounded-xl pl-8 pr-4 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-[#FFD700]/40 transition-colors backdrop-blur-sm"
                   />
@@ -333,7 +516,7 @@ export function CreatorOnboarding() {
                 </label>
                 <textarea
                   value={form.notes}
-                  onChange={e => set('notes', e.target.value)}
+                  onChange={e => setField('notes', e.target.value)}
                   placeholder="Tell us about your audience and why you're a good fit…"
                   rows={3}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-[#FFD700]/40 transition-colors resize-none backdrop-blur-sm"
