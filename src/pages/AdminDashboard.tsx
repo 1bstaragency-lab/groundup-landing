@@ -3,8 +3,6 @@
  * Lives at /admin. Auth: sign in with an admin-allowlisted Supabase account.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
-import type { Session } from '@supabase/supabase-js'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface AdminUser {
@@ -117,41 +115,19 @@ export function AdminDashboard() {
   const [search, setSearch] = useState('')
   const [sort, setSort]     = useState<{ col: keyof AdminUser; dir: 1 | -1 }>({ col: 'joined_at', dir: -1 })
 
-  const [session, setSession]             = useState<Session | null>(null)
-  const [authReady, setAuthReady]         = useState(false)
   const [data, setData]                   = useState<AdminData | null>(null)
   const [fetchLoading, setFetchLoading]   = useState(false)
   const [fetchError, setFetchError]       = useState('')
   const [lastRefresh, setLastRefresh]     = useState<Date | null>(null)
-
-  const [loginEmail, setLoginEmail]       = useState('')
-  const [loginPassword, setLoginPassword] = useState('')
-  const [loginErr, setLoginErr]           = useState('')
-  const [loginLoading, setLoginLoading]   = useState(false)
-
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s)
-      setAuthReady(true)
-      if (s) loadData(s.access_token)
-    })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s)
-      if (s) loadData(s.access_token)
-      else { setData(null); setFetchLoading(false) }
-    })
-    return () => subscription.unsubscribe()
-  }, [])
+  useEffect(() => { loadData() }, [])
 
-  async function loadData(token: string) {
+  async function loadData() {
     setFetchLoading(true)
     setFetchError('')
     try {
-      const res = await fetch('/.netlify/functions/admin-data', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch('/.netlify/functions/admin-data')
       const json = await res.json()
       if (!res.ok) { setFetchError(json.error || 'Failed to load admin data'); setFetchLoading(false); return }
       setData(json)
@@ -162,22 +138,12 @@ export function AdminDashboard() {
     setFetchLoading(false)
   }
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault()
-    setLoginLoading(true)
-    setLoginErr('')
-    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword })
-    if (error) setLoginErr(error.message)
-    setLoginLoading(false)
-  }
-
   async function handleCreatorAction(creatorId: string, status: Creator['status']) {
-    if (!session) return
     setActionLoading(creatorId)
     try {
       const res = await fetch('/.netlify/functions/admin-update-creator', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ creator_id: creatorId, status }),
       })
       if (res.ok && data) {
@@ -187,34 +153,13 @@ export function AdminDashboard() {
     setActionLoading(null)
   }
 
-  if (!authReady) return <div style={S.shell}><div style={S.center}>Loading…</div></div>
-
-  if (!session) {
-    return (
-      <div style={{ ...S.shell, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <div style={S.loginCard}>
-          <div style={S.logoRow}><span style={S.logoG}>G</span><h1 style={S.logoText}>GrounduP Admin</h1></div>
-          <p style={S.loginSub}>Sign in with your admin account to access the dashboard.</p>
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <input style={S.input} type="email" placeholder="Admin email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} required />
-            <input style={S.input} type="password" placeholder="Password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required />
-            {loginErr && <div style={S.errMsg}>{loginErr}</div>}
-            <button style={S.signInBtn} type="submit" disabled={loginLoading}>
-              {loginLoading ? 'Signing in…' : 'Sign In'}
-            </button>
-          </form>
-        </div>
-      </div>
-    )
-  }
-
   if (fetchLoading || !data) {
     return (
       <div style={S.shell}>
         <div style={S.center}>
           {fetchError
             ? <><div style={{ color: '#FF6B6B', marginBottom: 12, fontWeight: 700 }}>{fetchError}</div>
-                <button style={{ ...S.signInBtn, maxWidth: 160 }} onClick={() => session && loadData(session.access_token)}>Retry</button></>
+                <button style={{ ...S.signInBtn, maxWidth: 160 }} onClick={loadData}>Retry</button></>
             : 'Loading admin data…'}
         </div>
       </div>
@@ -227,8 +172,7 @@ export function AdminDashboard() {
       tab={tab} setTab={setTab}
       search={search} setSearch={setSearch}
       sort={sort} setSort={setSort}
-      onSignOut={() => supabase.auth.signOut()}
-      onRefresh={() => session && loadData(session.access_token)}
+      onRefresh={loadData}
       onCreatorAction={handleCreatorAction}
       actionLoading={actionLoading}
       lastRefresh={lastRefresh}
@@ -237,13 +181,12 @@ export function AdminDashboard() {
 }
 
 // ── Dashboard view ────────────────────────────────────────────────────────────
-function DashboardView({ data, tab, setTab, search, setSearch, sort, setSort, onSignOut, onRefresh, onCreatorAction, actionLoading, lastRefresh }: {
+function DashboardView({ data, tab, setTab, search, setSearch, sort, setSort, onRefresh, onCreatorAction, actionLoading, lastRefresh }: {
   data: AdminData
   tab: 'users' | 'tickets' | 'bugs' | 'costs' | 'creators'
   setTab: (t: 'users' | 'tickets' | 'bugs' | 'costs' | 'creators') => void
   search: string; setSearch: (s: string) => void
   sort: { col: keyof AdminUser; dir: 1 | -1 }; setSort: (s: { col: keyof AdminUser; dir: 1 | -1 }) => void
-  onSignOut: () => void
   onRefresh: () => void
   onCreatorAction: (id: string, status: Creator['status']) => void
   actionLoading: string | null
@@ -274,7 +217,6 @@ function DashboardView({ data, tab, setTab, search, setSearch, sort, setSort, on
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           {lastRefresh && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontWeight: 600 }}>Updated {lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
           <button style={S.linkBtn} onClick={onRefresh}>↻ Refresh</button>
-          <button style={S.linkBtn} onClick={onSignOut}>Sign out</button>
         </div>
       </div>
 
