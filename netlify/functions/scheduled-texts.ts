@@ -3,6 +3,8 @@
  * texts to users based on their artist profile and upcoming calendar events.
  *
  * Netlify schedule: every Sunday at 10am ET  →  "0 14 * * 0"
+ *
+ * Env: BLOOIO_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
  */
 
 import type { Handler, HandlerEvent } from '@netlify/functions'
@@ -10,8 +12,8 @@ import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL   = process.env.SUPABASE_URL!
 const SUPABASE_KEY   = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const BB_URL         = process.env.BLUEBUBBLES_SERVER_URL
-const BB_PASS        = process.env.BLUEBUBBLES_PASSWORD
+const BLOOIO_KEY     = process.env.BLOOIO_API_KEY ?? ''
+const BLOOIO_URL     = 'https://backend.blooio.com/v1/api/messages'
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
@@ -76,24 +78,20 @@ function outreachNudge(profile: Profile): string {
   return `${name} 📣 Your influencer network has 627 curators waiting. Pick 3 from your dashboard and reach out today — even a short DM on Twitter or email gets results. — uP`
 }
 
-// ─── Send via BlueBubbles ─────────────────────────────────────────────────────
+// ─── Send via Blooio ──────────────────────────────────────────────────────────
 
 async function sendMessage(phone: string, message: string): Promise<boolean> {
-  if (!BB_URL || !BB_PASS) {
+  if (!BLOOIO_KEY) {
     console.log(`[demo] Would send to ${phone}: ${message.slice(0, 60)}...`)
     return true
   }
   const e164 = phone.replace(/\D/g, '').replace(/^1?(\d{10})$/, '+1$1')
-  const res = await fetch(`${BB_URL}/api/v1/message/text?password=${encodeURIComponent(BB_PASS)}`, {
+  const res = await fetch(BLOOIO_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      chatGuid: `iMessage;-;${e164}`,
-      tempGuid: crypto.randomUUID(),
-      message,
-      method: 'private-api',
-    }),
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${BLOOIO_KEY}` },
+    body: JSON.stringify({ to: e164, text: message }),
   })
+  if (!res.ok) console.error('[scheduled-texts] Blooio send error', res.status, await res.text())
   return res.ok
 }
 

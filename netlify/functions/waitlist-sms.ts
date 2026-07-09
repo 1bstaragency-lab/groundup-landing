@@ -1,11 +1,13 @@
 /**
  * Fires immediately after a user joins the waitlist.
- * Sends a branded welcome iMessage via BlueBubbles.
+ * Sends a branded welcome iMessage via Blooio.
+ *
+ * Env: BLOOIO_API_KEY
  */
 import type { Handler } from '@netlify/functions'
 
-const BB_URL  = process.env.BLUEBUBBLES_SERVER_URL
-const BB_PASS = process.env.BLUEBUBBLES_PASSWORD
+const BLOOIO_KEY = process.env.BLOOIO_API_KEY ?? ''
+const BLOOIO_URL = 'https://backend.blooio.com/v1/api/messages'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -13,28 +15,18 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-async function sendBlueBubbles(phone: string, message: string): Promise<{ ok: boolean; demo?: boolean }> {
-  if (!BB_URL || !BB_PASS) {
-    console.log(`[demo] Would send to ${phone}: ${message.slice(0, 80)}...`)
+async function sendBlooio(to: string, text: string): Promise<{ ok: boolean; demo?: boolean }> {
+  if (!BLOOIO_KEY) {
+    console.log(`[demo] Would send to ${to}: ${text.slice(0, 80)}...`)
     return { ok: true, demo: true }
   }
 
-  const e164 = phone.replace(/\D/g, '').replace(/^1?(\d{10})$/, '+1$1')
-
-  const res = await fetch(
-    `${BB_URL}/api/v1/message/text?password=${encodeURIComponent(BB_PASS)}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chatGuid: `iMessage;-;${e164}`,
-        tempGuid: crypto.randomUUID(),
-        message,
-        method: 'private-api',
-      }),
-    },
-  )
-
+  const res = await fetch(BLOOIO_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${BLOOIO_KEY}` },
+    body: JSON.stringify({ to, text }),
+  })
+  if (!res.ok) console.error('[waitlist-sms] Blooio send error', res.status, await res.text())
   return { ok: res.ok }
 }
 
@@ -52,6 +44,9 @@ export const handler: Handler = async (event) => {
   const { phone, name } = body
   if (!phone) return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'phone required' }) }
 
+  // Normalize to E.164 (US default)
+  const e164 = phone.replace(/\D/g, '').replace(/^1?(\d{10})$/, '+1$1')
+
   const artistName = name ? name.split(' ')[0] : 'Artist'
 
   const message =
@@ -61,16 +56,16 @@ export const handler: Handler = async (event) => {
     `— uP Team | groundupapp.com`
 
   try {
-    const result = await sendBlueBubbles(phone, message)
+    const result = await sendBlooio(e164, message)
     return {
       statusCode: 200,
       headers: CORS,
       body: JSON.stringify({ ok: result.ok, demo: result.demo ?? false }),
     }
   } catch (err) {
-    console.error('BlueBubbles error:', err)
+    console.error('[waitlist-sms] Blooio error:', err)
     return {
-      statusCode: 200, // Don't fail the signup flow if SMS fails
+      statusCode: 200, // Don't fail the signup flow if the message fails
       headers: CORS,
       body: JSON.stringify({ ok: false, error: String(err) }),
     }
