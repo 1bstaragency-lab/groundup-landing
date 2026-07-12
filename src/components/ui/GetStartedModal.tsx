@@ -18,6 +18,7 @@ import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { usePaywallTracking } from '../../hooks/usePaywallTracking'
+import { GradientButton } from './gradient-button'
 
 type Path = {
   id:       string
@@ -56,6 +57,12 @@ export function GetStartedModal({ open, onClose }: { open: boolean; onClose: () 
     trackCta({ choice: p.id, href: p.href })
     onClose()
     navigate(p.href)
+  }
+
+  function goSignupDirect() {
+    trackCta({ choice: 'signup_fallback' })
+    onClose()
+    navigate('/signup')
   }
 
   return (
@@ -112,9 +119,12 @@ export function GetStartedModal({ open, onClose }: { open: boolean; onClose: () 
                 <h2 className="text-white text-3xl md:text-4xl font-black tracking-tighter leading-tight mb-2">
                   What should uP help with first?
                 </h2>
-                <p className="text-white/40 text-sm font-medium max-w-md mx-auto">
+                <p className="text-white/40 text-sm font-medium max-w-md mx-auto mb-6">
                   Pick the one that matters most right now — uP starts there.
                 </p>
+                <GradientButton onClick={goSignupDirect} className="text-[11px]">
+                  Or just create an account →
+                </GradientButton>
               </div>
 
               {/* Path cards */}
@@ -139,17 +149,6 @@ export function GetStartedModal({ open, onClose }: { open: boolean; onClose: () 
                     </svg>
                   </button>
                 ))}
-              </div>
-
-              {/* Escape hatch */}
-              <div className="relative px-8 pb-8 pt-2 text-center border-t border-white/5">
-                <a
-                  href="/signup"
-                  onClick={() => trackCta({ choice: 'signup_fallback' })}
-                  className="text-white/40 hover:text-white text-[11px] font-black uppercase tracking-widest transition-colors"
-                >
-                  Or just create an account →
-                </a>
               </div>
             </div>
           </motion.div>

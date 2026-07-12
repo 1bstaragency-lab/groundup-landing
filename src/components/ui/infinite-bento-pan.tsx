@@ -96,7 +96,7 @@ function BarsCard({ seed, t }: { seed: number; t: number }) {
         return (
           <div key={i} style={{
             flex: 1, height: `${h}%`,
-            background: `linear-gradient(180deg, ${GOLD} 0%, ${GOLD_DIM}88 100%)`,
+            background: `linear-gradient(180deg, ${GOLD} 0%, ${GOLD_DIM} 100%)`,
             borderRadius: 3,
             transition: "height 0.4s ease",
           }} />
@@ -184,7 +184,7 @@ function BentoCard({ card, t }: { card: CardDef; t: number }) {
         <div style={{ flex: 1, display: "flex", alignItems: "center", fontSize: 48, fontWeight: 800, letterSpacing: "-0.04em", color: GOLD }}>
           {v.toLocaleString()}
         </div>
-        <div style={{ fontSize: 11, color: "#4ade80", fontWeight: 700 }}>+{delta}%</div>
+        <div style={{ fontSize: 11, color: GOLD, fontWeight: 700 }}>+{delta}%</div>
       </div>
     )
   }
