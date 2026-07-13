@@ -32,7 +32,7 @@ export function GmailConnectButton({ className, saveBeforeRedirect }: { classNam
     <button
       onClick={connect}
       className={cn(
-        'flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-all font-black text-[10px] uppercase tracking-widest',
+        'flex items-center gap-2 px-3 py-2 rounded-xl bg-[rgba(var(--dash-fg),0.05)] border border-[rgba(var(--dash-fg),0.15)] text-[rgba(var(--dash-fg),0.6)] hover:text-[rgb(var(--dash-fg))] hover:border-[rgba(var(--dash-fg),0.25)] transition-all font-black text-[10px] uppercase tracking-widest',
         className,
       )}
     >
@@ -151,16 +151,16 @@ export function OutreachPanel({ target, onClose }: OutreachPanelProps) {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="fixed top-0 right-0 bottom-0 z-[150] w-full max-w-md bg-zinc-950 border-l border-white/10 shadow-[−20px_0_80px_rgba(0,0,0,0.6)] flex flex-col"
+            className="fixed top-0 right-0 bottom-0 z-[150] w-full max-w-md bg-[var(--dash-card)] border-l border-[rgba(var(--dash-fg),0.15)] shadow-[−20px_0_80px_rgba(0,0,0,0.6)] flex flex-col"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/5 flex-shrink-0">
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[var(--dash-border)] flex-shrink-0">
               <div>
                 <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest mb-1">Outreach</p>
-                <p className="text-white font-black text-sm uppercase tracking-tight leading-none">{target.name}</p>
-                <p className="text-white/30 text-[10px] font-mono mt-0.5">{target.handle} · {target.platform}</p>
+                <p className="text-[rgb(var(--dash-fg))] font-black text-sm uppercase tracking-tight leading-none">{target.name}</p>
+                <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-mono mt-0.5">{target.handle} · {target.platform}</p>
               </div>
-              <button onClick={onClose} className="text-white/30 hover:text-white transition-colors p-1">
+              <button onClick={onClose} className="text-[rgba(var(--dash-fg),0.5)] hover:text-[rgb(var(--dash-fg))] transition-colors p-1">
                 <X size={18} />
               </button>
             </div>
@@ -172,8 +172,8 @@ export function OutreachPanel({ target, onClose }: OutreachPanelProps) {
                   <Check size={28} className="text-green-400" />
                 </div>
                 <div>
-                  <p className="text-white font-black text-sm uppercase tracking-tight">Email sent!</p>
-                  <p className="text-white/30 text-[11px] mt-1">→ {to}</p>
+                  <p className="text-[rgb(var(--dash-fg))] font-black text-sm uppercase tracking-tight">Email sent!</p>
+                  <p className="text-[rgba(var(--dash-fg),0.5)] text-[11px] mt-1">→ {to}</p>
                 </div>
                 <button
                   onClick={() => { setStatus('idle'); setTo(target?.email ?? '') }}
@@ -191,7 +191,7 @@ export function OutreachPanel({ target, onClose }: OutreachPanelProps) {
                     <Mail size={14} className="text-[#FFD700] mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-[#FFD700] font-black text-[10px] uppercase tracking-widest mb-1">Gmail not connected</p>
-                      <p className="text-white/40 text-[10px] font-medium leading-relaxed">Connect to send directly — draft will be restored when you return.</p>
+                      <p className="text-[rgba(var(--dash-fg),0.52)] text-[10px] font-medium leading-relaxed">Connect to send directly — draft will be restored when you return.</p>
                     </div>
                     <GmailConnectButton
                       className="flex-shrink-0 !text-[9px]"
@@ -203,16 +203,16 @@ export function OutreachPanel({ target, onClose }: OutreachPanelProps) {
                 )}
                 {/* To */}
                 <div>
-                  <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1.5">To</p>
+                  <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-black uppercase tracking-widest mb-1.5">To</p>
                   <input
                     type="email"
                     value={to}
                     onChange={e => setTo(e.target.value)}
                     placeholder={`${target.handle.replace('@', '')}@email.com`}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-medium outline-none focus:border-[#FFD700]/40 transition-all placeholder:text-white/20"
+                    className="w-full bg-[var(--dash-card-alt)] border border-[rgba(var(--dash-fg),0.15)] rounded-xl px-4 py-3 text-[rgb(var(--dash-fg))] text-sm font-medium outline-none focus:border-[#FFD700]/40 transition-all placeholder:text-[rgba(var(--dash-fg),0.46)]"
                   />
                   {!target.email && (
-                    <p className="text-white/20 text-[9px] font-medium mt-1 leading-relaxed">
+                    <p className="text-[rgba(var(--dash-fg),0.46)] text-[9px] font-medium mt-1 leading-relaxed">
                       {instagramDM
                         ? <>No email on file — you can also DM via <a href={`https://${instagramDM}`} target="_blank" rel="noreferrer" className="text-[#FFD700]/60 underline">{instagramDM}</a></>
                         : 'Find their contact email in their bio, then paste it here.'}
@@ -222,23 +222,23 @@ export function OutreachPanel({ target, onClose }: OutreachPanelProps) {
 
                 {/* Subject */}
                 <div>
-                  <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1.5">Subject</p>
+                  <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-black uppercase tracking-widest mb-1.5">Subject</p>
                   <input
                     type="text"
                     value={subject}
                     onChange={e => setSubject(e.target.value)}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-medium outline-none focus:border-[#FFD700]/40 transition-all placeholder:text-white/20"
+                    className="w-full bg-[var(--dash-card-alt)] border border-[rgba(var(--dash-fg),0.15)] rounded-xl px-4 py-3 text-[rgb(var(--dash-fg))] text-sm font-medium outline-none focus:border-[#FFD700]/40 transition-all placeholder:text-[rgba(var(--dash-fg),0.46)]"
                   />
                 </div>
 
                 {/* Body */}
                 <div>
-                  <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1.5">Message</p>
+                  <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-black uppercase tracking-widest mb-1.5">Message</p>
                   <textarea
                     value={body}
                     onChange={e => setBody(e.target.value)}
                     rows={10}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-medium outline-none focus:border-[#FFD700]/40 transition-all placeholder:text-white/20 resize-none"
+                    className="w-full bg-[var(--dash-card-alt)] border border-[rgba(var(--dash-fg),0.15)] rounded-xl px-4 py-3 text-[rgb(var(--dash-fg))] text-sm font-medium outline-none focus:border-[#FFD700]/40 transition-all placeholder:text-[rgba(var(--dash-fg),0.46)] resize-none"
                   />
                 </div>
 
@@ -253,7 +253,7 @@ export function OutreachPanel({ target, onClose }: OutreachPanelProps) {
 
             {/* Footer send button */}
             {status !== 'sent' && (
-              <div className="p-6 border-t border-white/5 flex-shrink-0 space-y-2">
+              <div className="p-6 border-t border-[var(--dash-border)] flex-shrink-0 space-y-2">
                 <button
                   onClick={send}
                   disabled={!isConnected || !to || !subject || !body || status === 'sending'}
@@ -266,7 +266,7 @@ export function OutreachPanel({ target, onClose }: OutreachPanelProps) {
                       : <><Send size={14} /> Send to {target.name} <ChevronRight size={13} /></>}
                 </button>
                 {!isConnected && (
-                  <p className="text-white/20 text-[9px] text-center font-medium">
+                  <p className="text-[rgba(var(--dash-fg),0.46)] text-[9px] text-center font-medium">
                     Draft is ready — connect Gmail above to send it
                   </p>
                 )}
@@ -332,30 +332,30 @@ export function GmailComposeModal({ defaultTo = '', defaultSubject = '', default
     >
       <motion.div
         initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-        className="bg-zinc-950 border border-white/10 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden"
+        className="bg-[var(--dash-card)] border border-[rgba(var(--dash-fg),0.15)] rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden"
       >
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/5">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-[var(--dash-border)]">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/20 flex items-center justify-center">
               <Mail size={14} className="text-[#FFD700]" />
             </div>
             <div>
-              <p className="text-white font-black text-sm uppercase tracking-tight">Compose Email</p>
-              <p className="text-white/30 text-[10px] font-medium">Sending via your Gmail</p>
+              <p className="text-[rgb(var(--dash-fg))] font-black text-sm uppercase tracking-tight">Compose Email</p>
+              <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-medium">Sending via your Gmail</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-white/30 hover:text-white transition-colors"><X size={18} /></button>
+          <button onClick={onClose} className="text-[rgba(var(--dash-fg),0.5)] hover:text-[rgb(var(--dash-fg))] transition-colors"><X size={18} /></button>
         </div>
 
         <div className="p-6 space-y-4">
           {!isConnected ? (
             <div className="py-6 text-center space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto">
-                <Mail size={20} className="text-white/20" />
+              <div className="w-12 h-12 rounded-2xl bg-[rgba(var(--dash-fg),0.05)] border border-[rgba(var(--dash-fg),0.15)] flex items-center justify-center mx-auto">
+                <Mail size={20} className="text-[rgba(var(--dash-fg),0.46)]" />
               </div>
               <div>
-                <p className="text-white font-black text-sm uppercase tracking-tight">Gmail not connected</p>
-                <p className="text-white/30 text-[11px] font-medium mt-1 leading-relaxed">
+                <p className="text-[rgb(var(--dash-fg))] font-black text-sm uppercase tracking-tight">Gmail not connected</p>
+                <p className="text-[rgba(var(--dash-fg),0.5)] text-[11px] font-medium mt-1 leading-relaxed">
                   Connect your Gmail to send emails directly from uP.
                 </p>
               </div>
@@ -366,26 +366,26 @@ export function GmailComposeModal({ defaultTo = '', defaultSubject = '', default
               <div className="w-14 h-14 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center justify-center mx-auto mb-4">
                 <Check size={24} className="text-green-400" />
               </div>
-              <p className="text-white font-black text-sm uppercase tracking-tight">Sent!</p>
-              <p className="text-white/30 text-[11px] mt-1">{to}</p>
+              <p className="text-[rgb(var(--dash-fg))] font-black text-sm uppercase tracking-tight">Sent!</p>
+              <p className="text-[rgba(var(--dash-fg),0.5)] text-[11px] mt-1">{to}</p>
             </div>
           ) : (
             <>
               <div className="space-y-3">
                 <div>
-                  <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1.5">To</p>
+                  <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-black uppercase tracking-widest mb-1.5">To</p>
                   <input type="email" value={to} onChange={e => setTo(e.target.value)} placeholder="curator@playlist.com"
-                    className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-medium outline-none focus:border-[#FFD700]/40 transition-all placeholder:text-white/20" />
+                    className="w-full bg-[var(--dash-card-alt)] border border-[rgba(var(--dash-fg),0.15)] rounded-xl px-4 py-3 text-[rgb(var(--dash-fg))] text-sm font-medium outline-none focus:border-[#FFD700]/40 transition-all placeholder:text-[rgba(var(--dash-fg),0.46)]" />
                 </div>
                 <div>
-                  <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1.5">Subject</p>
+                  <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-black uppercase tracking-widest mb-1.5">Subject</p>
                   <input type="text" value={subject} onChange={e => setSubject(e.target.value)} placeholder="Music Submission"
-                    className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-medium outline-none focus:border-[#FFD700]/40 transition-all placeholder:text-white/20" />
+                    className="w-full bg-[var(--dash-card-alt)] border border-[rgba(var(--dash-fg),0.15)] rounded-xl px-4 py-3 text-[rgb(var(--dash-fg))] text-sm font-medium outline-none focus:border-[#FFD700]/40 transition-all placeholder:text-[rgba(var(--dash-fg),0.46)]" />
                 </div>
                 <div>
-                  <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-1.5">Message</p>
+                  <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-black uppercase tracking-widest mb-1.5">Message</p>
                   <textarea value={body} onChange={e => setBody(e.target.value)} rows={6} placeholder="Hey, I wanted to reach out about..."
-                    className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-medium outline-none focus:border-[#FFD700]/40 transition-all placeholder:text-white/20 resize-none" />
+                    className="w-full bg-[var(--dash-card-alt)] border border-[rgba(var(--dash-fg),0.15)] rounded-xl px-4 py-3 text-[rgb(var(--dash-fg))] text-sm font-medium outline-none focus:border-[#FFD700]/40 transition-all placeholder:text-[rgba(var(--dash-fg),0.46)] resize-none" />
                 </div>
               </div>
               {status === 'error' && (
@@ -423,7 +423,7 @@ export function EmailButton({ to, subject, body, label = 'Email', className }: E
       <button
         onClick={() => setOpen(true)}
         className={cn(
-          'flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:border-[#FFD700]/30 hover:bg-[#FFD700]/8 transition-all font-black text-[10px] uppercase tracking-widest',
+          'flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[rgba(var(--dash-fg),0.05)] border border-[rgba(var(--dash-fg),0.15)] text-[rgba(var(--dash-fg),0.6)] hover:text-[rgb(var(--dash-fg))] hover:border-[#FFD700]/30 hover:bg-[#FFD700]/8 transition-all font-black text-[10px] uppercase tracking-widest',
           className,
         )}
       >

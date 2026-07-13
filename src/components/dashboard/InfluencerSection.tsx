@@ -188,16 +188,16 @@ function Tooltip({ text, children, side = 'bottom' }: {
   return (
     <div className="relative group/tt inline-block">
       {children}
-      <div className={`pointer-events-none absolute z-50 w-52 bg-zinc-800 border border-white/12 rounded-xl px-3 py-2.5 shadow-2xl
-        opacity-0 group-hover/tt:opacity-100 transition-all duration-150 text-[11px] text-white/70 font-medium leading-snug
+      <div className={`pointer-events-none absolute z-50 w-52 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-xl px-3 py-2.5 shadow-2xl
+        opacity-0 group-hover/tt:opacity-100 transition-all duration-150 text-[11px] text-[rgba(var(--dash-fg),0.7)] font-medium leading-snug
         ${side === 'bottom' ? 'top-full left-1/2 -translate-x-1/2 mt-2' : ''}
         ${side === 'top'    ? 'bottom-full left-1/2 -translate-x-1/2 mb-2' : ''}
         ${side === 'right'  ? 'left-full top-1/2 -translate-y-1/2 ml-2' : ''}
       `}>
         {/* Arrow */}
-        {side === 'bottom' && <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-zinc-800 border-l border-t border-white/12 rotate-45" />}
-        {side === 'top'    && <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-zinc-800 border-r border-b border-white/12 rotate-45" />}
-        {side === 'right'  && <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-zinc-800 border-l border-b border-white/12 rotate-45" />}
+        {side === 'bottom' && <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[var(--dash-card)] border-l border-t border-[var(--dash-border)] rotate-45" />}
+        {side === 'top'    && <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[var(--dash-card)] border-r border-b border-[var(--dash-border)] rotate-45" />}
+        {side === 'right'  && <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-[var(--dash-card)] border-l border-b border-[var(--dash-border)] rotate-45" />}
         {text}
       </div>
     </div>
@@ -209,7 +209,7 @@ function Tooltip({ text, children, side = 'bottom' }: {
 // ─────────────────────────────────────────────────────────────────────────────
 function ExampleBubble({ text }: { text: string }) {
   return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/8 text-white/40 text-[10px] font-medium italic">
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[rgba(var(--dash-fg),0.05)] border border-[var(--dash-border)] text-[rgba(var(--dash-fg),0.52)] text-[10px] font-medium italic">
       <span className="text-[#FFD700]/60 not-italic">e.g.</span> {text}
     </span>
   );
@@ -233,7 +233,7 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
         className="relative"
         onClick={e => e.stopPropagation()}
       >
-        <button onClick={onClose} className="absolute -top-3 -right-3 z-10 w-7 h-7 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center text-white/30 hover:text-white transition-colors">
+        <button onClick={onClose} className="absolute -top-3 -right-3 z-10 w-7 h-7 rounded-full bg-[var(--dash-card)] border border-[rgba(var(--dash-fg),0.15)] flex items-center justify-center text-[rgba(var(--dash-fg),0.5)] hover:text-[rgb(var(--dash-fg))] transition-colors">
           <X size={13} />
         </button>
         <GlassCheckoutCard amount={29} planName="Pro" onSuccess={onClose} />
@@ -269,8 +269,8 @@ function InfluencerCard({
         selectable
           ? selected
             ? `${theme.bgOn} ${theme.borderOn} cursor-pointer`
-            : `bg-zinc-900/40 ${theme.border} hover:${theme.borderOn} cursor-pointer`
-          : `bg-zinc-900/40 ${theme.border} group`
+            : `bg-[var(--dash-card-alt)] ${theme.border} hover:${theme.borderOn} cursor-pointer`
+          : `bg-[var(--dash-card-alt)] ${theme.border} group`
       }`}
       onClick={selectable ? onToggle : undefined}
     >
@@ -278,7 +278,7 @@ function InfluencerCard({
       <div className="p-4">
         {selectable && (
           <div className={`absolute top-5 right-4 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
-            selected ? 'bg-[#FFD700] border-[#FFD700]' : 'border-white/20 bg-zinc-900/60'
+            selected ? 'bg-[#FFD700] border-[#FFD700]' : 'border-[rgba(var(--dash-fg),0.25)] bg-[var(--dash-card)]'
           }`}>
             {selected && <Check size={10} strokeWidth={3} className="text-black" />}
           </div>
@@ -288,11 +288,11 @@ function InfluencerCard({
             {inf.name[0]}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-white font-black text-sm leading-none truncate pr-6">{inf.name}</p>
-            <p className="text-white/30 text-[10px] font-mono mt-0.5 truncate">{inf.handle}</p>
+            <p className="text-[rgb(var(--dash-fg))] font-black text-sm leading-none truncate pr-6">{inf.name}</p>
+            <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-mono mt-0.5 truncate">{inf.handle}</p>
           </div>
           {!selectable && (
-            <button className="opacity-0 group-hover:opacity-100 transition-opacity text-white/25 hover:text-white shrink-0">
+            <button className="opacity-0 group-hover:opacity-100 transition-opacity text-[rgba(var(--dash-fg),0.48)] hover:text-[rgb(var(--dash-fg))] shrink-0">
               <ExternalLink size={13} />
             </button>
           )}
@@ -307,22 +307,22 @@ function InfluencerCard({
             </span>
           )}
         </div>
-        <p className="text-white/35 text-[11px] font-medium mb-3 line-clamp-1">{inf.niche}</p>
-        <div className="flex items-center justify-between pt-3 border-t border-white/5">
+        <p className="text-[rgba(var(--dash-fg),0.5)] text-[11px] font-medium mb-3 line-clamp-1">{inf.niche}</p>
+        <div className="flex items-center justify-between pt-3 border-t border-[var(--dash-border)]">
           <div>
-            <p className="text-white font-black text-base leading-none">{fmtFollowers(inf.followers)}</p>
-            <p className="text-white/20 text-[9px] font-black uppercase tracking-widest mt-0.5">Followers</p>
+            <p className="text-[rgb(var(--dash-fg))] font-black text-base leading-none">{fmtFollowers(inf.followers)}</p>
+            <p className="text-[rgba(var(--dash-fg),0.46)] text-[9px] font-black uppercase tracking-widest mt-0.5">Followers</p>
           </div>
           <div className="text-right">
-            <p className={`font-black text-base leading-none ${inf.engagementRate >= 10 ? 'text-[#FFD700]' : 'text-white'}`}>
+            <p className={`font-black text-base leading-none ${inf.engagementRate >= 10 ? 'text-[#FFD700]' : 'text-[rgb(var(--dash-fg))]'}`}>
               {inf.engagementRate}%
             </p>
-            <p className="text-white/20 text-[9px] font-black uppercase tracking-widest mt-0.5">Eng. Rate</p>
+            <p className="text-[rgba(var(--dash-fg),0.46)] text-[9px] font-black uppercase tracking-widest mt-0.5">Eng. Rate</p>
           </div>
           {inf.avgViews && (
             <div className="text-right">
-              <p className="text-white font-black text-base leading-none">{fmtFollowers(inf.avgViews)}</p>
-              <p className="text-white/20 text-[9px] font-black uppercase tracking-widest mt-0.5">Avg Views</p>
+              <p className="text-[rgb(var(--dash-fg))] font-black text-base leading-none">{fmtFollowers(inf.avgViews)}</p>
+              <p className="text-[rgba(var(--dash-fg),0.46)] text-[9px] font-black uppercase tracking-widest mt-0.5">Avg Views</p>
             </div>
           )}
         </div>
@@ -330,7 +330,7 @@ function InfluencerCard({
           <div className="mt-3">
             <button
               onClick={e => { e.stopPropagation(); onOutreach({ name: inf.name, handle: inf.handle, platform: inf.platform, niche: inf.niche, email: inf.email, instagram: inf.instagram }); }}
-              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:border-[#FFD700]/30 hover:bg-[#FFD700]/8 transition-all font-black text-[10px] uppercase tracking-widest"
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[rgba(var(--dash-fg),0.05)] border border-[rgba(var(--dash-fg),0.15)] text-[rgba(var(--dash-fg),0.6)] hover:text-[rgb(var(--dash-fg))] hover:border-[#FFD700]/30 hover:bg-[#FFD700]/8 transition-all font-black text-[10px] uppercase tracking-widest"
             >
               <Mail size={12} /> Email
             </button>
@@ -456,8 +456,8 @@ export function InfluencerSection() {
           {/* Page header */}
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-3xl lg:text-5xl font-black text-white tracking-tighter uppercase mb-2">Influencer Network</h1>
-              <p className="text-white/30 text-sm font-bold">{NETWORK_STATS.total}+ curated creators, curators & culture drivers.</p>
+              <h1 className="text-3xl lg:text-5xl font-black text-[rgb(var(--dash-fg))] tracking-tighter uppercase mb-2">Influencer Network</h1>
+              <p className="text-[rgba(var(--dash-fg),0.5)] text-sm font-bold">{NETWORK_STATS.total}+ curated creators, curators & culture drivers.</p>
             </div>
             {!isPro && (
               <button onClick={() => setShowUpgrade(true)} className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#FFD700]/10 border border-[#FFD700]/20 text-[#FFD700] font-black text-[10px] uppercase tracking-widest hover:bg-[#FFD700]/20 transition-all shrink-0">
@@ -468,7 +468,7 @@ export function InfluencerSection() {
 
           {/* Setup card */}
           <div className="w-full max-w-xl mx-auto">
-            <div className="bg-zinc-900/60 border border-white/8 rounded-3xl p-7 sm:p-9 shadow-2xl space-y-7">
+            <div className="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-3xl p-7 sm:p-9 shadow-2xl space-y-7">
 
               {/* Header */}
               <div className="flex items-center gap-3">
@@ -477,19 +477,19 @@ export function InfluencerSection() {
                 </div>
                 <div>
                   <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest leading-none">Campaign Builder</p>
-                  <h2 className="text-white font-black text-lg leading-tight mt-0.5">Who's promoting your track?</h2>
+                  <h2 className="text-[rgb(var(--dash-fg))] font-black text-lg leading-tight mt-0.5">Who's promoting your track?</h2>
                 </div>
               </div>
-              <p className="text-white/35 text-sm font-medium -mt-3 leading-relaxed">
+              <p className="text-[rgba(var(--dash-fg),0.5)] text-sm font-medium -mt-3 leading-relaxed">
                 Set your goal and platform — then hand-pick the creators you believe in.
               </p>
 
               {/* Song name */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-white/35">Song or release name</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-[rgba(var(--dash-fg),0.5)]">Song or release name</label>
                   <Tooltip text="Your track name is used to generate AI content ideas in the brief step." side="right">
-                    <Info size={11} className="text-white/20 cursor-default" />
+                    <Info size={11} className="text-[rgba(var(--dash-fg),0.46)] cursor-default" />
                   </Tooltip>
                 </div>
                 <input
@@ -497,17 +497,17 @@ export function InfluencerSection() {
                   value={campaignSong}
                   onChange={e => setCampaignSong(e.target.value)}
                   placeholder="e.g. Sloppy Joe"
-                  className="w-full bg-zinc-950 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#FFD700]/30 transition-colors"
+                  className="w-full bg-[var(--dash-card-alt)] border border-[var(--dash-border)] rounded-xl px-4 py-3 text-sm text-[rgb(var(--dash-fg))] placeholder:text-[rgba(var(--dash-fg),0.35)] focus:outline-none focus:border-[#FFD700]/30 transition-colors"
                 />
-                <p className="mt-1.5 text-white/20 text-[10px] font-medium">Optional — helps personalize content ideas later</p>
+                <p className="mt-1.5 text-[rgba(var(--dash-fg),0.46)] text-[10px] font-medium">Optional — helps personalize content ideas later</p>
               </div>
 
               {/* Platform focus */}
               <div>
                 <div className="flex items-center gap-2 mb-2.5">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-white/35">Focus platform</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-[rgba(var(--dash-fg),0.5)]">Focus platform</label>
                   <Tooltip text="Filter the creator list to a specific platform, or keep All for a full-coverage campaign." side="right">
-                    <Info size={11} className="text-white/20 cursor-default" />
+                    <Info size={11} className="text-[rgba(var(--dash-fg),0.46)] cursor-default" />
                   </Tooltip>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
@@ -518,7 +518,7 @@ export function InfluencerSection() {
                         className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border font-black text-[9px] uppercase tracking-widest transition-all ${
                           campaignPlatform === p.id
                             ? p.activeClass
-                            : 'bg-zinc-800/60 border-white/8 text-white/40 hover:text-white hover:border-white/15'
+                            : 'bg-[var(--dash-card-alt)] border-[var(--dash-border)] text-[rgba(var(--dash-fg),0.52)] hover:text-[rgb(var(--dash-fg))] hover:border-[rgba(var(--dash-fg),0.2)]'
                         }`}
                       >
                         {p.icon} {p.label}
@@ -531,9 +531,9 @@ export function InfluencerSection() {
               {/* Campaign goal — 6 presets + custom in a 2-col grid */}
               <div>
                 <div className="flex items-center gap-2 mb-2.5">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-white/35">Campaign goal</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-[rgba(var(--dash-fg),0.5)]">Campaign goal</label>
                   <Tooltip text="Your goal determines how the creator list is sorted — not who we pick for you. You make the final call." side="right">
-                    <Info size={11} className="text-white/20 cursor-default" />
+                    <Info size={11} className="text-[rgba(var(--dash-fg),0.46)] cursor-default" />
                   </Tooltip>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -543,20 +543,20 @@ export function InfluencerSection() {
                       onClick={() => setCampaignGoal(g.id)}
                       className={`relative flex flex-col items-start p-3.5 rounded-2xl border transition-all text-left group/goal ${
                         campaignGoal === g.id
-                          ? 'bg-[#FFD700]/10 border-[#FFD700]/35 text-white'
-                          : 'bg-zinc-800/40 border-white/6 text-white/40 hover:border-white/15 hover:text-white/70'
+                          ? 'bg-[#FFD700]/10 border-[#FFD700]/35 text-[rgb(var(--dash-fg))]'
+                          : 'bg-[var(--dash-card-alt)] border-[var(--dash-border)] text-[rgba(var(--dash-fg),0.52)] hover:border-[rgba(var(--dash-fg),0.2)] hover:text-[rgba(var(--dash-fg),0.62)]'
                       } ${g.id === 'custom' ? 'col-span-2' : ''}`}
                     >
-                      <span className={`mb-1.5 ${campaignGoal === g.id ? 'text-[#FFD700]' : 'text-white/30 group-hover/goal:text-white/50'}`}>
+                      <span className={`mb-1.5 ${campaignGoal === g.id ? 'text-[#FFD700]' : 'text-[rgba(var(--dash-fg),0.5)] group-hover/goal:text-[rgba(var(--dash-fg),0.55)]'}`}>
                         {g.icon}
                       </span>
                       <p className="font-black text-[11px] uppercase tracking-widest leading-none">{g.label}</p>
-                      <p className={`text-[10px] font-medium mt-1 leading-snug ${campaignGoal === g.id ? 'text-white/50' : 'text-white/25'}`}>
+                      <p className={`text-[10px] font-medium mt-1 leading-snug ${campaignGoal === g.id ? 'text-[rgba(var(--dash-fg),0.55)]' : 'text-[rgba(var(--dash-fg),0.48)]'}`}>
                         {g.desc}
                       </p>
                       {/* Hover hint bubble */}
                       <div className="mt-2 opacity-0 group-hover/goal:opacity-100 transition-opacity max-h-0 group-hover/goal:max-h-20 overflow-hidden">
-                        <p className="text-white/40 text-[10px] font-medium leading-snug border-t border-white/8 pt-2 mt-0.5">
+                        <p className="text-[rgba(var(--dash-fg),0.52)] text-[10px] font-medium leading-snug border-t border-[var(--dash-border)] pt-2 mt-0.5">
                           {g.hint}
                         </p>
                         <ExampleBubble text={g.example} />
@@ -579,7 +579,7 @@ export function InfluencerSection() {
                         onChange={e => setCustomGoalText(e.target.value)}
                         placeholder={'Describe your strategy — e.g. "I want TikTok creators in NY + LA who focus on drill, plus 2 Spotify playlist curators."'}
                         rows={3}
-                        className="w-full bg-zinc-950 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#FFD700]/30 transition-colors resize-none"
+                        className="w-full bg-[var(--dash-card-alt)] border border-[var(--dash-border)] rounded-xl px-4 py-3 text-sm text-[rgb(var(--dash-fg))] placeholder:text-[rgba(var(--dash-fg),0.35)] focus:outline-none focus:border-[#FFD700]/30 transition-colors resize-none"
                       />
                     </motion.div>
                   )}
@@ -595,7 +595,7 @@ export function InfluencerSection() {
               </button>
 
               <div className="text-center -mt-2">
-                <p className="text-white/15 text-[10px] font-medium">You choose who to include — no suggestions imposed.</p>
+                <p className="text-[rgba(var(--dash-fg),0.42)] text-[10px] font-medium">You choose who to include — no suggestions imposed.</p>
               </div>
             </div>
           </div>
@@ -610,7 +610,7 @@ export function InfluencerSection() {
 
           {/* Back + upgrade */}
           <div className="flex items-center justify-between">
-            <button onClick={() => setFlowStep('setup')} className="flex items-center gap-1.5 text-white/35 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors">
+            <button onClick={() => setFlowStep('setup')} className="flex items-center gap-1.5 text-[rgba(var(--dash-fg),0.5)] hover:text-[rgb(var(--dash-fg))] text-[10px] font-black uppercase tracking-widest transition-colors">
               <ArrowLeft size={13} /> Back to setup
             </button>
             {!isPro && (
@@ -622,17 +622,17 @@ export function InfluencerSection() {
 
           {/* Context chips */}
           <div>
-            <h2 className="text-2xl lg:text-4xl font-black text-white tracking-tighter uppercase mb-3">Pick your team</h2>
+            <h2 className="text-2xl lg:text-4xl font-black text-[rgb(var(--dash-fg))] tracking-tighter uppercase mb-3">Pick your team</h2>
             <div className="flex flex-wrap gap-2">
               {campaignSong && (
                 <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFD700]/10 border border-[#FFD700]/20 text-[#FFD700] text-[10px] font-black uppercase tracking-widest">
                   🎵 {campaignSong}
                 </span>
               )}
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/60 text-[10px] font-black uppercase tracking-widest">
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[rgba(var(--dash-fg),0.05)] border border-[rgba(var(--dash-fg),0.15)] text-[rgba(var(--dash-fg),0.6)] text-[10px] font-black uppercase tracking-widest">
                 {platformObj.label}
               </span>
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/60 text-[10px] font-black uppercase tracking-widest">
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[rgba(var(--dash-fg),0.05)] border border-[rgba(var(--dash-fg),0.15)] text-[rgba(var(--dash-fg),0.6)] text-[10px] font-black uppercase tracking-widest">
                 {goalObj.label}
               </span>
             </div>
@@ -643,15 +643,15 @@ export function InfluencerSection() {
             {!tipDismissed && (
               <motion.div
                 initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }}
-                className="flex items-start justify-between gap-3 px-4 py-3.5 rounded-2xl bg-white/[0.03] border border-white/8"
+                className="flex items-start justify-between gap-3 px-4 py-3.5 rounded-2xl bg-[rgba(var(--dash-fg),0.03)] border border-[var(--dash-border)]"
               >
                 <div className="flex items-start gap-3">
                   <div className="w-7 h-7 rounded-lg bg-[#FFD700]/10 border border-[#FFD700]/20 flex items-center justify-center shrink-0 mt-0.5">
                     <Info size={12} className="text-[#FFD700]" />
                   </div>
                   <div>
-                    <p className="text-white font-black text-[11px] uppercase tracking-widest leading-none">Browse freely — you decide</p>
-                    <p className="text-white/35 text-[11px] font-medium mt-1 leading-snug">
+                    <p className="text-[rgb(var(--dash-fg))] font-black text-[11px] uppercase tracking-widest leading-none">Browse freely — you decide</p>
+                    <p className="text-[rgba(var(--dash-fg),0.5)] text-[11px] font-medium mt-1 leading-snug">
                       Tap any card to add a creator to your campaign. Use the filters and search to find exactly who you want.
                       {campaignGoal !== 'custom' && ` Sorted by ${goalObj.label.toLowerCase()} relevance.`}
                     </p>
@@ -660,7 +660,7 @@ export function InfluencerSection() {
                     )}
                   </div>
                 </div>
-                <button onClick={() => setTipDismissed(true)} className="text-white/20 hover:text-white/50 transition-colors shrink-0 mt-0.5">
+                <button onClick={() => setTipDismissed(true)} className="text-[rgba(var(--dash-fg),0.46)] hover:text-[rgba(var(--dash-fg),0.55)] transition-colors shrink-0 mt-0.5">
                   <X size={14} />
                 </button>
               </motion.div>
@@ -668,12 +668,12 @@ export function InfluencerSection() {
           </AnimatePresence>
 
           {/* Gmail banner */}
-          <div className={`flex items-center justify-between gap-4 px-5 py-3.5 rounded-2xl border ${isGmailConnected ? 'bg-green-500/5 border-green-500/15' : 'bg-white/[0.03] border-white/8'}`}>
+          <div className={`flex items-center justify-between gap-4 px-5 py-3.5 rounded-2xl border ${isGmailConnected ? 'bg-green-500/5 border-green-500/15' : 'bg-[rgba(var(--dash-fg),0.03)] border-[var(--dash-border)]'}`}>
             <div className="flex items-center gap-3">
-              <div className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 ${isGmailConnected ? 'bg-green-500/15' : 'bg-white/5'}`}>
-                {isGmailConnected ? <Check size={13} className="text-green-400" /> : <Mail size={13} className="text-white/30" />}
+              <div className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 ${isGmailConnected ? 'bg-green-500/15' : 'bg-[rgba(var(--dash-fg),0.05)]'}`}>
+                {isGmailConnected ? <Check size={13} className="text-green-400" /> : <Mail size={13} className="text-[rgba(var(--dash-fg),0.5)]" />}
               </div>
-              <p className="text-white/45 text-[10px] font-black uppercase tracking-widest">
+              <p className="text-[rgba(var(--dash-fg),0.52)] text-[10px] font-black uppercase tracking-widest">
                 {isGmailConnected ? 'Gmail connected — pitch any creator directly from here' : 'Connect Gmail to send pitches without leaving GrounduP'}
               </p>
             </div>
@@ -689,7 +689,7 @@ export function InfluencerSection() {
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl border font-black text-[10px] uppercase tracking-widest transition-all ${
                     !showCurator && pickPlatform === tab.id
                       ? tab.activeClass
-                      : 'bg-zinc-900/40 border-white/5 text-white/40 hover:text-white hover:border-white/10'
+                      : 'bg-[var(--dash-card-alt)] border-[var(--dash-border)] text-[rgba(var(--dash-fg),0.52)] hover:text-[rgb(var(--dash-fg))] hover:border-[rgba(var(--dash-fg),0.15)]'
                   }`}
                 >
                   {tab.icon} {tab.label}
@@ -703,7 +703,7 @@ export function InfluencerSection() {
               className={`flex items-center gap-2 px-4 py-2 rounded-xl border font-black text-[10px] uppercase tracking-widest transition-all ${
                 showCurator
                   ? 'bg-violet-500 border-transparent text-white'
-                  : 'bg-zinc-900/40 border-violet-500/25 text-violet-400/70 hover:text-violet-300 hover:border-violet-500/40'
+                  : 'bg-[var(--dash-card-alt)] border-violet-500/25 text-violet-400/70 hover:text-violet-300 hover:border-violet-500/40'
               }`}
             >
               <ListMusic size={12} /> Curator
@@ -720,7 +720,8 @@ export function InfluencerSection() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 8 }}
-                className="rounded-3xl border border-violet-500/20 bg-gradient-to-br from-violet-500/8 via-zinc-900/60 to-zinc-900/40 overflow-hidden"
+                className="rounded-3xl border border-violet-500/20 bg-gradient-to-br from-violet-500/8 overflow-hidden"
+                style={{ backgroundColor: 'var(--dash-card)' }}
               >
                 {/* Top accent */}
                 <div className="h-[3px] w-full bg-gradient-to-r from-violet-500 via-purple-400 to-violet-600" />
@@ -737,12 +738,12 @@ export function InfluencerSection() {
                   </div>
 
                   {/* Heading */}
-                  <h3 className="text-white font-black text-2xl lg:text-3xl tracking-tighter uppercase mb-3">
+                  <h3 className="text-[rgb(var(--dash-fg))] font-black text-2xl lg:text-3xl tracking-tighter uppercase mb-3">
                     Playlist Curator
                   </h3>
 
                   {/* Description */}
-                  <p className="text-white/55 text-sm font-medium leading-relaxed max-w-md mb-6">
+                  <p className="text-[rgba(var(--dash-fg),0.55)] text-sm font-medium leading-relaxed max-w-md mb-6">
                     Drop any song from your catalog and we'll match it to real, active playlists that fit your sound —
                     so you can pitch directly and grow your streams through placement, not luck.
                   </p>
@@ -754,10 +755,10 @@ export function InfluencerSection() {
                       { icon: '📋', title: 'Playlist pairing', desc: 'We find playlists already playing your sound' },
                       { icon: '📈', title: 'Stream growth', desc: 'Direct pitch to active curators for placement' },
                     ].map(f => (
-                      <div key={f.title} className="bg-white/[0.03] border border-white/8 rounded-2xl p-4 text-left">
+                      <div key={f.title} className="bg-[rgba(var(--dash-fg),0.03)] border border-[var(--dash-border)] rounded-2xl p-4 text-left">
                         <p className="text-xl mb-1.5">{f.icon}</p>
-                        <p className="text-white font-black text-[11px] uppercase tracking-widest leading-none mb-1">{f.title}</p>
-                        <p className="text-white/35 text-[10px] font-medium leading-snug">{f.desc}</p>
+                        <p className="text-[rgb(var(--dash-fg))] font-black text-[11px] uppercase tracking-widest leading-none mb-1">{f.title}</p>
+                        <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-medium leading-snug">{f.desc}</p>
                       </div>
                     ))}
                   </div>
@@ -787,7 +788,7 @@ export function InfluencerSection() {
                   key={tier.id}
                   onClick={() => setPickTier(tier.id)}
                   className={`px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all ${
-                    pickTier === tier.id ? 'bg-zinc-800 border-white/20 text-white' : 'border-white/5 text-white/25 hover:text-white/50'
+                    pickTier === tier.id ? 'bg-[rgba(var(--dash-fg),0.08)] border-[rgba(var(--dash-fg),0.25)] text-[rgb(var(--dash-fg))]' : 'border-[var(--dash-border)] text-[rgba(var(--dash-fg),0.48)] hover:text-[rgba(var(--dash-fg),0.55)]'
                   }`}
                 >
                   {tier.label}{tier.range && <span className="ml-1.5 opacity-50">{tier.range}</span>}
@@ -798,18 +799,18 @@ export function InfluencerSection() {
 
           {/* Search */}
           {!showCurator && <div className="relative">
-            <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25" />
+            <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-[rgba(var(--dash-fg),0.48)]" />
             <input
               type="text"
               placeholder="Search by name, handle, or niche..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full bg-zinc-900/40 border border-white/5 rounded-2xl pl-10 pr-5 py-3.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/15 transition-colors"
+              className="w-full bg-[var(--dash-card-alt)] border border-[var(--dash-border)] rounded-2xl pl-10 pr-5 py-3.5 text-sm text-[rgb(var(--dash-fg))] placeholder:text-[rgba(var(--dash-fg),0.35)] focus:outline-none focus:border-[rgba(var(--dash-fg),0.2)] transition-colors"
             />
           </div>}
 
           {/* Results count */}
-          {!showCurator && <p className="text-white/25 text-[10px] font-black uppercase tracking-widest">
+          {!showCurator && <p className="text-[rgba(var(--dash-fg),0.48)] text-[10px] font-black uppercase tracking-widest">
             {isPro ? `${pickList.length} creators` : `${unlocked.length} of ${pickList.length} shown`}
             {campaignGoal !== 'custom' && ` · sorted by ${goalObj.label.toLowerCase()}`}
           </p>}
@@ -838,8 +839,8 @@ export function InfluencerSection() {
                     <Lock size={16} className="text-[#FFD700]" />
                   </div>
                   <div>
-                    <p className="text-white font-black text-sm uppercase tracking-widest">{lockedCards.length} more creators locked</p>
-                    <p className="text-white/30 text-[11px] font-medium mt-0.5">Upgrade to Pro to unlock the full network with contact info.</p>
+                    <p className="text-[rgb(var(--dash-fg))] font-black text-sm uppercase tracking-widest">{lockedCards.length} more creators locked</p>
+                    <p className="text-[rgba(var(--dash-fg),0.5)] text-[11px] font-medium mt-0.5">Upgrade to Pro to unlock the full network with contact info.</p>
                   </div>
                 </div>
                 <button onClick={() => setShowUpgrade(true)} className="shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#FFD700] text-black font-black text-[10px] uppercase tracking-widest hover:bg-[#FFD700]/90 transition-all">
@@ -851,14 +852,14 @@ export function InfluencerSection() {
                   <motion.div key={inf.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
                     className="relative rounded-2xl overflow-hidden cursor-pointer group" onClick={() => setShowUpgrade(true)}
                   >
-                    <div className="bg-zinc-900/40 border border-white/5 rounded-2xl p-5 select-none pointer-events-none blur-[3px]">
+                    <div className="bg-[var(--dash-card-alt)] border border-[var(--dash-border)] rounded-2xl p-5 select-none pointer-events-none blur-[3px]">
                       <div className="flex items-start gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-white/5 shrink-0" />
-                        <div><div className="h-3 w-24 bg-white/10 rounded" /><div className="h-2 w-16 bg-white/5 rounded mt-1.5" /></div>
+                        <div className="w-10 h-10 rounded-xl bg-[rgba(var(--dash-fg),0.08)] border border-[var(--dash-border)] shrink-0" />
+                        <div><div className="h-3 w-24 bg-[rgba(var(--dash-fg),0.1)] rounded" /><div className="h-2 w-16 bg-[rgba(var(--dash-fg),0.05)] rounded mt-1.5" /></div>
                       </div>
-                      <div className="flex gap-1.5 mb-3"><div className="h-4 w-14 bg-white/5 rounded-full" /><div className="h-4 w-10 bg-white/5 rounded-full" /></div>
-                      <div className="h-2 w-32 bg-white/5 rounded mb-3" />
-                      <div className="flex justify-between pt-3 border-t border-white/5"><div className="h-5 w-12 bg-white/10 rounded" /><div className="h-5 w-12 bg-white/10 rounded" /></div>
+                      <div className="flex gap-1.5 mb-3"><div className="h-4 w-14 bg-[rgba(var(--dash-fg),0.05)] rounded-full" /><div className="h-4 w-10 bg-[rgba(var(--dash-fg),0.05)] rounded-full" /></div>
+                      <div className="h-2 w-32 bg-[rgba(var(--dash-fg),0.05)] rounded mb-3" />
+                      <div className="flex justify-between pt-3 border-t border-[var(--dash-border)]"><div className="h-5 w-12 bg-[rgba(var(--dash-fg),0.1)] rounded" /><div className="h-5 w-12 bg-[rgba(var(--dash-fg),0.1)] rounded" /></div>
                     </div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 rounded-2xl group-hover:bg-black/50 transition-colors">
                       <div className="w-9 h-9 rounded-xl bg-[#FFD700]/15 border border-[#FFD700]/30 flex items-center justify-center mb-2"><Lock size={15} className="text-[#FFD700]" /></div>
@@ -873,19 +874,19 @@ export function InfluencerSection() {
 
           {!showCurator && pickList.length === 0 && (
             <div className="flex flex-col items-center py-20 text-center">
-              <Users size={32} className="text-white/10 mb-4" />
-              <p className="text-white/20 font-black text-sm uppercase tracking-widest">No creators match your filters</p>
+              <Users size={32} className="text-[rgba(var(--dash-fg),0.4)] mb-4" />
+              <p className="text-[rgba(var(--dash-fg),0.46)] font-black text-sm uppercase tracking-widest">No creators match your filters</p>
             </div>
           )}
 
           {/* Sticky bottom bar */}
           {!showCurator && <div className="sticky bottom-4 z-20">
-            <div className="flex items-center justify-between gap-4 px-5 py-4 rounded-2xl bg-zinc-900/95 border border-white/10 backdrop-blur-md shadow-2xl">
+            <div className="flex items-center justify-between gap-4 px-5 py-4 rounded-2xl bg-[var(--dash-card)] border border-[rgba(var(--dash-fg),0.15)] backdrop-blur-md shadow-2xl">
               <div>
-                <p className="text-white font-black text-sm leading-none">
+                <p className="text-[rgb(var(--dash-fg))] font-black text-sm leading-none">
                   {selectedCount === 0 ? 'No creators selected yet' : `${selectedCount} creator${selectedCount !== 1 ? 's' : ''} selected`}
                 </p>
-                <p className="text-white/30 text-[10px] font-medium mt-0.5">
+                <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-medium mt-0.5">
                   {selectedCount === 0 ? 'Tap any card above to add them' : 'Ready to write your briefs'}
                 </p>
               </div>

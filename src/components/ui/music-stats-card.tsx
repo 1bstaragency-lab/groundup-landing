@@ -3,6 +3,8 @@ import { motion } from "framer-motion"
 import { TrendingUp, Users, Music, Play, Link2, Radio } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePlatformStats, formatStat } from "../../hooks/usePlatformStats"
+import { GOLD, GOLDD } from "../../lib/brand-tokens"
+import { INK, DIM, FAINT, CARD } from "../../lib/dashboard-theme"
 
 interface Props {
   userId?: string
@@ -71,29 +73,29 @@ export function MusicStatsCard({ userId }: Props) {
   const hasAnyData = tiles.some(t => t.value !== null)
 
   return (
-    <div className="rounded-3xl border border-white/[0.08] bg-zinc-950 overflow-hidden">
+    <div className="rounded-3xl overflow-hidden" style={{ background: CARD, border: `1px solid ${FAINT}` }}>
       {/* Headline — Monthly Listeners */}
       <div className="p-5 pb-0">
-        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/30 mb-1">Monthly Listeners</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.25em] mb-1" style={{ color: DIM }}>Monthly Listeners</p>
         <div className="flex items-end justify-between">
-          <span className={cn("text-3xl font-black tracking-tight", headline ? 'text-white' : 'text-white/20')}>
+          <span className="text-3xl font-black tracking-tight" style={{ color: headline ? INK : 'rgba(var(--dash-fg),0.48)' }}>
             {headline ? formatStat(headline) : '— —'}
           </span>
-          <span className={cn("text-xs font-bold flex items-center gap-1 mb-1", headline ? 'text-green-400/70' : 'text-white/20')}>
+          <span className="text-xs font-bold flex items-center gap-1 mb-1" style={{ color: headline ? GOLDD : 'rgba(var(--dash-fg),0.48)' }}>
             <TrendingUp size={11} /> {headline ? 'Spotify' : 'No data yet'}
           </span>
         </div>
       </div>
       <div className={cn("px-3 -mt-1 overflow-hidden", headline ? 'opacity-100' : 'opacity-20')}>
-        <Sparkline data={sparklineData} color="#FFD700" />
+        <Sparkline data={sparklineData} color={GOLD} />
       </div>
 
       {/* Connect prompt when nothing linked */}
       {!hasAnyData && (
-        <div className="px-5 py-3 border-t border-white/5">
-          <a href="/dashboard/analytics" className="flex items-center gap-2 py-2 px-3 rounded-xl bg-[#FFD700]/5 border border-[#FFD700]/10 hover:bg-[#FFD700]/8 transition-colors">
-            <Link2 size={11} className="text-[#FFD700]/50 shrink-0" />
-            <p className="text-[10px] font-bold text-white/30">
+        <div className="px-5 py-3" style={{ borderTop: `1px solid ${FAINT}` }}>
+          <a href="/dashboard/analytics" className="flex items-center gap-2 py-2 px-3 rounded-xl transition-colors dash-hover-surface" style={{ background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(184,134,11,0.15)' }}>
+            <Link2 size={11} className="shrink-0" style={{ color: GOLDD, opacity: 0.7 }} />
+            <p className="text-[10px] font-bold" style={{ color: DIM }}>
               Link your Spotify / SoundCloud / YouTube in Analytics →
             </p>
           </a>
@@ -101,7 +103,7 @@ export function MusicStatsCard({ userId }: Props) {
       )}
 
       {/* Stat grid */}
-      <div className="grid grid-cols-2 border-t border-white/5">
+      <div className="grid grid-cols-2" style={{ borderTop: `1px solid ${FAINT}` }}>
         {tiles.map((s, i) => {
           const Icon = s.icon
           const hasData = s.value !== null
@@ -111,18 +113,22 @@ export function MusicStatsCard({ userId }: Props) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: i * 0.08 }}
-              className={cn("p-4 border-white/5", i % 2 === 0 ? "border-r" : "", i < 2 ? "border-b" : "")}
+              className="p-4"
+              style={{
+                borderRight: i % 2 === 0 ? `1px solid ${FAINT}` : undefined,
+                borderBottom: i < 2 ? `1px solid ${FAINT}` : undefined,
+              }}
             >
               <div className="flex items-center gap-1.5 mb-1.5">
-                <Icon size={11} className={hasData ? 'text-[#FFD700]/60' : 'text-white/15'} />
-                <span className={cn("text-[9px] font-black uppercase tracking-widest", hasData ? 'text-white/50' : 'text-white/20')}>
+                <Icon size={11} style={{ color: hasData ? GOLDD : 'rgba(var(--dash-fg),0.45)', opacity: hasData ? 0.7 : 1 }} />
+                <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: hasData ? DIM : 'rgba(var(--dash-fg),0.48)' }}>
                   {s.label}
                 </span>
               </div>
-              <p className={cn("text-lg font-black tracking-tight", hasData ? 'text-white' : 'text-white/20')}>
+              <p className="text-lg font-black tracking-tight" style={{ color: hasData ? INK : 'rgba(var(--dash-fg),0.48)' }}>
                 {hasData ? formatStat(s.value) : '—'}
               </p>
-              <p className={cn("text-[10px] font-bold", hasData ? 'text-white/40' : 'text-white/15')}>
+              <p className="text-[10px] font-bold" style={{ color: hasData ? DIM : 'rgba(var(--dash-fg),0.45)' }}>
                 {hasData ? s.placeholder : 'not connected'}
               </p>
             </motion.div>

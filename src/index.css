@@ -4,6 +4,31 @@
   --background: #000000;
   --foreground: #ffffff;
   cursor: url("/assets/media__1777265737649.jpg") 16 16, auto;
+
+  /* Dashboard theme tokens — light is the default; overridden below for dark.
+     --dash-fg is an RGB triplet (no rgb()/rgba() wrapper) so it can be
+     dropped into rgba(var(--dash-fg), <alpha>) at every call site. */
+  --dash-fg: 17, 17, 17;
+  --dash-fg-inv: 255, 255, 255;
+  --dash-bg: #F1F2F4;
+  --dash-card: #ffffff;
+  --dash-card-alt: rgba(17, 17, 17, 0.03);
+  --dash-border: rgba(17, 17, 17, 0.1);
+}
+
+.dash-nav-inactive { color: rgba(var(--dash-fg), 0.5); }
+.dash-nav-inactive:hover { color: rgb(var(--dash-fg)); }
+.dash-hover-surface:hover { background: rgba(var(--dash-fg), 0.05); }
+.dash-hover-border:hover { border-color: rgba(var(--dash-fg), 0.2); }
+.dash-hover-text:hover { color: rgb(var(--dash-fg)); }
+
+[data-dashboard-theme="dark"] {
+  --dash-fg: 255, 255, 255;
+  --dash-fg-inv: 17, 17, 17;
+  --dash-bg: #0B0B0D;
+  --dash-card: #18181B;
+  --dash-card-alt: rgba(255, 255, 255, 0.05);
+  --dash-border: rgba(255, 255, 255, 0.12);
 }
 
 body {
@@ -262,5 +287,30 @@ a, button {
     --border-angle: 210deg;
     --border-color-1: hsla(0, 0%, 100%, 0.2);
     --border-color-2: hsla(0, 0%, 10%, 0.75);
+  }
+}
+
+@layer components {
+  /* Persistent gold bloom — same look as .gradient-button:hover, but always on.
+     Used for the dashboard's "active" state (selected nav item, primary CTA)
+     where the highlight shouldn't depend on the cursor being there. */
+  .gradient-button-active {
+    --pos-x: 0%;
+    --pos-y: 91.51%;
+    --spread-x: 120.24%;
+    --spread-y: 103.18%;
+    --color-1: #B8860B;
+    --color-2: #FFD700;
+    --color-3: #8a6d00;
+    --color-4: #1a1400;
+    --color-5: #000;
+    --border-angle: 190deg;
+    --border-color-1: hsla(46, 95%, 90%, 0.15);
+    --border-color-2: hsla(46, 90%, 60%, 0.6);
+    --stop-1: 0%;
+    --stop-2: 8.8%;
+    --stop-3: 21.44%;
+    --stop-4: 71.34%;
+    --stop-5: 85.76%;
   }
 }

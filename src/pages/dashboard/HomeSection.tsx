@@ -6,36 +6,37 @@ import { HomeDashboard } from '../../components/dashboard/HomeDashboard';
 import { GmailConnectButton } from '../../components/ui/GmailCompose';
 import { readPlanIntent, clearPlanIntent, openCheckout } from '../../lib/pricingCheckout';
 import { PlatformLinkPrompt } from '../../components/dashboard/PlatformLinkPrompt';
+import { GOLDD } from '../../lib/brand-tokens';
+import { INK, DIM, FAINT, CARD } from '../../lib/dashboard-theme';
 
+// Tag colors consolidated to a single gold-monochrome accent (was a decorative
+// sky/green/purple/orange system per-topic — didn't fit the brand's strict
+// black/gold/white palette; the topic label itself still carries the meaning).
 const INDUSTRY_NEWS = [
   {
-    icon: <TrendingUp size={14} className="text-[#FFD700]" />,
+    icon: <TrendingUp size={14} style={{ color: GOLDD }} />,
     tag: 'TikTok',
-    tagColor: 'text-sky-400 bg-sky-400/10',
     headline: "TikTok's \"Add to Music App\" feature now live for all creators",
     sub: "Direct DSP saves from TikTok videos — biggest conversion tool since pre-saves.",
     age: '2h ago',
   },
   {
-    icon: <Music2 size={14} className="text-[#FFD700]" />,
+    icon: <Music2 size={14} style={{ color: GOLDD }} />,
     tag: 'Spotify',
-    tagColor: 'text-green-400 bg-green-400/10',
     headline: 'Spotify Artist Clips now available in 185+ markets',
     sub: 'Short-form video on your artist profile — prime it before your next release.',
     age: '1d ago',
   },
   {
-    icon: <Globe size={14} className="text-[#FFD700]" />,
+    icon: <Globe size={14} style={{ color: GOLDD }} />,
     tag: 'Industry',
-    tagColor: 'text-purple-400 bg-purple-400/10',
     headline: 'Global music revenue up 11% — streaming leads for 8th straight year',
     sub: 'Independent artists captured 12% of total market share — the highest on record.',
     age: '3d ago',
   },
   {
-    icon: <Zap size={14} className="text-[#FFD700]" />,
+    icon: <Zap size={14} style={{ color: GOLDD }} />,
     tag: 'Strategy',
-    tagColor: 'text-orange-400 bg-orange-400/10',
     headline: 'Why artists releasing every 6–8 weeks outperform quarterly releases',
     sub: 'Algorithm consistency > hype cycles. More touchpoints = more playlist adds.',
     age: '5d ago',
@@ -87,10 +88,10 @@ export function HomeSection() {
     <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6 lg:space-y-10">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl lg:text-5xl font-black text-white tracking-tighter uppercase mb-2">
-            Welcome, <span className="text-[#FFD700]">{displayName.toUpperCase()}</span>
+          <h1 className="text-3xl lg:text-5xl font-black tracking-tighter uppercase mb-2" style={{ color: INK }}>
+            Welcome, <span style={{ color: GOLDD }}>{displayName.toUpperCase()}</span>
           </h1>
-          <p className="text-white/40 font-medium text-sm leading-relaxed">
+          <p className="font-medium text-sm leading-relaxed" style={{ color: DIM }}>
             Your Artist OS is live. Start planning your next rollout.
           </p>
         </div>
@@ -99,7 +100,8 @@ export function HomeSection() {
           <button
             onClick={handleSignOut}
             disabled={loggingOut}
-            className="flex items-center gap-2 lg:gap-3 px-3 lg:px-5 py-2.5 lg:py-3 rounded-2xl bg-zinc-900/60 border border-white/5 text-white/40 hover:text-white hover:border-white/20 transition-all font-black text-[10px] uppercase tracking-widest shrink-0"
+            className="flex items-center gap-2 lg:gap-3 px-3 lg:px-5 py-2.5 lg:py-3 rounded-2xl transition-all font-black text-[10px] uppercase tracking-widest shrink-0"
+            style={{ background: CARD, border: `1px solid ${FAINT}`, color: DIM }}
           >
             <LogOut size={13} />
             <span className="hidden sm:inline">{loggingOut ? 'Signing out...' : 'Sign Out'}</span>
@@ -113,8 +115,8 @@ export function HomeSection() {
       {/* Industry news feed */}
       <div className="mt-8">
         <div className="flex items-center gap-2 mb-4">
-          <TrendingUp size={14} className="text-[#FFD700]" />
-          <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.3em]">Industry Pulse</p>
+          <TrendingUp size={14} style={{ color: GOLDD }} />
+          <p className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: GOLDD }}>Industry Pulse</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {INDUSTRY_NEWS.map((item, i) => (
@@ -123,18 +125,19 @@ export function HomeSection() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              className="bg-zinc-900/40 border border-white/5 rounded-2xl p-4 hover:border-white/10 transition-all group cursor-pointer"
+              className="rounded-2xl p-4 transition-all group cursor-pointer dash-hover-border"
+              style={{ background: CARD, border: `1px solid ${FAINT}` }}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${item.tagColor}`}>
+                <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ color: GOLDD, background: 'rgba(184,134,11,0.1)' }}>
                   {item.tag}
                 </span>
-                <span className="text-white/20 text-[9px] font-bold">{item.age}</span>
+                <span className="text-[9px] font-bold" style={{ color: DIM }}>{item.age}</span>
               </div>
-              <p className="text-white font-bold text-sm leading-snug mb-1 group-hover:text-[#FFD700] transition-colors">
+              <p className="font-bold text-sm leading-snug mb-1 transition-colors" style={{ color: INK }}>
                 {item.headline}
               </p>
-              <p className="text-white/30 text-[11px] leading-relaxed">{item.sub}</p>
+              <p className="text-[11px] leading-relaxed" style={{ color: DIM }}>{item.sub}</p>
             </motion.div>
           ))}
         </div>

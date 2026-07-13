@@ -113,14 +113,14 @@ export function CheckInSettingsCard({ userId, locked }: Props) {
 
   if (loading) {
     return (
-      <div className="bg-zinc-900/20 border border-[#FFD700]/10 p-8 rounded-[2.5rem] flex items-center justify-center">
+      <div className="bg-[var(--dash-card-alt)] border border-[#FFD700]/10 p-8 rounded-[2.5rem] flex items-center justify-center">
         <Loader2 size={18} className="text-[#FFD700]/40 animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="bg-zinc-900/20 border border-[#FFD700]/10 p-6 sm:p-8 rounded-[2.5rem] relative overflow-hidden">
+    <div className="bg-[var(--dash-card-alt)] border border-[#FFD700]/10 p-6 sm:p-8 rounded-[2.5rem] relative overflow-hidden">
       <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full bg-[#FFD700]/8 blur-3xl pointer-events-none" />
 
       <div className="relative z-10">
@@ -129,10 +129,10 @@ export function CheckInSettingsCard({ userId, locked }: Props) {
           <div className="w-7 h-7 rounded-lg bg-[#FFD700]/15 border border-[#FFD700]/25 flex items-center justify-center">
             <Sparkles size={13} className="text-[#FFD700]" />
           </div>
-          <h4 className="text-white font-black text-xs uppercase tracking-widest">uP Daily Check-In</h4>
+          <h4 className="text-[rgb(var(--dash-fg))] font-black text-xs uppercase tracking-widest">uP Daily Check-In</h4>
           <span className="text-[8px] font-black uppercase tracking-widest text-[#FFD700] bg-[#FFD700]/10 border border-[#FFD700]/20 px-2 py-0.5 rounded-full">Pro</span>
         </div>
-        <p className="text-white/30 text-[11px] font-medium mb-5 max-w-md">
+        <p className="text-[rgba(var(--dash-fg),0.5)] text-[11px] font-medium mb-5 max-w-md">
           uP texts you each morning with today's priorities — release deadlines, top tasks, stat shifts.
           Personalized to your tone and platform data.
         </p>
@@ -147,12 +147,12 @@ export function CheckInSettingsCard({ userId, locked }: Props) {
         )}
 
         {/* Master toggle */}
-        <div className="flex items-center justify-between gap-4 p-3 rounded-2xl bg-zinc-950/60 border border-white/8 mb-4">
+        <div className="flex items-center justify-between gap-4 p-3 rounded-2xl bg-[var(--dash-card)] border border-[var(--dash-border)] mb-4">
           <div className="flex items-center gap-3 min-w-0">
-            <Bell size={14} className={enabled ? 'text-[#FFD700]' : 'text-white/30'} />
+            <Bell size={14} className={enabled ? 'text-[#FFD700]' : 'text-[rgba(var(--dash-fg),0.5)]'} />
             <div>
-              <p className="text-white font-bold text-sm">Send me a morning check-in</p>
-              <p className="text-white/30 text-[10px] font-medium">{enabled ? 'On — uP will text you each day' : 'Off — no proactive texts'}</p>
+              <p className="text-[rgb(var(--dash-fg))] font-bold text-sm">Send me a morning check-in</p>
+              <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-medium">{enabled ? 'On — uP will text you each day' : 'Off — no proactive texts'}</p>
             </div>
           </div>
           <button
@@ -165,11 +165,11 @@ export function CheckInSettingsCard({ userId, locked }: Props) {
             disabled={locked || !phone || saving}
             aria-pressed={enabled}
             className={`relative shrink-0 w-11 h-6 rounded-full transition-colors disabled:opacity-40 ${
-              enabled ? 'bg-[#FFD700]' : 'bg-white/10'
+              enabled ? 'bg-[#FFD700]' : 'bg-[rgba(var(--dash-fg),0.12)]'
             }`}
           >
             <span
-              className={`absolute top-0.5 w-5 h-5 rounded-full bg-zinc-950 transition-transform ${
+              className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
                 enabled ? 'translate-x-[22px]' : 'translate-x-0.5'
               }`}
             />
@@ -188,8 +188,8 @@ export function CheckInSettingsCard({ userId, locked }: Props) {
             >
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
                 {/* Frequency */}
-                <label className="bg-zinc-950/60 border border-white/8 rounded-xl p-3 flex flex-col gap-1">
-                  <span className="text-white/30 text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                <label className="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-xl p-3 flex flex-col gap-1">
+                  <span className="text-[rgba(var(--dash-fg),0.5)] text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5">
                     <Bell size={9} /> Frequency
                   </span>
                   <select
@@ -198,15 +198,15 @@ export function CheckInSettingsCard({ userId, locked }: Props) {
                       const v = e.target.value as Frequency
                       setFrequency(v); save({ frequency: v })
                     }}
-                    className="bg-transparent text-white text-sm font-bold outline-none cursor-pointer"
+                    className="bg-transparent text-[rgb(var(--dash-fg))] text-sm font-bold outline-none cursor-pointer"
                   >
-                    {FREQUENCIES.map(f => <option key={f.id} value={f.id} className="bg-zinc-950">{f.label}</option>)}
+                    {FREQUENCIES.map(f => <option key={f.id} value={f.id} className="bg-[var(--dash-card)]">{f.label}</option>)}
                   </select>
                 </label>
 
                 {/* Hour */}
-                <label className="bg-zinc-950/60 border border-white/8 rounded-xl p-3 flex flex-col gap-1">
-                  <span className="text-white/30 text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                <label className="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-xl p-3 flex flex-col gap-1">
+                  <span className="text-[rgba(var(--dash-fg),0.5)] text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5">
                     <Clock size={9} /> Time
                   </span>
                   <select
@@ -215,10 +215,10 @@ export function CheckInSettingsCard({ userId, locked }: Props) {
                       const v = parseInt(e.target.value, 10)
                       setHour(v); save({ hour: v })
                     }}
-                    className="bg-transparent text-white text-sm font-bold outline-none cursor-pointer"
+                    className="bg-transparent text-[rgb(var(--dash-fg))] text-sm font-bold outline-none cursor-pointer"
                   >
                     {Array.from({ length: 24 }, (_, i) => i).map(h => (
-                      <option key={h} value={h} className="bg-zinc-950">
+                      <option key={h} value={h} className="bg-[var(--dash-card)]">
                         {h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h - 12} PM`}
                       </option>
                     ))}
@@ -226,8 +226,8 @@ export function CheckInSettingsCard({ userId, locked }: Props) {
                 </label>
 
                 {/* Timezone */}
-                <label className="bg-zinc-950/60 border border-white/8 rounded-xl p-3 flex flex-col gap-1">
-                  <span className="text-white/30 text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                <label className="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-xl p-3 flex flex-col gap-1">
+                  <span className="text-[rgba(var(--dash-fg),0.5)] text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5">
                     <Globe2 size={9} /> Timezone
                   </span>
                   <select
@@ -236,9 +236,9 @@ export function CheckInSettingsCard({ userId, locked }: Props) {
                       const v = e.target.value
                       setTimezone(v); save({ timezone: v })
                     }}
-                    className="bg-transparent text-white text-sm font-bold outline-none cursor-pointer truncate"
+                    className="bg-transparent text-[rgb(var(--dash-fg))] text-sm font-bold outline-none cursor-pointer truncate"
                   >
-                    {TIMEZONES.map(tz => <option key={tz} value={tz} className="bg-zinc-950">{tz}</option>)}
+                    {TIMEZONES.map(tz => <option key={tz} value={tz} className="bg-[var(--dash-card)]">{tz}</option>)}
                   </select>
                 </label>
               </div>
@@ -254,7 +254,7 @@ export function CheckInSettingsCard({ userId, locked }: Props) {
                   {testing ? 'Sending…' : 'Send Test Now'}
                 </button>
                 {lastSentAt && (
-                  <p className="text-white/30 text-[10px] font-bold flex items-center gap-1.5">
+                  <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-bold flex items-center gap-1.5">
                     <Check size={10} className="text-green-400" />
                     Last sent {new Date(lastSentAt).toLocaleString()}
                   </p>

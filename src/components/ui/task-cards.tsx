@@ -2,10 +2,12 @@
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { RefreshCw, X, Rocket, CheckCircle2 } from "lucide-react"
+import { GOLDD } from "../../lib/brand-tokens"
+import { INK, DIM, FAINT } from "../../lib/dashboard-theme"
 
 const POINTS_PER_TASK = 100
 
-// ── CSS (kristen17/course-design-cards structure) ────────────────────────────
+// ── CSS (kristen17/course-design-cards structure, converted to silver/white) ─
 const STYLES = `
   .cdc-grid {
     display: grid;
@@ -13,7 +15,8 @@ const STYLES = `
     gap: 14px;
   }
   .cdc-card {
-    background: #232228;
+    background: var(--dash-card);
+    border: 1px solid ${FAINT};
     border-radius: 18px;
     overflow: visible;
     display: flex;
@@ -38,25 +41,25 @@ const STYLES = `
     background: none;
     border: none;
     cursor: pointer;
-    color: #555;
+    color: rgba(var(--dash-fg),0.56);
     padding: 2px 4px;
     border-radius: 4px;
     line-height: 0;
     transition: color 0.15s;
     position: relative;
   }
-  .cdc-menu-btn:hover { color: #aaa; }
+  .cdc-menu-btn:hover { color: ${INK}; }
   .cdc-dropdown {
     position: absolute;
     top: calc(100% + 4px);
     right: 0;
-    background: #1a1a1f;
-    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--dash-card);
+    border: 1px solid ${FAINT};
     border-radius: 10px;
     overflow: hidden;
     z-index: 50;
     min-width: 150px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
   }
   .cdc-dropdown-btn {
     display: flex;
@@ -71,15 +74,15 @@ const STYLES = `
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #888;
+    color: ${DIM};
     text-align: left;
     transition: background 0.1s, color 0.1s;
   }
-  .cdc-dropdown-btn:hover { background: rgba(255,255,255,0.04); color: #fff; }
-  .cdc-dropdown-btn.danger:hover { color: #f43f5e; }
+  .cdc-dropdown-btn:hover { background: rgba(var(--dash-fg),0.04); color: ${INK}; }
+  .cdc-dropdown-btn.danger:hover { color: #DC2626; }
   .cdc-body { padding: 8px 14px 13px; flex: 1; }
   .cdc-title {
-    color: #fff;
+    color: ${INK};
     font-size: 13px;
     font-weight: 900;
     text-transform: uppercase;
@@ -88,7 +91,7 @@ const STYLES = `
     margin: 0 0 5px;
   }
   .cdc-desc {
-    color: #777;
+    color: ${DIM};
     font-size: 10.5px;
     line-height: 1.55;
     margin: 0 0 13px;
@@ -97,17 +100,18 @@ const STYLES = `
   .cdc-progress-label {
     font-size: 8.5px; font-weight: 900;
     text-transform: uppercase; letter-spacing: 0.12em;
-    color: #444; white-space: nowrap;
+    color: rgba(var(--dash-fg),0.56); white-space: nowrap;
   }
   .cdc-progress-track {
     flex: 1; height: 3px;
-    background: rgba(255,255,255,0.06);
+    background: rgba(var(--dash-fg),0.06);
     border-radius: 99px; overflow: hidden;
   }
   .cdc-progress-fill { height: 100%; border-radius: 99px; }
-  .cdc-progress-value { font-size: 8.5px; font-weight: 900; color: #444; white-space: nowrap; }
+  .cdc-progress-value { font-size: 8.5px; font-weight: 900; color: rgba(var(--dash-fg),0.56); white-space: nowrap; }
   .cdc-footer {
-    background: #151419;
+    background: rgba(var(--dash-fg),0.02);
+    border-top: 1px solid ${FAINT};
     padding: 10px 14px;
     display: flex; align-items: center; justify-content: space-between;
     border-radius: 0 0 18px 18px;
@@ -116,9 +120,9 @@ const STYLES = `
   .cdc-avatars li + li { margin-left: -6px; }
   .cdc-avatar {
     width: 24px; height: 24px; border-radius: 50%;
-    border: 2px solid #232228; background: #2e2d34;
+    border: 2px solid var(--dash-card); background: rgba(var(--dash-fg),0.06);
     display: flex; align-items: center; justify-content: center;
-    font-size: 7.5px; font-weight: 900; color: #999;
+    font-size: 7.5px; font-weight: 900; color: ${DIM};
   }
   .cdc-btn-countdown {
     font-size: 8.5px; font-weight: 900;
@@ -156,13 +160,16 @@ interface ActiveTask extends PoolTask {
   initials: string[]
 }
 
-// ── Category colors (original CSS vars) ──────────────────────────────────────
+// Category tags consolidated to a single gold-monochrome accent — was a
+// decorative gold/blue/orange/pink/teal system per-category, didn't fit the
+// brand's strict black/gold/white palette; the category label still carries
+// the meaning.
 const CAT_COLOR: Record<TaskCategory, { hex: string; bg: string }> = {
-  Creative:     { hex: "#FFD700", bg: "rgba(255,215,0,0.18)"  },
-  Admin:        { hex: "#1890ff", bg: "rgba(24,144,255,0.18)" },
-  Marketing:    { hex: "#ffb741", bg: "rgba(255,183,65,0.18)" },
-  Social:       { hex: "#f43f5e", bg: "rgba(244,63,94,0.18)"  },
-  Distribution: { hex: "#01c3a8", bg: "rgba(1,195,168,0.18)"  },
+  Creative:     { hex: GOLDD, bg: "rgba(184,134,11,0.1)" },
+  Admin:        { hex: GOLDD, bg: "rgba(184,134,11,0.1)" },
+  Marketing:    { hex: GOLDD, bg: "rgba(184,134,11,0.1)" },
+  Social:       { hex: GOLDD, bg: "rgba(184,134,11,0.1)" },
+  Distribution: { hex: GOLDD, bg: "rgba(184,134,11,0.1)" },
 }
 
 // ── Deep task pool (30+ tactics) ─────────────────────────────────────────────
@@ -344,7 +351,7 @@ function TaskCard({
               position: "absolute", inset: 0, zIndex: 20,
               borderRadius: 18, display: "flex", flexDirection: "column",
               alignItems: "center", justifyContent: "center",
-              background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)",
+              background: "rgba(var(--dash-fg-inv), 0.92)", backdropFilter: "blur(4px)",
             }}
           >
             <motion.div
@@ -352,13 +359,14 @@ function TaskCard({
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
-              <CheckCircle2 size={32} color="#4ade80" />
+              {/* Success checkmark — kept semantic green */}
+              <CheckCircle2 size={32} color="#16A34A" />
             </motion.div>
             <motion.p
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              style={{ color: "#FFD700", fontWeight: 900, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 8 }}
+              style={{ color: GOLDD, fontWeight: 900, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 8 }}
             >
               +{POINTS_PER_TASK} pts
             </motion.p>
@@ -533,20 +541,20 @@ export function TaskCards({ title = "Quick Tasks", releases = [], onTaskComplete
         <style>{STYLES}</style>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <div>
-            <p style={{ color: "#fff", fontWeight: 900, fontSize: 13, textTransform: "uppercase", letterSpacing: "-0.01em", margin: 0 }}>{title}</p>
-            <p style={{ color: "#555", fontSize: 10, fontWeight: 700, marginTop: 2 }}>Tasks appear when you create a release</p>
+            <p style={{ color: INK, fontWeight: 900, fontSize: 13, textTransform: "uppercase", letterSpacing: "-0.01em", margin: 0 }}>{title}</p>
+            <p style={{ color: "rgba(var(--dash-fg),0.56)", fontSize: 10, fontWeight: 700, marginTop: 2 }}>Tasks appear when you create a release</p>
           </div>
         </div>
         <div style={{
           textAlign: "center", padding: "36px 24px",
-          background: "#1a1a1f", borderRadius: 18,
-          border: "1px dashed rgba(255,255,255,0.07)",
+          background: "rgba(var(--dash-fg),0.02)", borderRadius: 18,
+          border: `1px dashed ${FAINT}`,
         }}>
-          <Rocket size={28} color="rgba(255,215,0,0.3)" style={{ margin: "0 auto 10px" }} />
-          <p style={{ color: "#555", fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", margin: "0 0 4px" }}>
+          <Rocket size={28} color="rgba(184,134,11,0.35)" style={{ margin: "0 auto 10px" }} />
+          <p style={{ color: "rgba(var(--dash-fg),0.56)", fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", margin: "0 0 4px" }}>
             No releases yet
           </p>
-          <p style={{ color: "#444", fontSize: 10, fontWeight: 500, margin: 0 }}>
+          <p style={{ color: "rgba(var(--dash-fg),0.48)", fontSize: 10, fontWeight: 500, margin: 0 }}>
             Create your first release in the Releases tab — uP will suggest tasks automatically.
           </p>
         </div>
@@ -560,14 +568,14 @@ export function TaskCards({ title = "Quick Tasks", releases = [], onTaskComplete
       <>
         <style>{STYLES}</style>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <p style={{ color: "#fff", fontWeight: 900, fontSize: 13, textTransform: "uppercase", letterSpacing: "-0.01em", margin: 0 }}>{title}</p>
+          <p style={{ color: INK, fontWeight: 900, fontSize: 13, textTransform: "uppercase", letterSpacing: "-0.01em", margin: 0 }}>{title}</p>
         </div>
         <div style={{
           textAlign: "center", padding: "32px 24px",
-          background: "#1a1a1f", borderRadius: 18,
-          border: "1px dashed rgba(255,255,255,0.07)",
+          background: "rgba(var(--dash-fg),0.02)", borderRadius: 18,
+          border: `1px dashed ${FAINT}`,
         }}>
-          <p style={{ color: "#444", fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", margin: 0 }}>
+          <p style={{ color: "rgba(var(--dash-fg),0.48)", fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", margin: 0 }}>
             All tasks dismissed — check back soon
           </p>
         </div>
@@ -582,8 +590,8 @@ export function TaskCards({ title = "Quick Tasks", releases = [], onTaskComplete
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div>
-          <p style={{ color: "#fff", fontWeight: 900, fontSize: 13, textTransform: "uppercase", letterSpacing: "-0.01em", margin: 0 }}>{title}</p>
-          <p style={{ color: "#555", fontSize: 10, fontWeight: 700, marginTop: 2 }}>
+          <p style={{ color: INK, fontWeight: 900, fontSize: 13, textTransform: "uppercase", letterSpacing: "-0.01em", margin: 0 }}>{title}</p>
+          <p style={{ color: "rgba(var(--dash-fg),0.56)", fontSize: 10, fontWeight: 700, marginTop: 2 }}>
             {activeTasks.length} suggested · tap ··· to dismiss or re-suggest
           </p>
         </div>

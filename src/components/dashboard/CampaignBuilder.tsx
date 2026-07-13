@@ -140,11 +140,11 @@ export function CampaignBuilder({ song, artist, preSelected, onClose }: Props) {
         initial={{ scale: 0.96, y: 24 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 24 }}
         transition={{ type: 'spring', damping: 28, stiffness: 320 }}
         onClick={e => e.stopPropagation()}
-        className="bg-zinc-950 border border-white/10 rounded-3xl w-full max-w-3xl flex flex-col shadow-2xl"
+        className="bg-[var(--dash-card)] border border-[rgba(var(--dash-fg),0.15)] rounded-3xl w-full max-w-3xl flex flex-col shadow-2xl"
         style={{ maxHeight: '92dvh' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--dash-border)] shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-[#FFD700]/15 border border-[#FFD700]/25 flex items-center justify-center">
               <Sparkles size={13} className="text-[#FFD700]" />
@@ -153,23 +153,23 @@ export function CampaignBuilder({ song, artist, preSelected, onClose }: Props) {
               <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest leading-none">
                 {step === 0 ? 'Step 1 · Pick creators' : 'Step 2 · Brief each post'}
               </p>
-              <h3 className="text-white font-black text-sm uppercase tracking-tighter">Create Campaign</h3>
+              <h3 className="text-[rgb(var(--dash-fg))] font-black text-sm uppercase tracking-tighter">Create Campaign</h3>
             </div>
           </div>
-          <button onClick={onClose} className="text-white/30 hover:text-white transition-colors p-1"><X size={20} /></button>
+          <button onClick={onClose} className="text-[rgba(var(--dash-fg),0.5)] hover:text-[rgb(var(--dash-fg))] transition-colors p-1"><X size={20} /></button>
         </div>
 
         {/* ── Step 0: pick influencers ── */}
         {step === 0 && (
           <>
-            <div className="px-6 py-3 border-b border-white/5 shrink-0 space-y-3">
-              <div className="flex items-center gap-2 bg-zinc-900/60 border border-white/8 rounded-xl px-3 py-2">
-                <Search size={13} className="text-white/30" />
+            <div className="px-6 py-3 border-b border-[var(--dash-border)] shrink-0 space-y-3">
+              <div className="flex items-center gap-2 bg-[var(--dash-card-alt)] border border-[var(--dash-border)] rounded-xl px-3 py-2">
+                <Search size={13} className="text-[rgba(var(--dash-fg),0.5)]" />
                 <input
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Search creators, niches…"
-                  className="flex-1 bg-transparent text-white text-sm outline-none placeholder-white/20"
+                  className="flex-1 bg-transparent text-[rgb(var(--dash-fg))] text-sm outline-none placeholder:text-[rgba(var(--dash-fg),0.35)]"
                 />
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -180,7 +180,7 @@ export function CampaignBuilder({ song, artist, preSelected, onClose }: Props) {
                     className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
                       platform === p
                         ? PLATFORM_TAB_ACTIVE[p]
-                        : 'bg-zinc-900/60 border border-white/8 text-white/40 hover:text-white'
+                        : 'bg-[var(--dash-card-alt)] border border-[var(--dash-border)] text-[rgba(var(--dash-fg),0.52)] hover:text-[rgb(var(--dash-fg))]'
                     }`}
                   >
                     {p}
@@ -209,19 +209,19 @@ export function CampaignBuilder({ song, artist, preSelected, onClose }: Props) {
                     className={`w-full flex items-center gap-3 p-3 rounded-2xl border text-left transition-all ${
                       on
                         ? `${theme.bg} ${theme.border}`
-                        : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
+                        : 'bg-[var(--dash-card-alt)] border-[var(--dash-border)] hover:border-[rgba(var(--dash-fg),0.15)]'
                     }`}
                   >
                     {/* Avatar */}
                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm shrink-0 ${
-                      on ? PLATFORM_AVATAR[inf.platform] : 'bg-zinc-800 text-white/50'
+                      on ? PLATFORM_AVATAR[inf.platform] : 'bg-[rgba(var(--dash-fg),0.08)] text-[rgba(var(--dash-fg),0.55)]'
                     }`}>
                       {inf.name[0]}
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-white font-bold text-sm truncate">{inf.name}</p>
-                      <p className="text-white/35 text-[11px] truncate">{inf.handle} · {inf.niche}</p>
+                      <p className="text-[rgb(var(--dash-fg))] font-bold text-sm truncate">{inf.name}</p>
+                      <p className="text-[rgba(var(--dash-fg),0.5)] text-[11px] truncate">{inf.handle} · {inf.niche}</p>
                     </div>
 
                     {/* Platform badge */}
@@ -231,7 +231,7 @@ export function CampaignBuilder({ song, artist, preSelected, onClose }: Props) {
 
                     {/* Checkbox */}
                     <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
-                      on ? 'bg-[#FFD700] border-[#FFD700]' : 'border-white/20'
+                      on ? 'bg-[#FFD700] border-[#FFD700]' : 'border-[rgba(var(--dash-fg),0.25)]'
                     }`}>
                       {on && <Check size={11} strokeWidth={3} className="text-black" />}
                     </div>
@@ -240,8 +240,8 @@ export function CampaignBuilder({ song, artist, preSelected, onClose }: Props) {
               })}
             </div>
 
-            <div className="px-6 py-4 border-t border-white/5 shrink-0 flex items-center justify-between">
-              <p className="text-white/40 text-xs font-bold">{count} selected</p>
+            <div className="px-6 py-4 border-t border-[var(--dash-border)] shrink-0 flex items-center justify-between">
+              <p className="text-[rgba(var(--dash-fg),0.52)] text-xs font-bold">{count} selected</p>
               <button
                 onClick={() => setStep(1)}
                 disabled={count === 0}
@@ -262,7 +262,7 @@ export function CampaignBuilder({ song, artist, preSelected, onClose }: Props) {
                 const accentBar = PLATFORM_ACCENT_BAR[inf.platform]
                 const briefBg   = PLATFORM_BRIEF_BG[inf.platform]
                 return (
-                  <div key={inf.id} className="rounded-2xl border border-white/8 overflow-hidden">
+                  <div key={inf.id} className="rounded-2xl border border-[var(--dash-border)] overflow-hidden">
                     {/* Platform-colored top accent bar */}
                     <div className={`h-[3px] w-full ${accentBar}`} />
 
@@ -273,12 +273,12 @@ export function CampaignBuilder({ song, artist, preSelected, onClose }: Props) {
                           {inf.name[0]}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-white font-bold text-sm truncate leading-none">{inf.name}</p>
+                          <p className="text-[rgb(var(--dash-fg))] font-bold text-sm truncate leading-none">{inf.name}</p>
                           <div className="flex items-center gap-1.5 mt-0.5">
                             <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full ${PLATFORM_BADGE[inf.platform]}`}>
                               {inf.platform}
                             </span>
-                            <p className="text-white/30 text-[10px] truncate">{inf.handle}</p>
+                            <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] truncate">{inf.handle}</p>
                           </div>
                         </div>
                       </div>
@@ -293,7 +293,7 @@ export function CampaignBuilder({ song, artist, preSelected, onClose }: Props) {
                         </button>
                       ) : (
                         <span className={`text-[9px] font-black uppercase tracking-widest shrink-0 ${
-                          inf.platform === 'SoundCloud' ? 'text-orange-400/70' : 'text-white/25'
+                          inf.platform === 'SoundCloud' ? 'text-orange-400/70' : 'text-[rgba(var(--dash-fg),0.48)]'
                         }`}>
                           {inf.platform === 'SoundCloud' ? 'Upload Placement' : 'Placement'}
                         </span>
@@ -313,7 +313,7 @@ export function CampaignBuilder({ song, artist, preSelected, onClose }: Props) {
                             : 'Add placement notes (playlist target, pitch angle, timing…)'
                         }
                         rows={3}
-                        className="w-full bg-zinc-950 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-white/20 resize-none"
+                        className="w-full bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-xl px-3 py-2.5 text-sm text-[rgb(var(--dash-fg))] placeholder:text-[rgba(var(--dash-fg),0.35)] outline-none focus:border-[rgba(var(--dash-fg),0.25)] resize-none"
                       />
                     </div>
                   </div>
@@ -321,8 +321,8 @@ export function CampaignBuilder({ song, artist, preSelected, onClose }: Props) {
               })}
             </div>
 
-            <div className="px-6 py-4 border-t border-white/5 shrink-0 flex items-center justify-between">
-              <button onClick={() => setStep(0)} className="flex items-center gap-1.5 text-white/40 hover:text-white text-[10px] font-black uppercase tracking-widest">
+            <div className="px-6 py-4 border-t border-[var(--dash-border)] shrink-0 flex items-center justify-between">
+              <button onClick={() => setStep(0)} className="flex items-center gap-1.5 text-[rgba(var(--dash-fg),0.52)] hover:text-[rgb(var(--dash-fg))] text-[10px] font-black uppercase tracking-widest">
                 <ArrowLeft size={13} /> Back
               </button>
               <button

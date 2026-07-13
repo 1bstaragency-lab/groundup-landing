@@ -2,6 +2,7 @@
 import { motion } from "framer-motion"
 import { Clock, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { CARD, FAINT } from "../../lib/dashboard-theme"
 
 export interface ArticleCardProps {
   cover?: string
@@ -29,7 +30,8 @@ export function ArticleCard({
         href={href}
         target={href ? "_blank" : undefined}
         rel={href ? "noopener noreferrer" : undefined}
-        className="block bg-zinc-900/60 border border-white/8 rounded-2xl overflow-hidden hover:border-white/18 transition-all duration-300 cursor-pointer"
+        className="block rounded-2xl overflow-hidden hover:border-[rgba(var(--dash-fg),0.2)] transition-all duration-300 cursor-pointer"
+        style={{ background: CARD, border: `1px solid ${FAINT}` }}
       >
         {/* Cover */}
         <div className="relative overflow-hidden h-36">
@@ -56,20 +58,20 @@ export function ArticleCard({
 
         {/* Content */}
         <div className="p-4">
-          <h3 className="text-white font-black text-[13px] leading-snug uppercase tracking-tight mb-1.5 group-hover:text-[#FFD700] transition-colors line-clamp-2">
+          <h3 className="text-[rgb(var(--dash-fg))] font-black text-[13px] leading-snug uppercase tracking-tight mb-1.5 group-hover:text-[#FFD700] transition-colors line-clamp-2">
             {headline}
           </h3>
-          <p className="text-white/40 text-[11px] leading-relaxed line-clamp-2 mb-3">{excerpt}</p>
+          <p className="text-[rgba(var(--dash-fg),0.52)] text-[11px] leading-relaxed line-clamp-2 mb-3">{excerpt}</p>
 
           {/* Footer */}
-          <div className="flex items-center justify-between pt-3 border-t border-white/5">
+          <div className="flex items-center justify-between pt-3" style={{ borderTop: `1px solid ${FAINT}` }}>
             <div>
-              <p className="text-white/55 text-[10px] font-bold">{writer}</p>
-              <p className="text-white/25 text-[9px]">{publishedAt}</p>
+              <p className="text-[rgba(var(--dash-fg),0.56)] text-[10px] font-bold">{writer}</p>
+              <p className="text-[rgba(var(--dash-fg),0.45)] text-[9px]">{publishedAt}</p>
             </div>
             <ArrowRight
               size={14}
-              className="text-white/20 group-hover:text-[#FFD700] group-hover:translate-x-0.5 transition-all duration-200"
+              className="text-[rgba(var(--dash-fg),0.4)] group-hover:text-[#FFD700] group-hover:translate-x-0.5 transition-all duration-200"
             />
           </div>
         </div>

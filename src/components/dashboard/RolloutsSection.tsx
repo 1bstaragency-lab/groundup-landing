@@ -38,20 +38,24 @@ interface WizardData {
   timeline: RolloutWeeks | 0;
 }
 
+// Release-type colors consolidated to a single gold-monochrome accent (was a
+// decorative gold/blue/purple/green/orange system per-type — didn't fit the
+// brand's strict black/gold/white palette; the icon + label still carry the
+// distinction).
 const TYPE_META: Record<ReleaseType, { color: string; bg: string; border: string; icon: React.ReactNode; desc: string }> = {
-  Single:  { color: 'text-[#FFD700]',  bg: 'bg-[#FFD700]/10',  border: 'border-[#FFD700]/20',  icon: <Disc3 size={26} />,    desc: 'One track. Perfect for testing a sound or building momentum.' },
-  EP:      { color: 'text-blue-400',   bg: 'bg-blue-500/10',   border: 'border-blue-500/20',   icon: <Layers size={26} />,   desc: '3–6 tracks. Introduce a sound without full album pressure.' },
-  Album:   { color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', icon: <Music size={26} />,    desc: 'Your full statement. Plan the rollout months in advance.' },
-  Mixtape: { color: 'text-green-400',  bg: 'bg-green-500/10',  border: 'border-green-500/20',  icon: <ListMusic size={26} />, desc: 'Raw, uncut. Rapid-fire community-first release.' },
-  'SoundCloud Exclusive': { color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', icon: <Radio size={26} />, desc: 'SC-first drop. Build hype with the underground before DSPs.' },
+  Single:  { color: 'text-[#FFD700]', bg: 'bg-[#FFD700]/10', border: 'border-[#FFD700]/20', icon: <Disc3 size={26} />,    desc: 'One track. Perfect for testing a sound or building momentum.' },
+  EP:      { color: 'text-[#FFD700]', bg: 'bg-[#FFD700]/10', border: 'border-[#FFD700]/20', icon: <Layers size={26} />,   desc: '3–6 tracks. Introduce a sound without full album pressure.' },
+  Album:   { color: 'text-[#FFD700]', bg: 'bg-[#FFD700]/10', border: 'border-[#FFD700]/20', icon: <Music size={26} />,    desc: 'Your full statement. Plan the rollout months in advance.' },
+  Mixtape: { color: 'text-[#FFD700]', bg: 'bg-[#FFD700]/10', border: 'border-[#FFD700]/20', icon: <ListMusic size={26} />, desc: 'Raw, uncut. Rapid-fire community-first release.' },
+  'SoundCloud Exclusive': { color: 'text-[#FFD700]', bg: 'bg-[#FFD700]/10', border: 'border-[#FFD700]/20', icon: <Radio size={26} />, desc: 'SC-first drop. Build hype with the underground before DSPs.' },
 };
 
 const TYPE_COLORS: Record<ReleaseType, string> = {
-  Single: 'bg-[#FFD700]/20 text-[#FFD700]',
-  EP: 'bg-blue-500/20 text-blue-400',
-  Album: 'bg-purple-500/20 text-purple-400',
-  Mixtape: 'bg-green-500/20 text-green-400',
-  'SoundCloud Exclusive': 'bg-orange-500/20 text-orange-400',
+  Single: 'bg-[#FFD700]/20 text-[#B8860B]',
+  EP: 'bg-[#FFD700]/20 text-[#B8860B]',
+  Album: 'bg-[#FFD700]/20 text-[#B8860B]',
+  Mixtape: 'bg-[#FFD700]/20 text-[#B8860B]',
+  'SoundCloud Exclusive': 'bg-[#FFD700]/20 text-[#B8860B]',
 };
 
 const FOCUS_AREAS: FocusArea[] = [
@@ -159,7 +163,7 @@ function AiMessage({ text }: { text: string }) {
       <div className="w-8 h-8 rounded-full bg-[#FFD700]/20 border border-[#FFD700]/30 flex items-center justify-center shrink-0 mt-0.5">
         <Sparkles size={13} className="text-[#FFD700]" />
       </div>
-      <div className="bg-zinc-900/60 border border-white/5 rounded-2xl rounded-tl-sm px-5 py-4 text-sm text-white/80 leading-relaxed font-medium max-w-md">
+      <div className="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-2xl rounded-tl-sm px-5 py-4 text-sm text-[rgba(var(--dash-fg),0.8)] leading-relaxed font-medium max-w-md">
         {text}
       </div>
     </div>
@@ -259,27 +263,27 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 lg:p-8"
+      className="fixed inset-0 z-50 bg-[rgba(0,0,0,0.6)] backdrop-blur-sm flex items-center justify-center p-4 lg:p-8"
     >
       <motion.div
         initial={{ scale: 0.96, y: 16 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.96, y: 16 }}
-        className="bg-zinc-950 border border-white/8 rounded-3xl w-full max-w-xl shadow-[0_40px_80px_rgba(0,0,0,0.8)] overflow-hidden max-h-[90vh] flex flex-col"
+        className="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-3xl w-full max-w-xl shadow-[0_40px_80px_rgba(0,0,0,0.8)] overflow-hidden max-h-[90vh] flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-8 pt-7 pb-5 border-b border-white/5 shrink-0">
+        <div className="flex items-center justify-between px-8 pt-7 pb-5 border-b border-[var(--dash-border)] shrink-0">
           <div className="flex items-center gap-3">
             {step > 0 && (
-              <button onClick={() => setStep(s => s - 1)} className="text-white/30 hover:text-white transition-colors mr-1">
+              <button onClick={() => setStep(s => s - 1)} className="text-[rgba(var(--dash-fg),0.5)] hover:text-[rgb(var(--dash-fg))] transition-colors mr-1">
                 <ChevronLeft size={18} />
               </button>
             )}
             <div>
-              <h3 className="text-white font-black text-lg uppercase tracking-tighter leading-none">
+              <h3 className="text-[rgb(var(--dash-fg))] font-black text-lg uppercase tracking-tighter leading-none">
                 {step === 0 ? 'New Rollout' : step === 1 ? `Setting Up "${data.title}"` : `Rollout Plan — "${data.title}"`}
               </h3>
-              <p className="text-white/25 text-[10px] font-bold mt-0.5">
+              <p className="text-[rgba(var(--dash-fg),0.48)] text-[10px] font-bold mt-0.5">
                 {['Tell us about your release', 'Set your goals & strategy', 'Your custom checklist'][step]}
               </p>
             </div>
@@ -290,11 +294,11 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
               {[0, 1, 2].map(i => (
                 <div
                   key={i}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${i === step ? 'w-5 bg-[#FFD700]' : i < step ? 'w-2 bg-[#FFD700]/50' : 'w-2 bg-white/10'}`}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${i === step ? 'w-5 bg-[#FFD700]' : i < step ? 'w-2 bg-[#FFD700]/50' : 'w-2 bg-[rgba(var(--dash-fg),0.12)]'}`}
                 />
               ))}
             </div>
-            <button onClick={onClose} className="text-white/20 hover:text-white transition-colors">
+            <button onClick={onClose} className="text-[rgba(var(--dash-fg),0.48)] hover:text-[rgb(var(--dash-fg))] transition-colors">
               <X size={18} />
             </button>
           </div>
@@ -317,13 +321,13 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
                 <div className="space-y-4">
                   {/* Cover art + basic fields */}
                   <div className="flex gap-4">
-                    <label className="relative w-24 h-24 rounded-2xl border border-dashed border-white/15 bg-zinc-900/40 flex flex-col items-center justify-center cursor-pointer hover:border-white/30 transition-colors shrink-0 overflow-hidden group">
+                    <label className="relative w-24 h-24 rounded-2xl border border-dashed border-[rgba(var(--dash-fg),0.2)] bg-[var(--dash-card-alt)] flex flex-col items-center justify-center cursor-pointer hover:border-[rgba(var(--dash-fg),0.3)] transition-colors shrink-0 overflow-hidden group">
                       {data.coverArt ? (
                         <img src={data.coverArt} alt="cover" className="w-full h-full object-cover" />
                       ) : (
                         <>
-                          <Upload size={18} className="text-white/20 group-hover:text-white/40 transition-colors mb-1" />
-                          <span className="text-[9px] text-white/20 font-bold text-center leading-tight">Cover Art</span>
+                          <Upload size={18} className="text-[rgba(var(--dash-fg),0.48)] group-hover:text-[rgba(var(--dash-fg),0.52)] transition-colors mb-1" />
+                          <span className="text-[9px] text-[rgba(var(--dash-fg),0.48)] font-bold text-center leading-tight">Cover Art</span>
                         </>
                       )}
                       <input type="file" accept="image/*" onChange={handleCover} className="hidden" />
@@ -335,28 +339,28 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
                         placeholder="Title (e.g. Summer Nights)"
                         value={data.title}
                         onChange={e => setData(prev => ({ ...prev, title: e.target.value }))}
-                        className="w-full bg-zinc-900/60 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#FFD700]/30 transition-colors"
+                        className="w-full bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-xl px-4 py-3 text-sm text-[rgb(var(--dash-fg))] placeholder:text-[rgba(var(--dash-fg),0.35)] focus:outline-none focus:border-[#FFD700]/30 transition-colors"
                       />
                       <input
                         type="text"
                         placeholder="Feature / Collaborator (optional)"
                         value={data.feature}
                         onChange={e => setData(prev => ({ ...prev, feature: e.target.value }))}
-                        className="w-full bg-zinc-900/60 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#FFD700]/30 transition-colors"
+                        className="w-full bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-xl px-4 py-3 text-sm text-[rgb(var(--dash-fg))] placeholder:text-[rgba(var(--dash-fg),0.35)] focus:outline-none focus:border-[#FFD700]/30 transition-colors"
                       />
                     </div>
                   </div>
 
                   {/* Type */}
                   <div>
-                    <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-2">Type</p>
+                    <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-black uppercase tracking-widest mb-2">Type</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {(['Single', 'EP', 'Album', 'Mixtape', 'SoundCloud Exclusive'] as ReleaseType[]).map(t => (
                         <button
                           key={t}
                           onClick={() => setData(prev => ({ ...prev, type: t }))}
                           className={`py-2.5 px-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all text-center leading-tight ${
-                            data.type === t ? 'bg-[#FFD700] border-transparent text-black' : 'bg-zinc-900/60 border-white/8 text-white/40 hover:text-white'
+                            data.type === t ? 'bg-[#FFD700] border-transparent text-black' : 'bg-[var(--dash-card)] border-[var(--dash-border)] text-[rgba(var(--dash-fg),0.52)] hover:text-[rgb(var(--dash-fg))]'
                           }`}
                         >
                           {t === 'SoundCloud Exclusive' ? 'SoundCloud' : t}
@@ -367,12 +371,12 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
 
                   {/* Date */}
                   <div>
-                    <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-2">Release Date</p>
+                    <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-black uppercase tracking-widest mb-2">Release Date</p>
                     <input
                       type="date"
                       value={data.date}
                       onChange={e => setData(prev => ({ ...prev, date: e.target.value }))}
-                      className="w-full bg-zinc-900/60 border border-white/8 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFD700]/30 transition-colors"
+                      className="w-full bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-xl px-4 py-3 text-sm text-[rgb(var(--dash-fg))] focus:outline-none focus:border-[#FFD700]/30 transition-colors"
                     />
                   </div>
                 </div>
@@ -383,7 +387,7 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
                 <div className="space-y-5">
                   {/* Budget */}
                   <div>
-                    <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-2">Budget</p>
+                    <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-black uppercase tracking-widest mb-2">Budget</p>
                     <div className="grid grid-cols-3 gap-2">
                       {BUDGET_OPTIONS.map(({ value, sub }) => (
                         <button
@@ -392,13 +396,13 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
                           className={`p-3 rounded-2xl border text-left transition-all ${
                             data.budget === value
                               ? 'bg-[#FFD700] border-transparent'
-                              : 'bg-zinc-900/40 border-white/5 hover:bg-zinc-900 hover:border-white/10'
+                              : 'bg-[var(--dash-card-alt)] border-[var(--dash-border)] hover:bg-[var(--dash-card)] hover:border-[var(--dash-border)]'
                           }`}
                         >
-                          <p className={`font-black text-[10px] uppercase tracking-wide leading-none mb-1 ${data.budget === value ? 'text-black' : 'text-white/70'}`}>
+                          <p className={`font-black text-[10px] uppercase tracking-wide leading-none mb-1 ${data.budget === value ? 'text-black' : 'text-[rgba(var(--dash-fg),0.62)]'}`}>
                             {value}
                           </p>
-                          <p className={`text-[9px] font-medium ${data.budget === value ? 'text-black/60' : 'text-white/20'}`}>
+                          <p className={`text-[9px] font-medium ${data.budget === value ? 'text-black/60' : 'text-[rgba(var(--dash-fg),0.48)]'}`}>
                             {sub}
                           </p>
                         </button>
@@ -408,8 +412,8 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
 
                   {/* Focus areas */}
                   <div>
-                    <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-2">
-                      Focus Areas <span className="normal-case font-normal text-white/20">(select all that apply)</span>
+                    <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-black uppercase tracking-widest mb-2">
+                      Focus Areas <span className="normal-case font-normal text-[rgba(var(--dash-fg),0.48)]">(select all that apply)</span>
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {FOCUS_AREAS.map(area => (
@@ -419,7 +423,7 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
                           className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wide border transition-all ${
                             data.focusAreas.includes(area)
                               ? 'bg-[#FFD700] border-transparent text-black'
-                              : 'bg-zinc-900/40 border-white/8 text-white/40 hover:text-white hover:border-white/20'
+                              : 'bg-[var(--dash-card-alt)] border-[var(--dash-border)] text-[rgba(var(--dash-fg),0.52)] hover:text-[rgb(var(--dash-fg))] hover:border-[rgba(var(--dash-fg),0.25)]'
                           }`}
                         >
                           {area}
@@ -430,7 +434,7 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
 
                   {/* Timeline */}
                   <div>
-                    <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-2">Timeline</p>
+                    <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-black uppercase tracking-widest mb-2">Timeline</p>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {TIMELINE_OPTIONS.map(({ value, label, sub }) => (
                         <button
@@ -439,13 +443,13 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
                           className={`p-3 rounded-2xl border text-left transition-all ${
                             data.timeline === value
                               ? 'bg-[#FFD700] border-transparent'
-                              : 'bg-zinc-900/40 border-white/5 hover:bg-zinc-900 hover:border-white/10'
+                              : 'bg-[var(--dash-card-alt)] border-[var(--dash-border)] hover:bg-[var(--dash-card)] hover:border-[var(--dash-border)]'
                           }`}
                         >
-                          <p className={`font-black text-[10px] uppercase tracking-wide leading-none mb-1 ${data.timeline === value ? 'text-black' : 'text-white/70'}`}>
+                          <p className={`font-black text-[10px] uppercase tracking-wide leading-none mb-1 ${data.timeline === value ? 'text-black' : 'text-[rgba(var(--dash-fg),0.62)]'}`}>
                             {label}
                           </p>
-                          <p className={`text-[9px] font-medium ${data.timeline === value ? 'text-black/60' : 'text-white/20'}`}>
+                          <p className={`text-[9px] font-medium ${data.timeline === value ? 'text-black/60' : 'text-[rgba(var(--dash-fg),0.48)]'}`}>
                             {sub}
                           </p>
                         </button>
@@ -464,11 +468,11 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
                       initial={{ opacity: 0, x: 10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.04 }}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/40 border border-white/5"
+                      className="flex items-center gap-3 p-3 rounded-xl bg-[var(--dash-card-alt)] border border-[var(--dash-border)]"
                     >
                       <div className="w-1.5 h-1.5 rounded-full bg-[#FFD700]/60 shrink-0" />
-                      <p className="text-white/70 text-sm font-medium">{item.label}</p>
-                      <span className="ml-auto text-[9px] font-black uppercase tracking-widest text-white/20 shrink-0">
+                      <p className="text-[rgba(var(--dash-fg),0.62)] text-sm font-medium">{item.label}</p>
+                      <span className="ml-auto text-[9px] font-black uppercase tracking-widest text-[rgba(var(--dash-fg),0.48)] shrink-0">
                         {item.category}
                       </span>
                     </motion.div>
@@ -480,7 +484,7 @@ function NewRolloutWizard({ artistName, initialType, onClose, onCreate }: Wizard
         </div>
 
         {/* Footer */}
-        <div className="px-8 pb-7 pt-5 border-t border-white/5 shrink-0">
+        <div className="px-8 pb-7 pt-5 border-t border-[var(--dash-border)] shrink-0">
           {step < 2 ? (
             <button
               onClick={() => setStep(s => s + 1)}
@@ -611,14 +615,14 @@ export function RolloutsSection() {
   if (loading) return (
     <div className="flex flex-col items-center justify-center py-32 gap-4">
       <div className="w-8 h-8 border-2 border-[#FFD700]/30 border-t-[#FFD700] rounded-full animate-spin" />
-      <p className="text-white/30 text-[11px] font-black uppercase tracking-widest">Loading releases…</p>
+      <p className="text-[rgba(var(--dash-fg),0.5)] text-[11px] font-black uppercase tracking-widest">Loading releases…</p>
     </div>
   );
 
   if (loadError) return (
     <div className="flex flex-col items-center justify-center py-32 gap-4 text-center">
       <p className="text-red-400 font-black text-sm uppercase tracking-widest">Failed to load</p>
-      <p className="text-white/30 text-xs max-w-sm">{loadError}</p>
+      <p className="text-[rgba(var(--dash-fg),0.5)] text-xs max-w-sm">{loadError}</p>
       <button
         onClick={loadReleases}
         className="mt-2 px-5 py-2 rounded-xl bg-[#FFD700] text-black font-black text-[11px] uppercase tracking-widest hover:scale-105 transition-transform"
@@ -633,8 +637,8 @@ export function RolloutsSection() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl lg:text-5xl font-black text-white tracking-tighter uppercase mb-2">Releases</h1>
-          <p className="text-white/30 text-sm font-bold">
+          <h1 className="text-3xl lg:text-5xl font-black text-[rgb(var(--dash-fg))] tracking-tighter uppercase mb-2">Releases</h1>
+          <p className="text-[rgba(var(--dash-fg),0.5)] text-sm font-bold">
             {releases.length === 0 ? 'No releases planned yet.' : `${releases.length} release${releases.length > 1 ? 's' : ''} in pipeline`}
           </p>
         </div>
@@ -661,7 +665,7 @@ export function RolloutsSection() {
       {/* Empty state — type cards */}
       {releases.length === 0 && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-          <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.3em]">What are you releasing?</p>
+          <p className="text-[rgba(var(--dash-fg),0.48)] text-[10px] font-black uppercase tracking-[0.3em]">What are you releasing?</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {(Object.keys(TYPE_META) as ReleaseType[]).map(type => {
               const meta = TYPE_META[type];
@@ -675,7 +679,7 @@ export function RolloutsSection() {
                 >
                   <div className={`mb-4 ${meta.color}`}>{meta.icon}</div>
                   <p className={`font-black text-xl uppercase tracking-tighter mb-2 ${meta.color}`}>{type}</p>
-                  <p className="text-white/30 text-[11px] font-medium leading-relaxed mb-5">{meta.desc}</p>
+                  <p className="text-[rgba(var(--dash-fg),0.5)] text-[11px] font-medium leading-relaxed mb-5">{meta.desc}</p>
                   <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${meta.color} group-hover:translate-x-1 transition-transform`}>
                     Plan {type} <ChevronRight size={12} />
                   </div>
@@ -691,7 +695,7 @@ export function RolloutsSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Release list */}
           <div className="lg:col-span-4 space-y-3">
-            <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Pipeline</p>
+            <p className="text-[rgba(var(--dash-fg),0.48)] text-[10px] font-black uppercase tracking-[0.3em] mb-4">Pipeline</p>
             {releases.map(r => (
               <motion.button
                 key={r.id}
@@ -699,15 +703,15 @@ export function RolloutsSection() {
                 onClick={() => setSelected(r.id)}
                 className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 group ${
                   selected === r.id
-                    ? 'bg-zinc-900 border-[#FFD700]/40 shadow-[0_0_30px_rgba(255,215,0,0.08)]'
-                    : 'bg-zinc-900/30 border-white/5 hover:bg-zinc-900/60'
+                    ? 'bg-[var(--dash-card)] border-[#FFD700]/40 shadow-[0_0_30px_rgba(255,215,0,0.08)]'
+                    : 'bg-[var(--dash-card-alt)] border-[var(--dash-border)] hover:bg-[var(--dash-card)]'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${TYPE_COLORS[r.type]}`}>{r.type}</span>
                   <button
                     onClick={e => { e.stopPropagation(); deleteRelease(r.id); }}
-                    className="opacity-0 group-hover:opacity-100 text-white/20 hover:text-red-400 transition-all"
+                    className="opacity-0 group-hover:opacity-100 text-[rgba(var(--dash-fg),0.48)] hover:text-red-400 transition-all"
                   >
                     <Trash2 size={12} />
                   </button>
@@ -716,17 +720,17 @@ export function RolloutsSection() {
                   {r.coverArt && (
                     <img src={r.coverArt} alt="cover" className="w-8 h-8 rounded-lg object-cover shrink-0" />
                   )}
-                  <p className="text-white font-black text-sm uppercase tracking-tight">{r.title}</p>
+                  <p className="text-[rgb(var(--dash-fg))] font-black text-sm uppercase tracking-tight">{r.title}</p>
                 </div>
-                <div className="flex items-center gap-2 text-white/30 mb-3">
+                <div className="flex items-center gap-2 text-[rgba(var(--dash-fg),0.5)] mb-3">
                   <Calendar size={10} />
                   <span className="text-[10px] font-bold">
                     {new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
-                  <span className="text-white/10">·</span>
+                  <span className="text-[rgba(var(--dash-fg),0.4)]">·</span>
                   <span className="text-[10px] font-bold">{r.timeline}wk plan</span>
                 </div>
-                <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-1 bg-[rgba(var(--dash-fg),0.08)] rounded-full overflow-hidden">
                   <div
                     className="h-full bg-[#FFD700] transition-all duration-500"
                     style={{ width: `${(r.checklist.filter(c => c.done).length / r.checklist.length) * 100}%` }}
@@ -737,7 +741,7 @@ export function RolloutsSection() {
 
             <button
               onClick={() => openWizard()}
-              className="w-full py-3 rounded-2xl border border-dashed border-white/10 text-white/20 hover:text-white/40 hover:border-white/20 transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-2xl border border-dashed border-[var(--dash-border)] text-[rgba(var(--dash-fg),0.48)] hover:text-[rgba(var(--dash-fg),0.52)] hover:border-[rgba(var(--dash-fg),0.25)] transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
             >
               <Plus size={12} /> Add Another
             </button>
@@ -752,7 +756,7 @@ export function RolloutsSection() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="bg-zinc-900/40 border border-white/5 rounded-3xl p-8"
+                  className="bg-[var(--dash-card-alt)] border border-[var(--dash-border)] rounded-3xl p-8"
                 >
                   {/* Release header */}
                   <div className="flex items-start justify-between mb-6">
@@ -764,8 +768,8 @@ export function RolloutsSection() {
                         <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg inline-block mb-2 ${TYPE_COLORS[activeRelease.type]}`}>
                           {activeRelease.type}
                         </span>
-                        <h3 className="text-white font-black text-2xl uppercase tracking-tighter">{activeRelease.title}</h3>
-                        <p className="text-white/30 text-xs font-bold mt-1 flex items-center gap-2">
+                        <h3 className="text-[rgb(var(--dash-fg))] font-black text-2xl uppercase tracking-tighter">{activeRelease.title}</h3>
+                        <p className="text-[rgba(var(--dash-fg),0.5)] text-xs font-bold mt-1 flex items-center gap-2">
                           <Calendar size={10} />
                           {new Date(activeRelease.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                         </p>
@@ -773,7 +777,7 @@ export function RolloutsSection() {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-[#FFD700] font-black text-3xl">{Math.round(progress)}%</p>
-                      <p className="text-white/20 text-[10px] font-black uppercase tracking-widest">{completedCount}/{totalCount} done</p>
+                      <p className="text-[rgba(var(--dash-fg),0.48)] text-[10px] font-black uppercase tracking-widest">{completedCount}/{totalCount} done</p>
                     </div>
                   </div>
 
@@ -781,7 +785,7 @@ export function RolloutsSection() {
                   {activeRelease.focusAreas.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mb-5">
                       {activeRelease.focusAreas.map(area => (
-                        <span key={area} className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full bg-white/5 text-white/30">
+                        <span key={area} className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full bg-[rgba(var(--dash-fg),0.05)] text-[rgba(var(--dash-fg),0.5)]">
                           {area}
                         </span>
                       ))}
@@ -789,7 +793,7 @@ export function RolloutsSection() {
                   )}
 
                   {/* Progress bar */}
-                  <div className="h-2 bg-zinc-800 rounded-full overflow-hidden mb-8">
+                  <div className="h-2 bg-[rgba(var(--dash-fg),0.08)] rounded-full overflow-hidden mb-8">
                     <motion.div
                       className="h-full bg-[#FFD700] shadow-[0_0_20px_rgba(255,215,0,0.4)]"
                       animate={{ width: `${progress}%` }}
@@ -799,7 +803,7 @@ export function RolloutsSection() {
 
                   {/* Grouped checklist */}
                   <div className="space-y-3">
-                    <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Rollout Checklist</p>
+                    <p className="text-[rgba(var(--dash-fg),0.48)] text-[10px] font-black uppercase tracking-[0.3em] mb-4">Rollout Checklist</p>
                     {activeRelease.checklist.map(item => (
                       <button
                         key={item.id}
@@ -807,17 +811,17 @@ export function RolloutsSection() {
                         className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all duration-200 text-left group ${
                           item.done
                             ? 'bg-[#FFD700]/10 border-[#FFD700]/20'
-                            : 'bg-zinc-900/40 border-white/5 hover:border-white/20'
+                            : 'bg-[var(--dash-card-alt)] border-[var(--dash-border)] hover:border-[rgba(var(--dash-fg),0.25)]'
                         }`}
                       >
                         {item.done
                           ? <CheckSquare size={16} className="text-[#FFD700] shrink-0" />
-                          : <Square size={16} className="text-white/20 group-hover:text-white/40 shrink-0 transition-colors" />
+                          : <Square size={16} className="text-[rgba(var(--dash-fg),0.48)] group-hover:text-[rgba(var(--dash-fg),0.52)] shrink-0 transition-colors" />
                         }
-                        <span className={`font-bold text-sm flex-1 text-left ${item.done ? 'text-white/30 line-through' : 'text-white/80'}`}>
+                        <span className={`font-bold text-sm flex-1 text-left ${item.done ? 'text-[rgba(var(--dash-fg),0.5)] line-through' : 'text-[rgba(var(--dash-fg),0.8)]'}`}>
                           {item.label}
                         </span>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-white/15 shrink-0">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-[rgba(var(--dash-fg),0.45)] shrink-0">
                           {item.category}
                         </span>
                       </button>
@@ -829,9 +833,9 @@ export function RolloutsSection() {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="mt-8 pt-6 border-t border-white/5"
+                    className="mt-8 pt-6 border-t border-[var(--dash-border)]"
                   >
-                    <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.3em] mb-4">
+                    <p className="text-[rgba(var(--dash-fg),0.48)] text-[10px] font-black uppercase tracking-[0.3em] mb-4">
                       Rollout Progress{activeRelease.budget ? ` · ${activeRelease.budget}` : ''}
                     </p>
                     <CircularProgressCard
@@ -849,7 +853,7 @@ export function RolloutsSection() {
                   animate={{ opacity: 1 }}
                   className="flex flex-col items-center justify-center h-full py-24 text-center"
                 >
-                  <p className="text-white/20 font-black text-sm uppercase tracking-widest">Select a release to view checklist</p>
+                  <p className="text-[rgba(var(--dash-fg),0.48)] font-black text-sm uppercase tracking-widest">Select a release to view checklist</p>
                 </motion.div>
               )}
             </AnimatePresence>

@@ -122,12 +122,15 @@ const PDF_LIBRARY: PdfGuide[] = [
 
 const CATEGORIES = [...new Set(PDF_LIBRARY.map(g => g.category))]
 
+// Category colors consolidated to gold-monochrome (was a decorative
+// sky/green/orange/blue/pink system per-category) — icon + label still
+// carry the distinction.
 const CATEGORY_META: Record<string, { icon: React.ReactNode; color: string; border: string }> = {
-  'TikTok Growth':    { icon: <TrendingUp size={14} />, color: 'text-sky-400',    border: 'border-sky-400/20' },
-  'Spotify Algorithm':{ icon: <Music2 size={14} />,     color: 'text-green-400',  border: 'border-green-400/20' },
-  'Touring':          { icon: <Truck size={14} />,      color: 'text-orange-400', border: 'border-orange-400/20' },
-  'Distribution':     { icon: <Globe size={14} />,      color: 'text-blue-400',   border: 'border-blue-400/20' },
-  'PR & Press':       { icon: <Megaphone size={14} />,  color: 'text-pink-400',   border: 'border-pink-400/20' },
+  'TikTok Growth':    { icon: <TrendingUp size={14} />, color: 'text-[#B8860B]', border: 'border-[#FFD700]/20' },
+  'Spotify Algorithm':{ icon: <Music2 size={14} />,     color: 'text-[#B8860B]', border: 'border-[#FFD700]/20' },
+  'Touring':          { icon: <Truck size={14} />,      color: 'text-[#B8860B]', border: 'border-[#FFD700]/20' },
+  'Distribution':     { icon: <Globe size={14} />,      color: 'text-[#B8860B]', border: 'border-[#FFD700]/20' },
+  'PR & Press':       { icon: <Megaphone size={14} />,  color: 'text-[#B8860B]', border: 'border-[#FFD700]/20' },
 }
 
 // ─── Industry Articles ────────────────────────────────────────────────────────
@@ -392,35 +395,35 @@ function PdfReaderModal({ guide, onClose }: { guide: PdfGuide; onClose: () => vo
         initial={{ scale: 0.95, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.95, y: 20 }}
-        className="bg-zinc-950 border border-white/10 rounded-3xl w-full max-w-3xl shadow-2xl flex flex-col overflow-hidden"
+        className="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-3xl w-full max-w-3xl shadow-2xl flex flex-col overflow-hidden"
         style={{ maxHeight: '90vh' }}
       >
         {/* Header */}
-        <div className="flex items-start justify-between px-7 pt-6 pb-5 border-b border-white/5 shrink-0">
+        <div className="flex items-start justify-between px-7 pt-6 pb-5 border-b border-[var(--dash-border)] shrink-0">
           <div className="flex-1 min-w-0 pr-4">
             <span className={`text-[9px] font-black uppercase tracking-widest ${meta.color}`}>{guide.category}</span>
-            <h3 className="text-white font-black text-xl uppercase tracking-tighter mt-1 leading-tight">{guide.title}</h3>
+            <h3 className="text-[rgb(var(--dash-fg))] font-black text-xl uppercase tracking-tighter mt-1 leading-tight">{guide.title}</h3>
             <div className="flex items-center gap-4 mt-2">
-              <span className="flex items-center gap-1.5 text-white/30 text-[10px] font-bold">
+              <span className="flex items-center gap-1.5 text-[rgba(var(--dash-fg),0.48)] text-[10px] font-bold">
                 <Clock size={10} /> {guide.readTime} read
               </span>
-              <span className="flex items-center gap-1.5 text-white/30 text-[10px] font-bold">
+              <span className="flex items-center gap-1.5 text-[rgba(var(--dash-fg),0.48)] text-[10px] font-bold">
                 <FileText size={10} /> {guide.pages} pages
               </span>
             </div>
           </div>
-          <button onClick={() => { stop(); onClose(); }} className="text-white/30 hover:text-white transition-colors shrink-0 mt-1">
+          <button onClick={() => { stop(); onClose(); }} className="text-[rgba(var(--dash-fg),0.48)] hover:text-[rgb(var(--dash-fg))] transition-colors shrink-0 mt-1">
             <X size={20} />
           </button>
         </div>
 
         {/* TTS Controls */}
-        <div className="px-7 py-4 border-b border-white/5 shrink-0 flex items-center gap-4">
+        <div className="px-7 py-4 border-b border-[var(--dash-border)] shrink-0 flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Volume2 size={14} className="text-[#FFD700]" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Listen</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-[rgba(var(--dash-fg),0.5)]">Listen</span>
             {!ELEVENLABS_KEY && (
-              <span className="text-[9px] text-white/20 font-medium">(Browser TTS · Add VITE_ELEVENLABS_API_KEY for ElevenLabs)</span>
+              <span className="text-[9px] text-[rgba(var(--dash-fg),0.46)] font-medium">(Browser TTS · Add VITE_ELEVENLABS_API_KEY for ElevenLabs)</span>
             )}
           </div>
           <div className="flex items-center gap-2 ml-auto">
@@ -441,7 +444,7 @@ function PdfReaderModal({ guide, onClose }: { guide: PdfGuide; onClose: () => vo
             {(ttsState === 'playing' || ttsState === 'paused') && (
               <button
                 onClick={stop}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 text-white/40 hover:text-white transition-colors font-black text-[10px] uppercase tracking-widest"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[rgba(var(--dash-fg),0.15)] text-[rgba(var(--dash-fg),0.5)] hover:text-[rgb(var(--dash-fg))] transition-colors font-black text-[10px] uppercase tracking-widest"
               >
                 <Square size={12} /> Stop
               </button>
@@ -454,13 +457,13 @@ function PdfReaderModal({ guide, onClose }: { guide: PdfGuide; onClose: () => vo
           {guide.pdfUrl ? (
             <iframe
               src={`https://docs.google.com/viewer?url=${encodeURIComponent(guide.pdfUrl)}&embedded=true`}
-              className="w-full rounded-2xl border border-white/5"
+              className="w-full rounded-2xl border border-[var(--dash-border)]"
               style={{ minHeight: '500px' }}
               title={guide.title}
             />
           ) : (
             <div className="space-y-5">
-              <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${meta.color} ${meta.border} bg-white/3`}>
+              <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${meta.color} ${meta.border} bg-[rgba(var(--dash-fg),0.03)]`}>
                 {meta.icon} PDF not yet attached — reading content below
               </div>
               <div className="prose prose-invert max-w-none">
@@ -469,7 +472,7 @@ function PdfReaderModal({ guide, onClose }: { guide: PdfGuide; onClose: () => vo
                   acc.push(sentence + (i < arr.length - 1 ? '. ' : ''))
                   return acc
                 }, []).join('').split('\n\n').map((para, i) => (
-                  <p key={i} className="text-white/60 text-sm leading-relaxed font-medium mb-4">{para}</p>
+                  <p key={i} className="text-[rgba(var(--dash-fg),0.6)] text-sm leading-relaxed font-medium mb-4">{para}</p>
                 ))}
               </div>
               {guide.pdfUrl === undefined && (
@@ -507,15 +510,15 @@ function PlaylistModal({ playlist, onClose }: { playlist: Playlist; onClose: () 
         initial={{ scale: 0.96, y: 24 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 24 }}
         transition={{ type: 'spring', damping: 28, stiffness: 320 }}
         onClick={e => e.stopPropagation()}
-        className="bg-zinc-950 border border-white/10 rounded-3xl overflow-hidden w-full shadow-2xl flex flex-col h-[100dvh] lg:h-auto"
+        className="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-3xl overflow-hidden w-full shadow-2xl flex flex-col h-[100dvh] lg:h-auto"
         style={{ maxWidth: 960, maxHeight: '100dvh' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-white/5 shrink-0 bg-zinc-950">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[var(--dash-border)] shrink-0 bg-[var(--dash-card)]">
           {/* Back button — clearly visible on mobile */}
           <button
             onClick={onClose}
-            className="flex items-center gap-2 px-3 py-2 -ml-2 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all"
+            className="flex items-center gap-2 px-3 py-2 -ml-2 rounded-xl text-[rgba(var(--dash-fg),0.6)] hover:text-[rgb(var(--dash-fg))] hover:bg-[rgba(var(--dash-fg),0.05)] transition-all"
             aria-label="Back"
           >
             <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
@@ -525,8 +528,8 @@ function PlaylistModal({ playlist, onClose }: { playlist: Playlist; onClose: () 
           </button>
 
           <div className="min-w-0 flex-1 text-center px-2">
-            <p className="text-white font-black text-sm uppercase tracking-tighter truncate">{playlist.title}</p>
-            <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mt-0.5">
+            <p className="text-[rgb(var(--dash-fg))] font-black text-sm uppercase tracking-tighter truncate">{playlist.title}</p>
+            <p className="text-[rgba(var(--dash-fg),0.48)] text-[10px] font-bold uppercase tracking-widest mt-0.5">
               {activeIdx + 1} / {playlist.videos.length}
             </p>
           </div>
@@ -535,11 +538,11 @@ function PlaylistModal({ playlist, onClose }: { playlist: Playlist; onClose: () 
             <a
               href={`https://www.youtube.com/playlist?list=${playlist.playlistId}`}
               target="_blank" rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1.5 text-white/30 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors"
+              className="hidden sm:flex items-center gap-1.5 text-[rgba(var(--dash-fg),0.48)] hover:text-[rgb(var(--dash-fg))] text-[10px] font-black uppercase tracking-widest transition-colors"
             >
               <ExternalLink size={12} /> YouTube
             </a>
-            <button onClick={onClose} className="text-white/30 hover:text-white transition-colors p-1" aria-label="Close">
+            <button onClick={onClose} className="text-[rgba(var(--dash-fg),0.48)] hover:text-[rgb(var(--dash-fg))] transition-colors p-1" aria-label="Close">
               <X size={20} />
             </button>
           </div>
@@ -561,23 +564,23 @@ function PlaylistModal({ playlist, onClose }: { playlist: Playlist; onClose: () 
               />
             </div>
             {/* Now playing label + description */}
-            <div className="px-5 py-3 border-t border-white/5 shrink-0">
-              <p className="text-white font-black text-sm leading-snug line-clamp-2">{activeVideo.title}</p>
+            <div className="px-5 py-3 border-t border-[var(--dash-border)] shrink-0">
+              <p className="text-[rgb(var(--dash-fg))] font-black text-sm leading-snug line-clamp-2">{activeVideo.title}</p>
               {activeVideo.description && (
-                <p className="text-white/50 text-sm font-medium leading-relaxed mt-2 line-clamp-4">{activeVideo.description}</p>
+                <p className="text-[rgba(var(--dash-fg),0.52)] text-sm font-medium leading-relaxed mt-2 line-clamp-4">{activeVideo.description}</p>
               )}
               <div className="flex items-center gap-3 mt-2">
                 <button
                   onClick={() => setActiveIdx(i => Math.max(0, i - 1))}
                   disabled={activeIdx === 0}
-                  className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white disabled:opacity-20 transition-colors"
+                  className="text-[10px] font-black uppercase tracking-widest text-[rgba(var(--dash-fg),0.48)] hover:text-[rgb(var(--dash-fg))] disabled:opacity-20 transition-colors"
                 >
                   ← Prev
                 </button>
                 <button
                   onClick={() => setActiveIdx(i => Math.min(playlist.videos.length - 1, i + 1))}
                   disabled={activeIdx === playlist.videos.length - 1}
-                  className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white disabled:opacity-20 transition-colors"
+                  className="text-[10px] font-black uppercase tracking-widest text-[rgba(var(--dash-fg),0.48)] hover:text-[rgb(var(--dash-fg))] disabled:opacity-20 transition-colors"
                 >
                   Next →
                 </button>
@@ -588,7 +591,7 @@ function PlaylistModal({ playlist, onClose }: { playlist: Playlist; onClose: () 
           {/* Sidebar — flows in mobile (parent scrolls), scrolls itself on desktop */}
           <div
             ref={sidebarRef}
-            className="w-full lg:w-72 xl:w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-white/5 lg:overflow-y-auto"
+            className="w-full lg:w-72 xl:w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-[var(--dash-border)] lg:overflow-y-auto"
             style={{ maxHeight: 'unset' }}
           >
             <div className="p-3 space-y-1">
@@ -602,11 +605,11 @@ function PlaylistModal({ playlist, onClose }: { playlist: Playlist; onClose: () 
                     className={`w-full flex items-start gap-3 p-3 rounded-xl text-left transition-all group ${
                       isActive
                         ? 'bg-[#FFD700]/10 border border-[#FFD700]/25'
-                        : 'border border-transparent hover:bg-white/5 hover:border-white/8'
+                        : 'border border-transparent hover:bg-[rgba(var(--dash-fg),0.05)] hover:border-[var(--dash-border)]'
                     }`}
                   >
                     {/* Thumbnail */}
-                    <div className="relative w-[88px] h-[50px] rounded-lg overflow-hidden shrink-0 bg-zinc-800">
+                    <div className="relative w-[88px] h-[50px] rounded-lg overflow-hidden shrink-0 bg-[rgba(var(--dash-fg),0.08)]">
                       <img
                         src={`https://img.youtube.com/vi/${video.id}/mqdefault.jpg`}
                         alt={video.title}
@@ -628,11 +631,11 @@ function PlaylistModal({ playlist, onClose }: { playlist: Playlist; onClose: () 
                     {/* Title + index */}
                     <div className="flex-1 min-w-0 pt-0.5">
                       <p className={`text-[11px] font-bold leading-snug line-clamp-3 transition-colors ${
-                        isActive ? 'text-[#FFD700]' : 'text-white/60 group-hover:text-white'
+                        isActive ? 'text-[#FFD700]' : 'text-[rgba(var(--dash-fg),0.6)] group-hover:text-[rgb(var(--dash-fg))]'
                       }`}>
                         {video.title}
                       </p>
-                      <p className="text-white/20 text-[9px] font-black uppercase tracking-widest mt-1">
+                      <p className="text-[rgba(var(--dash-fg),0.46)] text-[9px] font-black uppercase tracking-widest mt-1">
                         {video.duration ?? `${i + 1}`}
                       </p>
                     </div>
@@ -685,13 +688,14 @@ export function LearnSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06 }}
               onClick={() => setOpenPlaylist(pl)}
-              className="group relative overflow-hidden rounded-2xl border border-white/5 hover:border-white/15 transition-all text-left"
+              className="group relative overflow-hidden rounded-2xl border border-[var(--dash-border)] hover:border-[rgba(var(--dash-fg),0.25)] transition-all text-left"
             >
               <img src={pl.coverImage} alt={pl.title} className="w-full aspect-video object-cover group-hover:scale-105 transition-transform duration-500" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+              {/* Text sits on the fixed dark image-gradient overlay above — stays white regardless of theme */}
               <div className="absolute inset-0 flex flex-col justify-end p-4">
                 <p className="text-white font-black text-sm uppercase tracking-tighter">{pl.title}</p>
-                <p className="text-white/40 text-[10px] font-bold mt-1">{pl.videos.length} {pl.videos.length === 1 ? 'video' : 'videos'}</p>
+                <p className="text-white/50 text-[10px] font-bold mt-1">{pl.videos.length} {pl.videos.length === 1 ? 'video' : 'videos'}</p>
               </div>
               <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-[#FFD700] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
                 <Play size={12} fill="black" className="text-black ml-0.5" />
@@ -711,7 +715,7 @@ export function LearnSection() {
               <Lock size={9} /> Pro
             </span>
           )}
-          <span className="text-white/20 text-[10px] font-bold ml-auto">{PDF_LIBRARY.length} guides</span>
+          <span className="text-[rgba(var(--dash-fg),0.46)] text-[10px] font-bold ml-auto">{PDF_LIBRARY.length} guides</span>
         </div>
 
         {/* Category filter */}
@@ -725,7 +729,7 @@ export function LearnSection() {
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all ${
                   activeCategory === cat
                     ? 'bg-[#FFD700] border-transparent text-black'
-                    : 'bg-zinc-900/40 border-white/5 text-white/40 hover:text-white hover:border-white/10'
+                    : 'bg-[var(--dash-card-alt)] border-[var(--dash-border)] text-[rgba(var(--dash-fg),0.5)] hover:text-[rgb(var(--dash-fg))] hover:border-[rgba(var(--dash-fg),0.15)]'
                 }`}
               >
                 {meta?.icon}{cat}
@@ -745,7 +749,7 @@ export function LearnSection() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
                 onClick={() => tryOpenGuide(guide)}
-                className={`text-left p-5 bg-zinc-900/40 border ${meta.border} rounded-2xl hover:bg-zinc-900/70 transition-all group relative ${
+                className={`text-left p-5 bg-[var(--dash-card-alt)] border ${meta.border} rounded-2xl hover:bg-[var(--dash-card)] transition-all group relative ${
                   !canReadPro ? 'opacity-90' : ''
                 }`}
               >
@@ -754,22 +758,22 @@ export function LearnSection() {
                     {meta.icon}{guide.category}
                   </span>
                   {canReadPro ? (
-                    <ChevronRight size={13} className="text-white/20 group-hover:text-white/50 transition-colors shrink-0" />
+                    <ChevronRight size={13} className="text-[rgba(var(--dash-fg),0.46)] group-hover:text-[rgba(var(--dash-fg),0.52)] transition-colors shrink-0" />
                   ) : (
                     <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-[#FFD700]/30 bg-[#FFD700]/10 text-[#FFD700] text-[8px] font-black uppercase tracking-[0.15em] shrink-0">
                       <Lock size={9} /> Pro
                     </span>
                   )}
                 </div>
-                <p className="text-white font-black text-sm uppercase tracking-tight leading-snug mb-2 group-hover:text-[#FFD700] transition-colors">
+                <p className="text-[rgb(var(--dash-fg))] font-black text-sm uppercase tracking-tight leading-snug mb-2 group-hover:text-[#FFD700] transition-colors">
                   {guide.title}
                 </p>
-                <p className="text-white/30 text-[11px] leading-relaxed mb-3">{guide.description}</p>
-                <div className="flex items-center gap-4 pt-2 border-t border-white/5">
-                  <span className="flex items-center gap-1 text-white/20 text-[9px] font-bold">
+                <p className="text-[rgba(var(--dash-fg),0.48)] text-[11px] leading-relaxed mb-3">{guide.description}</p>
+                <div className="flex items-center gap-4 pt-2 border-t border-[var(--dash-border)]">
+                  <span className="flex items-center gap-1 text-[rgba(var(--dash-fg),0.46)] text-[9px] font-bold">
                     <Clock size={9} />{guide.readTime}
                   </span>
-                  <span className="flex items-center gap-1 text-white/20 text-[9px] font-bold">
+                  <span className="flex items-center gap-1 text-[rgba(var(--dash-fg),0.46)] text-[9px] font-bold">
                     <FileText size={9} />{guide.pages} pages
                   </span>
                   <span className="flex items-center gap-1 text-[#FFD700]/50 text-[9px] font-black uppercase tracking-widest ml-auto">
@@ -792,7 +796,7 @@ export function LearnSection() {
               <Lock size={9} /> Pro
             </span>
           )}
-          <span className="text-white/20 text-[10px] font-bold ml-auto">{ARTICLES.length} articles</span>
+          <span className="text-[rgba(var(--dash-fg),0.46)] text-[10px] font-bold ml-auto">{ARTICLES.length} articles</span>
         </div>
         <div
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
@@ -879,6 +883,8 @@ function UpgradeGate({
         >
           <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[70%] h-32 bg-[#FFD700]/20 blur-[80px] rounded-full pointer-events-none" />
 
+          {/* This paywall card intentionally keeps a fixed dark/gold treatment
+              regardless of dashboard theme — premium upsells stay consistent. */}
           <button
             onClick={onClose}
             className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center"

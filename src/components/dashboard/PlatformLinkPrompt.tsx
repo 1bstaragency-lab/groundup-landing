@@ -13,6 +13,8 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Link2, Check, Loader2, Music2, ChevronRight } from 'lucide-react'
 import { supabase } from '../../lib/supabaseClient'
+import { GOLDD } from '../../lib/brand-tokens'
+import { INK, DIM, FAINT, CARD } from '../../lib/dashboard-theme'
 
 // Dismiss key uses localStorage — persists across sessions (truly one-time)
 
@@ -143,26 +145,26 @@ export function PlatformLinkPrompt({ userId }: Props) {
           transition={{ type: 'spring', stiffness: 320, damping: 30 }}
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] w-[calc(100vw-32px)] max-w-md"
         >
-          <div className="bg-zinc-900 border border-white/10 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.7)] backdrop-blur-xl overflow-hidden">
+          <div className="rounded-3xl overflow-hidden backdrop-blur-xl" style={{ background: CARD, border: `1px solid ${FAINT}`, boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
 
             {/* ── Collapsed prompt ── */}
             {!expanded && !done && (
               <div className="px-5 py-4 flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-[#FFD700]/10 border border-[#FFD700]/20 flex items-center justify-center shrink-0">
-                  <Link2 size={17} className="text-[#FFD700]" />
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(184,134,11,0.2)' }}>
+                  <Link2 size={17} style={{ color: GOLDD }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white font-bold text-sm leading-tight">Connect your platforms</p>
-                  <p className="text-white/40 text-xs mt-0.5 truncate">Link Spotify, SoundCloud, or YouTube to power your dashboard</p>
+                  <p className="font-bold text-sm leading-tight" style={{ color: INK }}>Connect your platforms</p>
+                  <p className="text-xs mt-0.5 truncate" style={{ color: DIM }}>Link Spotify, SoundCloud, or YouTube to power your dashboard</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => setExpanded(true)}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#FFD700] text-black text-xs font-black uppercase tracking-wider hover:bg-[#f0c800] transition-colors"
+                    className="gradient-button flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider"
                   >
                     Add <ChevronRight size={12} strokeWidth={3} />
                   </button>
-                  <button onClick={dismiss} className="w-7 h-7 flex items-center justify-center rounded-xl text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors">
+                  <button onClick={dismiss} className="w-7 h-7 flex items-center justify-center rounded-xl transition-colors dash-hover-surface" style={{ color: 'rgba(var(--dash-fg),0.56)' }}>
                     <X size={14} />
                   </button>
                 </div>
@@ -174,48 +176,51 @@ export function PlatformLinkPrompt({ userId }: Props) {
               <div className="px-5 py-5">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-white font-black text-sm uppercase tracking-wider">Link your platforms</p>
-                    <p className="text-white/30 text-xs mt-0.5">Paste any or all — we'll pull the stats automatically</p>
+                    <p className="font-black text-sm uppercase tracking-wider" style={{ color: INK }}>Link your platforms</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'rgba(var(--dash-fg),0.56)' }}>Paste any or all — we'll pull the stats automatically</p>
                   </div>
-                  <button onClick={dismiss} className="w-7 h-7 flex items-center justify-center rounded-xl text-white/30 hover:text-white/50 hover:bg-white/5 transition-colors">
+                  <button onClick={dismiss} className="w-7 h-7 flex items-center justify-center rounded-xl transition-colors dash-hover-surface" style={{ color: 'rgba(var(--dash-fg),0.56)' }}>
                     <X size={14} />
                   </button>
                 </div>
 
                 <div className="space-y-2.5">
-                  {/* Spotify */}
-                  <div className="flex items-center gap-3 bg-white/3 border border-white/8 rounded-2xl px-3 py-2.5 focus-within:border-green-500/40 transition-colors">
-                    <Music2 size={14} className="text-green-400 shrink-0" />
+                  {/* Spotify — platform's real brand green, kept */}
+                  <div className="flex items-center gap-3 rounded-2xl px-3 py-2.5 transition-colors" style={{ background: 'rgba(var(--dash-fg),0.02)', border: '1px solid rgba(var(--dash-fg),0.08)' }}>
+                    <Music2 size={14} className="shrink-0" style={{ color: '#1DB954' }} />
                     <input
                       type="url"
                       placeholder="Spotify artist URL"
                       value={spotifyUrl}
                       onChange={e => setSpotifyUrl(e.target.value)}
-                      className="flex-1 bg-transparent text-white text-sm placeholder:text-white/20 focus:outline-none min-w-0"
+                      className="flex-1 bg-transparent text-sm focus:outline-none min-w-0"
+                      style={{ color: INK }}
                     />
                   </div>
 
-                  {/* SoundCloud */}
-                  <div className="flex items-center gap-3 bg-white/3 border border-white/8 rounded-2xl px-3 py-2.5 focus-within:border-orange-500/40 transition-colors">
-                    <Music2 size={14} className="text-orange-400 shrink-0" />
+                  {/* SoundCloud — platform's real brand orange, kept */}
+                  <div className="flex items-center gap-3 rounded-2xl px-3 py-2.5 transition-colors" style={{ background: 'rgba(var(--dash-fg),0.02)', border: '1px solid rgba(var(--dash-fg),0.08)' }}>
+                    <Music2 size={14} className="shrink-0" style={{ color: '#FF7700' }} />
                     <input
                       type="url"
                       placeholder="SoundCloud profile URL"
                       value={soundcloudUrl}
                       onChange={e => setSoundcloudUrl(e.target.value)}
-                      className="flex-1 bg-transparent text-white text-sm placeholder:text-white/20 focus:outline-none min-w-0"
+                      className="flex-1 bg-transparent text-sm focus:outline-none min-w-0"
+                      style={{ color: INK }}
                     />
                   </div>
 
-                  {/* YouTube */}
-                  <div className="flex items-center gap-3 bg-white/3 border border-white/8 rounded-2xl px-3 py-2.5 focus-within:border-red-500/40 transition-colors">
-                    <Music2 size={14} className="text-red-400 shrink-0" />
+                  {/* YouTube — platform's real brand red, kept */}
+                  <div className="flex items-center gap-3 rounded-2xl px-3 py-2.5 transition-colors" style={{ background: 'rgba(var(--dash-fg),0.02)', border: '1px solid rgba(var(--dash-fg),0.08)' }}>
+                    <Music2 size={14} className="shrink-0" style={{ color: '#E03C31' }} />
                     <input
                       type="url"
                       placeholder="YouTube channel URL"
                       value={youtubeUrl}
                       onChange={e => setYoutubeUrl(e.target.value)}
-                      className="flex-1 bg-transparent text-white text-sm placeholder:text-white/20 focus:outline-none min-w-0"
+                      className="flex-1 bg-transparent text-sm focus:outline-none min-w-0"
+                      style={{ color: INK }}
                     />
                   </div>
                 </div>
@@ -225,10 +230,10 @@ export function PlatformLinkPrompt({ userId }: Props) {
                   <div className="mt-3 space-y-1">
                     {Object.entries(statuses).map(([label, st]) => (
                       <div key={label} className="flex items-center gap-2 text-xs">
-                        {st.loading && <Loader2 size={11} className="text-white/40 animate-spin shrink-0" />}
-                        {!st.loading && st.done  && <Check size={11} className="text-green-400 shrink-0" />}
-                        {!st.loading && !st.done && <X    size={11} className="text-red-400  shrink-0" />}
-                        <span className={st.done ? 'text-white/60' : st.error ? 'text-red-400' : 'text-white/40'}>
+                        {st.loading && <Loader2 size={11} className="animate-spin shrink-0" style={{ color: DIM }} />}
+                        {!st.loading && st.done  && <Check size={11} className="shrink-0" style={{ color: '#16A34A' }} />}
+                        {!st.loading && !st.done && <X    size={11} className="shrink-0" style={{ color: '#DC2626' }} />}
+                        <span style={{ color: st.done ? DIM : st.error ? '#DC2626' : 'rgba(var(--dash-fg),0.6)' }}>
                           {st.loading ? `Fetching ${label}…` : st.done ? `${label} synced` : st.error ?? 'Error'}
                         </span>
                       </div>
@@ -240,7 +245,7 @@ export function PlatformLinkPrompt({ userId }: Props) {
                   <button
                     onClick={handleSubmit}
                     disabled={submitting || (!spotifyUrl && !soundcloudUrl && !youtubeUrl)}
-                    className="flex-1 py-2.5 rounded-2xl bg-[#FFD700] text-black font-black text-xs uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#f0c800] transition-colors flex items-center justify-center gap-2"
+                    className="gradient-button flex-1 py-2.5 rounded-2xl font-black text-xs uppercase tracking-wider disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-2"
                   >
                     {submitting
                       ? <><Loader2 size={13} className="animate-spin" /> Syncing…</>
@@ -250,7 +255,8 @@ export function PlatformLinkPrompt({ userId }: Props) {
                   <button
                     onClick={dismiss}
                     disabled={submitting}
-                    className="px-4 py-2.5 rounded-2xl border border-white/10 text-white/40 text-xs font-bold hover:text-white/60 hover:border-white/20 transition-colors disabled:opacity-40"
+                    className="px-4 py-2.5 rounded-2xl text-xs font-bold transition-colors disabled:opacity-40 dash-hover-border"
+                    style={{ border: `1px solid ${FAINT}`, color: DIM }}
                   >
                     Later
                   </button>
@@ -261,12 +267,12 @@ export function PlatformLinkPrompt({ userId }: Props) {
             {/* ── Success state ── */}
             {done && (
               <div className="px-5 py-4 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-2xl bg-green-500/15 border border-green-500/25 flex items-center justify-center shrink-0">
-                  <Check size={16} className="text-green-400" />
+                <div className="w-9 h-9 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)' }}>
+                  <Check size={16} style={{ color: '#16A34A' }} />
                 </div>
                 <div>
-                  <p className="text-white font-bold text-sm">Platforms connected!</p>
-                  <p className="text-white/40 text-xs">Your stats are synced and live in your dashboard</p>
+                  <p className="font-bold text-sm" style={{ color: INK }}>Platforms connected!</p>
+                  <p className="text-xs" style={{ color: DIM }}>Your stats are synced and live in your dashboard</p>
                 </div>
               </div>
             )}

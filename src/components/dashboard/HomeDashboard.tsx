@@ -18,6 +18,8 @@ import { UpSection } from './UpSection'
 import { UpTasksFeed } from './UpTasksFeed'
 import { ReferralWidget } from './ReferralWidget'
 import { CompletionWidget } from './CompletionWidget'
+import { GOLD, GOLDD } from '../../lib/brand-tokens'
+import { INK, DIM, FAINT, CARD } from '../../lib/dashboard-theme'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -91,46 +93,48 @@ function EventFormModal({
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6"
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6"
     >
       <motion.div
         initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-        className="bg-zinc-900 border border-white/10 rounded-3xl p-8 w-full max-w-md shadow-2xl"
+        className="rounded-3xl p-8 w-full max-w-md"
+        style={{ background: CARD, border: `1px solid ${FAINT}`, boxShadow: '0 40px 100px rgba(0,0,0,0.2)' }}
       >
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-white font-black text-xl uppercase tracking-tighter">
+          <h3 className="font-black text-xl uppercase tracking-tighter" style={{ color: INK }}>
             {existing ? 'Edit Event' : 'New Event'}
           </h3>
-          <button onClick={onClose} className="text-white/30 hover:text-white transition-colors"><X size={20} /></button>
+          <button onClick={onClose} className="transition-colors" style={{ color: DIM }}><X size={20} /></button>
         </div>
         <div className="space-y-4">
           <input
             type="text" placeholder="Event Title" value={title}
             onChange={e => setTitle(e.target.value)}
-            className="w-full bg-zinc-800 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold text-sm outline-none focus:border-[#FFD700]/40 transition-all placeholder:text-white/20"
+            className="w-full rounded-2xl px-5 py-4 font-bold text-sm outline-none transition-all"
+            style={{ background: 'rgba(var(--dash-fg),0.04)', border: `1px solid ${FAINT}`, color: INK }}
           />
           <div>
-            <p className="text-white/20 text-[10px] font-black uppercase tracking-widest mb-2">Type</p>
+            <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: DIM }}>Type</p>
             <div className="grid grid-cols-3 gap-2">
               {EVENT_TYPES.map(t => (
                 <button key={t} onClick={() => setType(t)}
-                  className={`p-2.5 rounded-xl border text-[9px] font-black uppercase tracking-wide transition-all ${
-                    type === t ? 'bg-[#FFD700] border-transparent text-black' : 'bg-zinc-800 border-white/5 text-white/40 hover:text-white'
-                  }`}
+                  className={type === t ? 'gradient-button gradient-button-active p-2.5 rounded-xl text-[9px] font-black uppercase tracking-wide transition-all' : 'p-2.5 rounded-xl border text-[9px] font-black uppercase tracking-wide transition-all dash-hover-border'}
+                  style={type === t ? { color: '#fff' } : { background: 'rgba(var(--dash-fg),0.03)', borderColor: FAINT, color: DIM }}
                 >{t}</button>
               ))}
             </div>
           </div>
           <div>
-            <p className="text-white/20 text-[10px] font-black uppercase tracking-widest mb-2">Date</p>
+            <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: DIM }}>Date</p>
             <input
               type="date" value={date} onChange={e => setDate(e.target.value)}
-              className="w-full bg-zinc-800 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold text-sm outline-none focus:border-[#FFD700]/40 transition-all"
+              className="w-full rounded-2xl px-5 py-4 font-bold text-sm outline-none transition-all"
+              style={{ background: 'rgba(var(--dash-fg),0.04)', border: `1px solid ${FAINT}`, color: INK }}
             />
           </div>
           <button
             onClick={save} disabled={!title || !date || saving}
-            className="w-full py-4 bg-[#FFD700] text-black font-black text-[11px] uppercase tracking-widest rounded-2xl hover:scale-105 transition-all disabled:opacity-30 disabled:pointer-events-none"
+            className="gradient-button w-full py-4 font-black text-[11px] uppercase tracking-widest rounded-2xl transition-all disabled:opacity-30 disabled:pointer-events-none"
           >
             {saving ? 'Saving...' : existing ? 'Save Changes' : 'Add to Calendar'}
           </button>
@@ -142,13 +146,12 @@ function EventFormModal({
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
 
-const TYPE_COLOR: Record<string, string> = {
-  Release:   'bg-[#FFD700] text-black',
-  Social:    'bg-white/10 text-white',
-  PR:        'bg-[#FFD700]/20 text-[#FFD700]',
-  Meeting:   'bg-blue-500/20 text-blue-400',
-  TikTok:    'bg-pink-500/20 text-pink-400',
-  Interview: 'bg-purple-500/20 text-purple-400',
+// Event-type badge — consolidated to gold-monochrome (was a decorative
+// gold/white/blue/pink/purple system; "Release" keeps the strongest
+// treatment since it's the primary type).
+function typeChipStyle(type: string): React.CSSProperties {
+  if (type === 'Release') return { background: GOLD, color: INK }
+  return { background: 'rgba(184,134,11,0.1)', color: GOLDD }
 }
 
 const DAYS_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
@@ -185,14 +188,14 @@ function DynamicCalendar({ events }: { events: CalEvent[] }) {
     : 'min-h-[64px] rounded-xl p-2'
 
   return (
-    <div className="bg-zinc-900/30 border border-white/5 rounded-2xl p-4 mb-4">
-      <p className="text-white/20 text-[9px] font-black uppercase tracking-[0.3em] mb-3">
+    <div className="rounded-2xl p-4 mb-4" style={{ background: CARD, border: `1px solid ${FAINT}` }}>
+      <p className="text-[9px] font-black uppercase tracking-[0.3em] mb-3" style={{ color: DIM }}>
         {today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
       </p>
       {/* Day headers */}
       <div className="grid grid-cols-7 gap-1 mb-1">
         {DAYS_SHORT.map((d, i) => (
-          <div key={i} className="text-center text-[9px] font-black text-white/20 uppercase py-1">{d}</div>
+          <div key={i} className="text-center text-[9px] font-black uppercase py-1" style={{ color: 'rgba(var(--dash-fg),0.52)' }}>{d}</div>
         ))}
       </div>
       {/* Day cells */}
@@ -204,35 +207,32 @@ function DynamicCalendar({ events }: { events: CalEvent[] }) {
           const day     = i + 1
           const dayEvs  = byDay[day] ?? []
           const isToday = day === todayDate
-          // Highest priority on this day drives the cell color
+          // Highest priority on this day drives the cell color — priority
+          // stays a semantic red/amber/green traffic-light, not decoration.
           const topPriority = dayEvs.find(e => e.priority === 'high')?.priority
             ?? dayEvs.find(e => e.priority === 'medium')?.priority
             ?? dayEvs.find(e => e.priority === 'low')?.priority
             ?? 'none'
           const priorityBg =
-            topPriority === 'high'   ? 'border-red-500/50 bg-red-500/15' :
-            topPriority === 'medium' ? 'border-amber-400/50 bg-amber-400/15' :
-            topPriority === 'low'    ? 'border-green-500/50 bg-green-500/15' : ''
+            topPriority === 'high'   ? 'border-red-400/50 bg-red-400/10' :
+            topPriority === 'medium' ? 'border-amber-400/50 bg-amber-400/10' :
+            topPriority === 'low'    ? 'border-green-500/40 bg-green-500/10' : ''
+          const cellStyle: React.CSSProperties | undefined =
+            isToday    ? { borderColor: 'rgba(184,134,11,0.4)', background: 'rgba(184,134,11,0.08)' } :
+            priorityBg ? undefined :
+            dayEvs.length ? { borderColor: FAINT, background: 'rgba(var(--dash-fg),0.03)' } :
+            { borderColor: 'rgba(var(--dash-fg),0.06)' }
           return (
-            <div key={day} className={`${cellBase} border transition-all relative ${
-              isToday    ? 'border-[#FFD700]/40 bg-[#FFD700]/8' :
-              priorityBg ? priorityBg :
-              dayEvs.length ? 'border-white/10 bg-white/4' :
-              'border-white/4 hover:border-white/10'
-            }`}>
-              <span className={`text-[10px] font-black ${isToday ? 'text-[#FFD700]' : dayEvs.length ? 'text-white' : 'text-white/25'}`}>
+            <div key={day} className={`${cellBase} border transition-all relative ${priorityBg}`} style={cellStyle}>
+              <span className="text-[10px] font-black" style={{ color: isToday ? GOLDD : dayEvs.length ? INK : 'rgba(var(--dash-fg),0.56)' }}>
                 {day}
               </span>
-              {isToday && <div className="absolute top-1 right-1 w-1 h-1 bg-[#FFD700] rounded-full" />}
+              {isToday && <div className="absolute top-1 right-1 w-1 h-1 rounded-full" style={{ background: GOLDD }} />}
               {/* Medium: dots only */}
               {isMedium && dayEvs.length > 0 && (
                 <div className="flex gap-0.5 mt-0.5 flex-wrap">
                   {dayEvs.slice(0, 3).map((ev, j) => (
-                    <div key={j} className={`w-1.5 h-1.5 rounded-full ${
-                      ev.event_type === 'Release' ? 'bg-[#FFD700]' :
-                      ev.event_type === 'TikTok'  ? 'bg-pink-400' :
-                      ev.event_type === 'Meeting' ? 'bg-blue-400' : 'bg-white/40'
-                    }`} />
+                    <div key={j} className="w-1.5 h-1.5 rounded-full" style={{ background: ev.event_type === 'Release' ? GOLD : 'rgba(var(--dash-fg),0.56)' }} />
                   ))}
                 </div>
               )}
@@ -240,12 +240,12 @@ function DynamicCalendar({ events }: { events: CalEvent[] }) {
               {isLarge && dayEvs.length > 0 && (
                 <div className="mt-1 space-y-0.5">
                   {dayEvs.slice(0, 2).map((ev, j) => (
-                    <div key={j} className={`px-1 py-0.5 rounded text-[7px] font-black uppercase truncate ${TYPE_COLOR[ev.event_type] ?? 'bg-white/10 text-white'}`}>
+                    <div key={j} className="px-1 py-0.5 rounded text-[7px] font-black uppercase truncate" style={typeChipStyle(ev.event_type)}>
                       {ev.title}
                     </div>
                   ))}
                   {dayEvs.length > 2 && (
-                    <div className="text-[7px] text-white/30 font-black">+{dayEvs.length - 2}</div>
+                    <div className="text-[7px] font-black" style={{ color: DIM }}>+{dayEvs.length - 2}</div>
                   )}
                 </div>
               )}
@@ -257,11 +257,17 @@ function DynamicCalendar({ events }: { events: CalEvent[] }) {
   )
 }
 
+// Priority stays a semantic red/amber/green system — functional, not decorative.
 const PRIORITY_CONFIG = {
-  none:   { label: 'None',   dot: '',                        row: '' },
-  low:    { label: 'Low',    dot: 'bg-green-400',            row: 'border-green-500/30 bg-green-500/5' },
-  medium: { label: 'Medium', dot: 'bg-amber-400',            row: 'border-amber-400/30 bg-amber-400/5' },
-  high:   { label: 'High',   dot: 'bg-red-400',              row: 'border-red-500/30 bg-red-500/5' },
+  none:   { label: 'None',   dot: '',                   row: '' },
+  low:    { label: 'Low',    dot: 'bg-green-500',        row: '' },
+  medium: { label: 'Medium', dot: 'bg-amber-400',        row: '' },
+  high:   { label: 'High',   dot: 'bg-red-400',          row: '' },
+}
+const PRIORITY_ROW_STYLE: Record<string, React.CSSProperties> = {
+  low:    { borderColor: 'rgba(34,197,94,0.35)',  background: 'rgba(34,197,94,0.05)' },
+  medium: { borderColor: 'rgba(251,191,36,0.4)',  background: 'rgba(251,191,36,0.06)' },
+  high:   { borderColor: 'rgba(248,113,113,0.4)', background: 'rgba(248,113,113,0.06)' },
 }
 
 function EventRow({
@@ -290,28 +296,28 @@ function EventRow({
   }
 
   return (
-    <div className={`relative flex items-center gap-3 p-3 border rounded-2xl transition-all group ${
-      pri.row || 'bg-zinc-900/40 border-white/5 hover:border-white/10'
-    }`}>
+    <div className="relative flex items-center gap-3 p-3 border rounded-2xl transition-all group"
+      style={ev.priority !== 'none' ? PRIORITY_ROW_STYLE[ev.priority] : { background: CARD, borderColor: FAINT }}
+    >
       {/* Priority dot on date box */}
-      <div className="w-11 h-11 bg-zinc-800 rounded-xl flex flex-col items-center justify-center shrink-0 relative">
-        <span className="text-[#FFD700] font-black text-[9px] uppercase leading-none">
+      <div className="w-11 h-11 rounded-xl flex flex-col items-center justify-center shrink-0 relative" style={{ background: 'rgba(var(--dash-fg),0.04)' }}>
+        <span className="font-black text-[9px] uppercase leading-none" style={{ color: GOLDD }}>
           {new Date(ev.event_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' })}
         </span>
-        <span className="text-white font-black text-base leading-none mt-0.5">
+        <span className="font-black text-base leading-none mt-0.5" style={{ color: INK }}>
           {new Date(ev.event_date + 'T00:00:00').getDate()}
         </span>
         {ev.priority !== 'none' && (
-          <div className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-zinc-900 ${pri.dot}`} />
+          <div className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-white ${pri.dot}`} />
         )}
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-white font-bold text-sm tracking-tight truncate group-hover:text-[#FFD700] transition-colors">{ev.title}</p>
-        <p className="text-white/30 text-[10px] font-medium mt-0.5">{formatDate(ev.event_date)}</p>
+        <p className="font-bold text-sm tracking-tight truncate transition-colors" style={{ color: INK }}>{ev.title}</p>
+        <p className="text-[10px] font-medium mt-0.5" style={{ color: DIM }}>{formatDate(ev.event_date)}</p>
       </div>
 
-      <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wide shrink-0 ${TYPE_COLOR[ev.event_type] ?? 'bg-white/10 text-white'}`}>
+      <span className="px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wide shrink-0" style={typeChipStyle(ev.event_type)}>
         {ev.event_type}
       </span>
 
@@ -319,7 +325,8 @@ function EventRow({
       <button
         ref={btnRef}
         onClick={toggleMenu}
-        className="p-1.5 rounded-lg text-white/20 hover:text-white hover:bg-white/5 transition-all"
+        className="p-1.5 rounded-lg transition-all dash-hover-surface"
+        style={{ color: 'rgba(var(--dash-fg),0.52)' }}
       >
         <MoreVertical size={14} />
       </button>
@@ -334,20 +341,21 @@ function EventRow({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: -4 }}
               transition={{ duration: 0.12 }}
-              style={{ position: 'fixed', top: menuPos.top, right: menuPos.right }}
-              className="z-[200] w-44 bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+              style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, background: CARD, border: `1px solid ${FAINT}`, boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
+              className="z-[200] w-44 rounded-2xl overflow-hidden"
             >
               {/* Edit */}
               <button
                 onClick={() => { setOpen(false); onEdit() }}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-white/70 hover:text-white hover:bg-white/5 transition-all text-[11px] font-black uppercase tracking-widest"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 transition-all text-[11px] font-black uppercase tracking-widest dash-hover-surface"
+                style={{ color: DIM }}
               >
                 <Edit2 size={12} /> Edit
               </button>
 
               {/* Priority divider */}
-              <div className="px-4 py-1.5 border-t border-white/5">
-                <p className="text-white/20 text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5">
+              <div className="px-4 py-1.5" style={{ borderTop: `1px solid ${FAINT}` }}>
+                <p className="text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5" style={{ color: 'rgba(var(--dash-fg),0.56)' }}>
                   <Flag size={9} /> Priority
                 </p>
               </div>
@@ -356,9 +364,8 @@ function EventRow({
                 <button
                   key={p}
                   onClick={() => { setOpen(false); onPriority(p) }}
-                  className={`w-full flex items-center gap-2.5 px-4 py-2 transition-all text-[11px] font-black uppercase tracking-widest ${
-                    ev.priority === p ? 'bg-white/8 text-white' : 'text-white/50 hover:text-white hover:bg-white/5'
-                  }`}
+                  className="w-full flex items-center gap-2.5 px-4 py-2 transition-all text-[11px] font-black uppercase tracking-widest dash-hover-surface"
+                  style={{ background: ev.priority === p ? 'rgba(var(--dash-fg),0.05)' : undefined, color: ev.priority === p ? INK : DIM }}
                 >
                   <div className={`w-2 h-2 rounded-full ${PRIORITY_CONFIG[p].dot}`} />
                   {PRIORITY_CONFIG[p].label}
@@ -369,17 +376,18 @@ function EventRow({
               {ev.priority !== 'none' && (
                 <button
                   onClick={() => { setOpen(false); onPriority('none') }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-white/30 hover:text-white/60 hover:bg-white/5 transition-all text-[11px] font-black uppercase tracking-widest"
+                  className="w-full flex items-center gap-2.5 px-4 py-2 transition-all text-[11px] font-black uppercase tracking-widest dash-hover-surface"
+                  style={{ color: 'rgba(var(--dash-fg),0.56)' }}
                 >
-                  <div className="w-2 h-2 rounded-full bg-white/20" /> Clear priority
+                  <div className="w-2 h-2 rounded-full" style={{ background: 'rgba(var(--dash-fg),0.45)' }} /> Clear priority
                 </button>
               )}
 
-              {/* Delete */}
-              <div className="border-t border-white/5">
+              {/* Delete — kept red, a destructive-action color, not decorative */}
+              <div style={{ borderTop: `1px solid ${FAINT}` }}>
                 <button
                   onClick={() => { setOpen(false); onDelete() }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all text-[11px] font-black uppercase tracking-widest"
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-red-500/80 hover:text-red-600 hover:bg-red-500/5 transition-all text-[11px] font-black uppercase tracking-widest"
                 >
                   <Trash2 size={12} /> Delete
                 </button>
@@ -428,12 +436,12 @@ function OverviewTab({ events, setEvents, loadingEvents, userId, onEventAdded }:
       <CompletionWidget userId={userId} />
 
       <div className="flex items-center justify-between">
-        <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em]">
+        <p className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: DIM }}>
           {upcoming.length > 0 ? `${upcoming.length} upcoming` : 'Upcoming Events'}
         </p>
         <button
           onClick={() => setShowAdd(true)}
-          className="flex items-center gap-1.5 px-3 py-2 bg-[#FFD700] text-black font-black text-[10px] uppercase tracking-widest rounded-xl hover:scale-105 transition-transform"
+          className="gradient-button flex items-center gap-1.5 px-3 py-2 font-black text-[10px] uppercase tracking-widest rounded-xl transition-transform hover:scale-105"
         >
           <Plus size={12} /> Add Event
         </button>
@@ -441,13 +449,13 @@ function OverviewTab({ events, setEvents, loadingEvents, userId, onEventAdded }:
 
       {loadingEvents ? (
         <div className="flex items-center justify-center py-8">
-          <div className="w-5 h-5 border-2 border-[#FFD700]/40 border-t-[#FFD700] rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: 'rgba(184,134,11,0.3)', borderTopColor: GOLDD }} />
         </div>
       ) : upcoming.length === 0 ? (
-        <div className="py-8 text-center border border-dashed border-white/10 rounded-2xl">
-          <Calendar size={24} className="text-white/10 mx-auto mb-3" />
-          <p className="text-white/20 text-[11px] font-black uppercase tracking-widest">No upcoming events</p>
-          <p className="text-white/10 text-[10px] font-medium mt-1">Add your first release date or campaign</p>
+        <div className="py-8 text-center rounded-2xl" style={{ border: `1px dashed ${FAINT}` }}>
+          <Calendar size={24} className="mx-auto mb-3" style={{ color: 'rgba(var(--dash-fg),0.45)' }} />
+          <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'rgba(var(--dash-fg),0.52)' }}>No upcoming events</p>
+          <p className="text-[10px] font-medium mt-1" style={{ color: 'rgba(var(--dash-fg),0.45)' }}>Add your first release date or campaign</p>
         </div>
       ) : (
         <>
@@ -463,7 +471,7 @@ function OverviewTab({ events, setEvents, loadingEvents, userId, onEventAdded }:
               />
             ))}
             {upcoming.length > listLimit && (
-              <p className="text-white/20 text-[10px] font-black uppercase tracking-widest text-center pt-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-center pt-1" style={{ color: 'rgba(var(--dash-fg),0.52)' }}>
                 +{upcoming.length - listLimit} more — visible on calendar above
               </p>
             )}
@@ -491,11 +499,13 @@ function OverviewTab({ events, setEvents, loadingEvents, userId, onEventAdded }:
 
 // ─── Releases Tab ─────────────────────────────────────────────────────────────
 
-const TYPE_META: Record<string, { color: string; bg: string; icon: React.ReactNode }> = {
-  Single:  { color: 'text-[#FFD700]',  bg: 'bg-[#FFD700]/10',  icon: <Disc3 size={16} /> },
-  EP:      { color: 'text-blue-400',   bg: 'bg-blue-500/10',   icon: <Layers size={16} /> },
-  Album:   { color: 'text-purple-400', bg: 'bg-purple-500/10', icon: <Music size={16} /> },
-  Mixtape: { color: 'text-green-400',  bg: 'bg-green-500/10',  icon: <ListMusic size={16} /> },
+// Release-type accent — consolidated to gold, keeping distinct icons per type
+// (was a decorative gold/blue/purple/green system).
+const TYPE_META: Record<string, { icon: React.ReactNode }> = {
+  Single:  { icon: <Disc3 size={16} /> },
+  EP:      { icon: <Layers size={16} /> },
+  Album:   { icon: <Music size={16} /> },
+  Mixtape: { icon: <ListMusic size={16} /> },
 }
 
 function ReleasesTab({ releases, loading, onUpdate }: {
@@ -513,15 +523,15 @@ function ReleasesTab({ releases, loading, onUpdate }: {
 
   if (loading) return (
     <div className="flex items-center justify-center py-12">
-      <div className="w-5 h-5 border-2 border-[#FFD700]/40 border-t-[#FFD700] rounded-full animate-spin" />
+      <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: 'rgba(184,134,11,0.3)', borderTopColor: GOLDD }} />
     </div>
   )
 
   if (releases.length === 0) return (
-    <div className="py-12 text-center border border-dashed border-white/10 rounded-2xl">
-      <Rocket size={28} className="text-white/10 mx-auto mb-3" />
-      <p className="text-white/20 text-[11px] font-black uppercase tracking-widest">No releases yet</p>
-      <p className="text-white/10 text-[10px] font-medium mt-1">Go to Releases in the sidebar to plan your first drop</p>
+    <div className="py-12 text-center rounded-2xl" style={{ border: `1px dashed ${FAINT}` }}>
+      <Rocket size={28} className="mx-auto mb-3" style={{ color: 'rgba(var(--dash-fg),0.45)' }} />
+      <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'rgba(var(--dash-fg),0.52)' }}>No releases yet</p>
+      <p className="text-[10px] font-medium mt-1" style={{ color: 'rgba(var(--dash-fg),0.45)' }}>Go to Releases in the sidebar to plan your first drop</p>
     </div>
   )
 
@@ -535,18 +545,18 @@ function ReleasesTab({ releases, loading, onUpdate }: {
         const releaseDate = new Date(release.release_date + 'T00:00:00')
 
         return (
-          <div key={release.id} className="bg-zinc-900/40 border border-white/5 rounded-2xl p-5 space-y-4">
+          <div key={release.id} className="rounded-2xl p-5 space-y-4" style={{ background: CARD, border: `1px solid ${FAINT}` }}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${meta.bg} ${meta.color} shrink-0`}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(184,134,11,0.1)', color: GOLDD }}>
                   {meta.icon}
                 </div>
                 <div>
-                  <p className="text-white font-black text-sm uppercase tracking-tight">{release.title}</p>
+                  <p className="font-black text-sm uppercase tracking-tight" style={{ color: INK }}>{release.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className={`text-[9px] font-black uppercase ${meta.color}`}>{release.type}</span>
-                    <span className="text-white/20 text-[9px]">·</span>
-                    <span className="text-white/30 text-[9px] flex items-center gap-1">
+                    <span className="text-[9px] font-black uppercase" style={{ color: GOLDD }}>{release.type}</span>
+                    <span className="text-[9px]" style={{ color: 'rgba(var(--dash-fg),0.48)' }}>·</span>
+                    <span className="text-[9px] flex items-center gap-1" style={{ color: DIM }}>
                       <Calendar size={9} />
                       {releaseDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
@@ -554,16 +564,17 @@ function ReleasesTab({ releases, loading, onUpdate }: {
                 </div>
               </div>
               <div className="text-right shrink-0">
-                <p className="text-[#FFD700] font-black text-xl">{pct}%</p>
-                <p className="text-white/20 text-[9px] font-black uppercase">{done}/{total}</p>
+                <p className="font-black text-xl" style={{ color: GOLDD }}>{pct}%</p>
+                <p className="text-[9px] font-black uppercase" style={{ color: 'rgba(var(--dash-fg),0.52)' }}>{done}/{total}</p>
               </div>
             </div>
 
             {total > 0 && (
               <>
-                <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(var(--dash-fg),0.08)' }}>
                   <motion.div
-                    className="h-full bg-[#FFD700]"
+                    className="h-full"
+                    style={{ background: GOLD }}
                     initial={{ width: 0 }}
                     animate={{ width: `${pct}%` }}
                     transition={{ duration: 0.6, ease: 'easeOut' }}
@@ -574,21 +585,20 @@ function ReleasesTab({ releases, loading, onUpdate }: {
                     <button
                       key={i}
                       onClick={() => toggleItem(release, i)}
-                      className={`w-full flex items-center gap-3 p-2.5 rounded-xl border text-left transition-all ${
-                        item.done ? 'bg-[#FFD700]/8 border-[#FFD700]/15' : 'bg-zinc-900/40 border-white/5 hover:border-white/10'
-                      }`}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl border text-left transition-all dash-hover-border"
+                      style={item.done ? { background: 'rgba(255,215,0,0.08)', borderColor: 'rgba(184,134,11,0.2)' } : { background: 'rgba(var(--dash-fg),0.02)', borderColor: FAINT }}
                     >
                       {item.done
-                        ? <CheckSquare size={13} className="text-[#FFD700] shrink-0" />
-                        : <Square size={13} className="text-white/20 shrink-0" />
+                        ? <CheckSquare size={13} className="shrink-0" style={{ color: GOLDD }} />
+                        : <Square size={13} className="shrink-0" style={{ color: 'rgba(var(--dash-fg),0.48)' }} />
                       }
-                      <span className={`text-[11px] font-bold ${item.done ? 'text-white/30 line-through' : 'text-white/70'}`}>
+                      <span className="text-[11px] font-bold" style={{ color: item.done ? 'rgba(var(--dash-fg),0.56)' : DIM, textDecoration: item.done ? 'line-through' : 'none' }}>
                         {item.label}
                       </span>
                     </button>
                   ))}
                   {release.checklist.length > 4 && (
-                    <p className="text-white/20 text-[10px] font-black uppercase tracking-widest text-center pt-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-center pt-1" style={{ color: 'rgba(var(--dash-fg),0.52)' }}>
                       +{release.checklist.length - 4} more — open Releases to see all
                     </p>
                   )}
@@ -599,7 +609,7 @@ function ReleasesTab({ releases, loading, onUpdate }: {
         )
       })}
       {releases.length > 3 && (
-        <p className="text-white/20 text-[10px] font-black uppercase tracking-widest text-center">
+        <p className="text-[10px] font-black uppercase tracking-widest text-center" style={{ color: 'rgba(var(--dash-fg),0.52)' }}>
           +{releases.length - 3} more releases — open Releases in sidebar
         </p>
       )}
@@ -609,43 +619,46 @@ function ReleasesTab({ releases, loading, onUpdate }: {
 
 // ─── Analytics Tab ────────────────────────────────────────────────────────────
 
+// Spotify green + YouTube red kept — real, recognizable platform-brand colors,
+// not arbitrary decoration. TikTok's pink swapped for gold (that pink wasn't
+// actually TikTok's brand color to begin with).
 const PLATFORMS = [
-  { name: 'Spotify for Artists', icon: <Music2 size={18} />, color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20', desc: 'Streams, listeners, playlist placements' },
-  { name: 'YouTube Studio',      icon: <BarChart2 size={18} />, color: 'text-red-400',   bg: 'bg-red-500/10',   border: 'border-red-500/20',   desc: 'Views, subscribers, watch time' },
-  { name: 'TikTok Analytics',   icon: <TrendingUp size={18} />, color: 'text-pink-400',  bg: 'bg-pink-500/10',  border: 'border-pink-500/20',  desc: 'Video views, profile reach, sounds used' },
+  { name: 'Spotify for Artists', icon: <Music2 size={18} />,    color: '#1DB954', bg: 'rgba(29,185,84,0.08)',   border: 'rgba(29,185,84,0.25)',   desc: 'Streams, listeners, playlist placements' },
+  { name: 'YouTube Studio',      icon: <BarChart2 size={18} />, color: '#E03C31', bg: 'rgba(224,60,49,0.08)',   border: 'rgba(224,60,49,0.25)',   desc: 'Views, subscribers, watch time' },
+  { name: 'TikTok Analytics',    icon: <TrendingUp size={18} />, color: GOLDD,    bg: 'rgba(184,134,11,0.08)',  border: 'rgba(184,134,11,0.25)',  desc: 'Video views, profile reach, sounds used' },
 ]
 
 function AnalyticsTab() {
   return (
     <div className="space-y-4">
-      <div className="p-4 bg-[#FFD700]/8 border border-[#FFD700]/20 rounded-2xl">
+      <div className="p-4 rounded-2xl" style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(184,134,11,0.25)' }}>
         <div className="flex items-center gap-2 mb-1">
-          <Link2 size={12} className="text-[#FFD700]" />
-          <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-widest">Connect your accounts</p>
+          <Link2 size={12} style={{ color: GOLDD }} />
+          <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: GOLDD }}>Connect your accounts</p>
         </div>
-        <p className="text-white/40 text-[11px] font-medium leading-relaxed">
+        <p className="text-[11px] font-medium leading-relaxed" style={{ color: DIM }}>
           Link your streaming platforms to see live streams, listeners, and playlist data directly in your dashboard.
         </p>
       </div>
 
       <div className="space-y-3">
         {PLATFORMS.map(p => (
-          <div key={p.name} className={`flex items-center gap-4 p-4 rounded-2xl border ${p.bg} ${p.border}`}>
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-black/20 ${p.color} shrink-0`}>
+          <div key={p.name} className="flex items-center gap-4 p-4 rounded-2xl border" style={{ background: p.bg, borderColor: p.border }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(255,255,255,0.6)', color: p.color }}>
               {p.icon}
             </div>
             <div className="flex-1 min-w-0">
-              <p className={`font-black text-sm uppercase tracking-tight ${p.color}`}>{p.name}</p>
-              <p className="text-white/30 text-[10px] font-medium mt-0.5">{p.desc}</p>
+              <p className="font-black text-sm uppercase tracking-tight" style={{ color: p.color }}>{p.name}</p>
+              <p className="text-[10px] font-medium mt-0.5" style={{ color: DIM }}>{p.desc}</p>
             </div>
-            <button className={`px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest shrink-0 transition-all hover:scale-105 ${p.color} ${p.border} bg-black/20 hover:bg-black/40`}>
+            <button className="px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest shrink-0 transition-all hover:scale-105" style={{ color: p.color, borderColor: p.border, background: 'rgba(255,255,255,0.6)' }}>
               Connect
             </button>
           </div>
         ))}
       </div>
 
-      <p className="text-white/15 text-[10px] font-black uppercase tracking-widest text-center pt-2">
+      <p className="text-[10px] font-black uppercase tracking-widest text-center pt-2" style={{ color: 'rgba(var(--dash-fg),0.4)' }}>
         Analytics populate automatically once accounts are connected
       </p>
     </div>
@@ -654,52 +667,53 @@ function AnalyticsTab() {
 
 // ─── Team Tab ─────────────────────────────────────────────────────────────────
 
-const ROLE_META: Record<string, { color: string; bg: string; icon: React.ReactNode }> = {
-  Manager:   { color: 'text-blue-400',   bg: 'bg-blue-400/10',   icon: <Crown size={11} /> },
-  Producer:  { color: 'text-green-400',  bg: 'bg-green-400/10',  icon: <Music2 size={11} /> },
-  Marketing: { color: 'text-orange-400', bg: 'bg-orange-400/10', icon: <Briefcase size={11} /> },
-  Booking:   { color: 'text-purple-400', bg: 'bg-purple-400/10', icon: <Calendar size={11} /> },
-  PR:        { color: 'text-pink-400',   bg: 'bg-pink-400/10',   icon: <TrendingUp size={11} /> },
+// Role badge — consolidated to gold-monochrome (was a decorative
+// blue/green/orange/purple/pink per-role system).
+const ROLE_META: Record<string, { icon: React.ReactNode }> = {
+  Manager:   { icon: <Crown size={11} /> },
+  Producer:  { icon: <Music2 size={11} /> },
+  Marketing: { icon: <Briefcase size={11} /> },
+  Booking:   { icon: <Calendar size={11} /> },
+  PR:        { icon: <TrendingUp size={11} /> },
 }
 
 function TeamTab({ members, loading }: { members: TeamMember[]; loading: boolean }) {
   if (loading) return (
     <div className="flex items-center justify-center py-12">
-      <div className="w-5 h-5 border-2 border-[#FFD700]/40 border-t-[#FFD700] rounded-full animate-spin" />
+      <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: 'rgba(184,134,11,0.3)', borderTopColor: GOLDD }} />
     </div>
   )
 
   if (members.length === 0) return (
-    <div className="py-12 text-center border border-dashed border-white/10 rounded-2xl">
-      <Users size={28} className="text-white/10 mx-auto mb-3" />
-      <p className="text-white/20 text-[11px] font-black uppercase tracking-widest">No team members yet</p>
-      <p className="text-white/10 text-[10px] font-medium mt-1">Go to Team in the sidebar to invite your crew</p>
+    <div className="py-12 text-center rounded-2xl" style={{ border: `1px dashed ${FAINT}` }}>
+      <Users size={28} className="mx-auto mb-3" style={{ color: 'rgba(var(--dash-fg),0.45)' }} />
+      <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'rgba(var(--dash-fg),0.52)' }}>No team members yet</p>
+      <p className="text-[10px] font-medium mt-1" style={{ color: 'rgba(var(--dash-fg),0.45)' }}>Go to Team in the sidebar to invite your crew</p>
     </div>
   )
 
   return (
     <div className="space-y-3">
-      <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.3em]">
+      <p className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: 'rgba(var(--dash-fg),0.52)' }}>
         Your Team · {members.length} {members.length === 1 ? 'Member' : 'Members'}
       </p>
       {members.map(m => {
         const meta = ROLE_META[m.role] ?? ROLE_META.Manager
         return (
-          <div key={m.id} className="flex items-center gap-4 p-4 bg-zinc-900/40 border border-white/5 rounded-2xl">
-            <div className="w-10 h-10 bg-zinc-800 rounded-xl flex items-center justify-center font-black text-white text-sm uppercase shrink-0">
+          <div key={m.id} className="flex items-center gap-4 p-4 rounded-2xl" style={{ background: CARD, border: `1px solid ${FAINT}` }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm uppercase shrink-0" style={{ background: 'rgba(var(--dash-fg),0.05)', color: INK }}>
               {m.invitee_name[0]}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white font-black text-sm uppercase tracking-tight truncate">{m.invitee_name}</p>
-              <p className="text-white/30 text-[10px] font-medium truncate">{m.invitee_email}</p>
+              <p className="font-black text-sm uppercase tracking-tight truncate" style={{ color: INK }}>{m.invitee_name}</p>
+              <p className="text-[10px] font-medium truncate" style={{ color: DIM }}>{m.invitee_email}</p>
             </div>
             <div className="flex flex-col items-end gap-1.5 shrink-0">
-              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${meta.bg} ${meta.color} text-[9px] font-black uppercase tracking-wide border border-white/5`}>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wide" style={{ background: 'rgba(184,134,11,0.08)', color: GOLDD, border: `1px solid ${FAINT}` }}>
                 {meta.icon} {m.role}
               </div>
-              <span className={`text-[8px] font-black uppercase tracking-widest ${
-                m.status === 'accepted' ? 'text-green-400' : 'text-white/20'
-              }`}>
+              {/* Accepted/pending kept as semantic status — green = active. */}
+              <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: m.status === 'accepted' ? '#16A34A' : 'rgba(var(--dash-fg),0.52)' }}>
                 {m.status === 'accepted' ? (
                   <span className="flex items-center gap-1"><Check size={8} /> Active</span>
                 ) : 'Pending invite'}
@@ -786,53 +800,48 @@ export function HomeDashboard() {
   if (!user) return null
 
   return (
-    <div className="w-full bg-zinc-950 rounded-[32px] border border-white/5 shadow-[0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden">
+    <div className="w-full rounded-[32px] overflow-hidden" style={{ background: CARD, border: `1px solid ${FAINT}`, boxShadow: '0 30px 80px rgba(0,0,0,0.06)' }}>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/5">
+      <div className="flex items-center justify-between px-6 pt-6 pb-4" style={{ borderBottom: `1px solid ${FAINT}` }}>
         <div className="flex items-center gap-3">
-          <img src="/gu-logo.png" alt="uP" className="h-8 w-auto" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+          <img src="/gu-logo.png" alt="uP" className="h-8 w-auto" style={{ filter: 'invert(1) brightness(0.2)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
           <div>
-            <h3 className="text-white font-black text-base tracking-tighter uppercase leading-none">
+            <h3 className="font-black text-base tracking-tighter uppercase leading-none" style={{ color: INK }}>
               {displayName.toUpperCase()}
             </h3>
-            <p className="text-[#FFD700] text-[9px] font-black tracking-[0.25em] opacity-70 mt-0.5">ARTIST OS · LIVE</p>
+            <p className="text-[9px] font-black tracking-[0.25em] mt-0.5" style={{ color: GOLDD, opacity: 0.85 }}>ARTIST OS · LIVE</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-0.5 bg-zinc-900/60 border border-white/5 rounded-2xl p-1">
+        <div className="flex items-center gap-0.5 rounded-2xl p-1" style={{ background: 'rgba(var(--dash-fg),0.03)', border: `1px solid ${FAINT}` }}>
           {TABS.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${
-                activeTab === tab.id
-                  ? 'bg-[#FFD700] text-black shadow-[0_4px_16px_rgba(255,215,0,0.2)]'
-                  : tab.highlight
-                  ? 'text-[#FFD700]/60 hover:text-[#FFD700]'
-                  : 'text-white/30 hover:text-white'
-              }`}
+              className={activeTab === tab.id ? 'gradient-button gradient-button-active flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative' : 'flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative dash-hover-text'}
+              style={activeTab === tab.id ? { color: '#fff' } : { color: tab.highlight ? GOLDD : DIM }}
             >
               {tab.icon}
               <span className="hidden sm:inline">{tab.label}</span>
               {tab.highlight && activeTab !== tab.id && (
-                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-[#FFD700] rounded-full animate-pulse shadow-[0_0_4px_#FFD700]" />
+                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: GOLD, boxShadow: '0 0 4px #FFD700' }} />
               )}
             </button>
           ))}
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-[#FFD700] rounded-full animate-pulse shadow-[0_0_8px_#FFD700]" />
-          <span className="text-white/30 font-black text-[9px] tracking-widest hidden sm:block">LIVE</span>
+          <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: GOLD, boxShadow: '0 0 8px #FFD700' }} />
+          <span className="font-black text-[9px] tracking-widest hidden sm:block" style={{ color: DIM }}>LIVE</span>
         </div>
       </div>
 
       {/* Content */}
       <div className="p-6">
         <div className="mb-5">
-          <h2 className="text-white text-2xl font-black tracking-tighter leading-none uppercase">{activeTab}</h2>
-          <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.3em] mt-1">
+          <h2 className="text-2xl font-black tracking-tighter leading-none uppercase" style={{ color: INK }}>{activeTab}</h2>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] mt-1" style={{ color: 'rgba(var(--dash-fg),0.52)' }}>
             {activeTab === 'Overview'  && `${events.filter(e => new Date(e.event_date) >= new Date()).length} upcoming events`}
             {activeTab === 'Releases'  && `${releases.length} active ${releases.length === 1 ? 'release' : 'releases'}`}
             {activeTab === 'Analytics' && 'Connect platforms to see live data'}
@@ -855,7 +864,7 @@ export function HomeDashboard() {
                   <MusicStatsCard userId={user.id} />
                 </div>
                 <OverviewTab events={events} setEvents={setEvents} loadingEvents={loadingEvents} userId={user.id} onEventAdded={ev => setEvents(prev => [...prev, ev])} />
-                <div className="mt-6 pt-6 border-t border-white/5">
+                <div className="mt-6 pt-6" style={{ borderTop: `1px solid ${FAINT}` }}>
                   <TaskCards
                     title="Quick Tasks"
                     releases={releases}

@@ -142,20 +142,20 @@ export function GlassAccountSettingsCard({ className }: { className?: string }) 
 
   return (
     <div className={cn(
-      "w-full rounded-3xl border border-white/8 bg-zinc-950/80 backdrop-blur-xl shadow-[0_30px_80px_rgba(0,0,0,0.6)] overflow-hidden",
+      "w-full rounded-3xl border border-[var(--dash-border)] bg-[var(--dash-card)] backdrop-blur-xl shadow-[0_30px_80px_rgba(0,0,0,0.6)] overflow-hidden",
       className
     )}>
       {/* Header */}
-      <div className="px-6 pt-6 pb-4 border-b border-white/5">
+      <div className="px-6 pt-6 pb-4 border-b border-[var(--dash-border)]">
         <div className="flex items-center gap-2 mb-1">
           <Zap size={14} className="text-[#FFD700]" />
           <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#FFD700]/70">Account Settings</p>
         </div>
-        <h3 className="text-white font-black text-lg uppercase tracking-tighter">Manage Your Plan</h3>
+        <h3 className="text-[rgb(var(--dash-fg))] font-black text-lg uppercase tracking-tighter">Manage Your Plan</h3>
       </div>
 
       {/* Accordion sections */}
-      <div className="divide-y divide-white/5">
+      <div className="divide-y divide-[var(--dash-border)]">
         {sections.map(section => {
           const isOpen = openSection === section.id
           return (
@@ -165,7 +165,7 @@ export function GlassAccountSettingsCard({ className }: { className?: string }) 
                 onClick={() => toggleSection(section.id)}
                 className={cn(
                   "w-full flex items-center justify-between px-6 py-4 transition-all",
-                  isOpen ? "text-[#FFD700]" : "text-white/40 hover:text-white/70"
+                  isOpen ? "text-[#FFD700]" : "text-[rgba(var(--dash-fg),0.52)] hover:text-[rgba(var(--dash-fg),0.62)]"
                 )}
               >
                 <div className="flex items-center gap-2">
@@ -199,17 +199,17 @@ export function GlassAccountSettingsCard({ className }: { className?: string }) 
                             <div className="min-w-0">
                               <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.3em] mb-1">Current Plan</p>
                               <div className="flex items-baseline gap-2">
-                                <span className="text-white font-black text-xl uppercase tracking-tight">{plan.label}</span>
-                                <span className="text-white/40 text-xs font-bold">{plan.priceLabel}</span>
+                                <span className="text-[rgb(var(--dash-fg))] font-black text-xl uppercase tracking-tight">{plan.label}</span>
+                                <span className="text-[rgba(var(--dash-fg),0.52)] text-xs font-bold">{plan.priceLabel}</span>
                               </div>
                               {portalMsg && (
-                                <p className="text-white/40 text-[10px] font-medium mt-2">{portalMsg}</p>
+                                <p className="text-[rgba(var(--dash-fg),0.52)] text-[10px] font-medium mt-2">{portalMsg}</p>
                               )}
                             </div>
                             <button
                               onClick={openPortal}
                               disabled={portalLoading}
-                              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:text-white hover:border-white/20 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 shrink-0"
+                              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[rgba(var(--dash-fg),0.05)] border border-[rgba(var(--dash-fg),0.15)] text-[rgba(var(--dash-fg),0.62)] hover:text-[rgb(var(--dash-fg))] hover:border-[rgba(var(--dash-fg),0.25)] text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 shrink-0"
                             >
                               {portalLoading ? <Loader2 size={11} className="animate-spin" /> : <ExternalLink size={11} />}
                               {portalLoading ? 'Opening…' : 'Manage Subscription'}
@@ -232,7 +232,7 @@ export function GlassAccountSettingsCard({ className }: { className?: string }) 
                                 "relative p-5 rounded-2xl border transition-all",
                                 isCurrent
                                   ? "border-[#FFD700]/30 bg-[#FFD700]/5"
-                                  : "border-white/5 bg-zinc-900/30 hover:border-white/10"
+                                  : "border-[var(--dash-border)] bg-[var(--dash-card-alt)] hover:border-[rgba(var(--dash-fg),0.15)]"
                               )}
                             >
                               {planRow.badge && (
@@ -245,7 +245,7 @@ export function GlassAccountSettingsCard({ className }: { className?: string }) 
                               <div className="flex items-start justify-between gap-4">
                                 <div>
                                   <div className="flex items-center gap-2 mb-1">
-                                    <p className="text-white font-black text-sm uppercase tracking-wide">{planRow.name}</p>
+                                    <p className="text-[rgb(var(--dash-fg))] font-black text-sm uppercase tracking-wide">{planRow.name}</p>
                                     {isCurrent && (
                                       <span className="flex items-center gap-1 text-[9px] font-black uppercase text-[#FFD700]">
                                         <Check size={9} /> Current
@@ -253,12 +253,12 @@ export function GlassAccountSettingsCard({ className }: { className?: string }) 
                                     )}
                                   </div>
                                   <div className="flex items-baseline gap-1 mb-3">
-                                    <span className="text-2xl font-black text-white">{planRow.price}</span>
-                                    <span className="text-white/30 text-xs font-medium">/{planRow.period}</span>
+                                    <span className="text-2xl font-black text-[rgb(var(--dash-fg))]">{planRow.price}</span>
+                                    <span className="text-[rgba(var(--dash-fg),0.5)] text-xs font-medium">/{planRow.period}</span>
                                   </div>
                                   <ul className="space-y-1">
                                     {planRow.features.map((f, i) => (
-                                      <li key={i} className="flex items-center gap-2 text-white/40 text-[11px] font-medium">
+                                      <li key={i} className="flex items-center gap-2 text-[rgba(var(--dash-fg),0.52)] text-[11px] font-medium">
                                         <div className="w-1 h-1 rounded-full bg-[#FFD700]/50 shrink-0" />
                                         {f}
                                       </li>
@@ -293,11 +293,11 @@ export function GlassAccountSettingsCard({ className }: { className?: string }) 
                               initial={{ opacity: 0, y: 6 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: i * 0.06 }}
-                              className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-white/5 bg-zinc-900/30 hover:border-white/8 transition-colors"
+                              className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-[var(--dash-border)] bg-[var(--dash-card-alt)] hover:border-[var(--dash-border)] transition-colors"
                             >
                               <div className="flex-1 min-w-0">
-                                <p className="text-white font-bold text-sm">{notif.label}</p>
-                                <p className="text-white/30 text-[11px] font-medium mt-0.5">{notif.description}</p>
+                                <p className="text-[rgb(var(--dash-fg))] font-bold text-sm">{notif.label}</p>
+                                <p className="text-[rgba(var(--dash-fg),0.5)] text-[11px] font-medium mt-0.5">{notif.description}</p>
                               </div>
                               <Switch
                                 checked={notif.enabled}
@@ -324,20 +324,20 @@ export function GlassAccountSettingsCard({ className }: { className?: string }) 
                                 "flex items-center justify-between gap-4 p-4 rounded-2xl border transition-colors",
                                 item.danger
                                   ? "border-red-500/15 bg-red-500/5 hover:border-red-500/25"
-                                  : "border-white/5 bg-zinc-900/30 hover:border-white/8"
+                                  : "border-[var(--dash-border)] bg-[var(--dash-card-alt)] hover:border-[var(--dash-border)]"
                               )}
                             >
                               <div className="flex-1 min-w-0">
-                                <p className={cn("font-bold text-sm", item.danger ? "text-red-400" : "text-white")}>{item.label}</p>
-                                <p className="text-white/30 text-[11px] font-medium mt-0.5">{item.desc}</p>
+                                <p className={cn("font-bold text-sm", item.danger ? "text-red-400" : "text-[rgb(var(--dash-fg))]")}>{item.label}</p>
+                                <p className="text-[rgba(var(--dash-fg),0.5)] text-[11px] font-medium mt-0.5">{item.desc}</p>
                               </div>
                               <div className="flex items-center gap-3 shrink-0">
-                                <span className="text-white/20 text-[10px] font-black uppercase">{item.status}</span>
+                                <span className="text-[rgba(var(--dash-fg),0.46)] text-[10px] font-black uppercase">{item.status}</span>
                                 <button className={cn(
                                   "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-colors",
                                   item.danger
                                     ? "border-red-500/30 text-red-400 hover:bg-red-500/10"
-                                    : "border-white/10 text-white/50 hover:text-white hover:border-white/20"
+                                    : "border-[rgba(var(--dash-fg),0.15)] text-[rgba(var(--dash-fg),0.55)] hover:text-[rgb(var(--dash-fg))] hover:border-[rgba(var(--dash-fg),0.25)]"
                                 )}>
                                   {item.action}
                                 </button>

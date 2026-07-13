@@ -185,7 +185,7 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
 
   if (loading) {
     return (
-      <div className={`bg-zinc-900/40 border ${meta.border} rounded-3xl p-8 flex items-center justify-center`}>
+      <div className={`bg-[var(--dash-card-alt)] border ${meta.border} rounded-3xl p-8 flex items-center justify-center`}>
         <Loader2 size={16} className={`${meta.accent} opacity-60 animate-spin`} />
       </div>
     )
@@ -194,7 +194,7 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
   const tiles = latest ? statTiles(platform, latest) : []
 
   return (
-    <div className={`bg-zinc-900/40 border ${meta.border} rounded-3xl p-6 backdrop-blur-xl`}>
+    <div className={`bg-[var(--dash-card-alt)] border ${meta.border} rounded-3xl p-6 backdrop-blur-xl`}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3 min-w-0">
@@ -210,7 +210,7 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
                 </span>
               )}
             </div>
-            <h3 className="text-white font-black text-base sm:text-lg tracking-tighter truncate">
+            <h3 className="text-[rgb(var(--dash-fg))] font-black text-base sm:text-lg tracking-tighter truncate">
               {latest?.display_name ?? (savedUrl ? 'Syncing…' : 'Not connected')}
             </h3>
           </div>
@@ -219,7 +219,7 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
           <button
             onClick={() => syncNow(savedUrl)}
             disabled={fetching}
-            className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 shrink-0"
+            className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-[rgba(var(--dash-fg),0.05)] border border-[rgba(var(--dash-fg),0.15)] text-[rgba(var(--dash-fg),0.6)] hover:text-[rgb(var(--dash-fg))] text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 shrink-0"
           >
             {fetching ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />}
             {fetching ? 'Syncing' : 'Refresh'}
@@ -229,14 +229,14 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
 
       {/* URL input */}
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
-        <div className="flex-1 flex items-center bg-zinc-950 border border-white/8 rounded-xl px-3 py-2.5 min-w-0">
-          <ExternalLink size={12} className="text-white/20 mr-2 shrink-0" />
+        <div className="flex-1 flex items-center bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-xl px-3 py-2.5 min-w-0">
+          <ExternalLink size={12} className="text-[rgba(var(--dash-fg),0.46)] mr-2 shrink-0" />
           <input
             type="url"
             value={url}
             onChange={e => setUrl(e.target.value)}
             placeholder={meta.placeholder}
-            className="flex-1 bg-transparent text-white text-xs font-medium placeholder-white/20 outline-none min-w-0"
+            className="flex-1 bg-transparent text-[rgb(var(--dash-fg))] text-xs font-medium placeholder:text-[rgba(var(--dash-fg),0.35)] outline-none min-w-0"
           />
         </div>
         <button
@@ -245,7 +245,7 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
           className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex-shrink-0 ${
             url.trim()
               ? `${meta.bg} ${meta.accent} border hover:scale-[1.02]`
-              : 'bg-white/5 text-white/20 cursor-not-allowed'
+              : 'bg-[rgba(var(--dash-fg),0.05)] text-[rgba(var(--dash-fg),0.46)] cursor-not-allowed'
           }`}
         >
           {fetching ? <Loader2 size={11} className="animate-spin" /> : savedUrl === url ? <RefreshCw size={11} /> : <Check size={11} />}
@@ -269,9 +269,9 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
         <>
           <div className={`grid gap-2 ${tiles.length === 1 ? 'grid-cols-1' : tiles.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
             {tiles.map(t => (
-              <div key={t.label} className="bg-zinc-950/60 border border-white/5 rounded-xl p-3">
+              <div key={t.label} className="bg-[var(--dash-card-alt)] border border-[var(--dash-border)] rounded-xl p-3">
                 <p className={`${meta.accent} text-[9px] font-black uppercase tracking-widest mb-1`}>{t.label}</p>
-                <p className="text-white font-black text-xl tracking-tight">
+                <p className="text-[rgb(var(--dash-fg))] font-black text-xl tracking-tight">
                   {typeof t.value === 'string' ? t.value : formatNum(t.value as number | null)}
                 </p>
               </div>
@@ -284,14 +284,14 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
           {latest.top_items && latest.top_items.length > 0 && (
             <ul className="space-y-1 mt-3">
               {latest.top_items.slice(0, 5).map((t, i) => (
-                <li key={i} className="flex items-center gap-2.5 p-2 rounded-lg bg-zinc-950/40 border border-white/5">
-                  <div className="w-7 h-7 rounded bg-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+                <li key={i} className="flex items-center gap-2.5 p-2 rounded-lg bg-[var(--dash-card-alt)] border border-[var(--dash-border)]">
+                  <div className="w-7 h-7 rounded bg-[rgba(var(--dash-fg),0.08)] flex items-center justify-center overflow-hidden shrink-0">
                     {t.image
                       ? <img src={t.image} alt="" className="w-full h-full object-cover" />
-                      : <span className="text-white/30 text-[9px] font-black">{i + 1}</span>}
+                      : <span className="text-[rgba(var(--dash-fg),0.5)] text-[9px] font-black">{i + 1}</span>}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-xs font-medium truncate">{t.name}</p>
+                    <p className="text-[rgb(var(--dash-fg))] text-xs font-medium truncate">{t.name}</p>
                     {t.subtitle && (
                       <p className={`text-[10px] font-bold mt-0.5 ${meta.accent}`}>{t.subtitle}</p>
                     )}
@@ -301,14 +301,14 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
             </ul>
           )}
 
-          <p className="text-white/15 text-[9px] font-bold uppercase tracking-widest text-right mt-3">
+          <p className="text-[rgba(var(--dash-fg),0.42)] text-[9px] font-bold uppercase tracking-widest text-right mt-3">
             Last synced {timeAgo(latest.fetched_at)}
           </p>
         </>
       )}
 
       {!latest && !savedUrl && (
-        <p className="text-white/30 text-[10px] font-medium text-center py-3">
+        <p className="text-[rgba(var(--dash-fg),0.5)] text-[10px] font-medium text-center py-3">
           {meta.hint} — we pull public stats from the page.
         </p>
       )}

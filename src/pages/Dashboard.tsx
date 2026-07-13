@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { DashboardShell } from '../components/layout/DashboardShell';
+import { DashboardThemeProvider } from '../lib/dashboard-theme';
 
 export function Dashboard() {
   const { emailJustConfirmed, clearEmailConfirmed } = useAuth();
@@ -31,7 +32,7 @@ export function Dashboard() {
   }, []);
 
   return (
-    <>
+    <DashboardThemeProvider>
       {/* Gmail connected banner */}
       <AnimatePresence>
         {gmailBanner && (
@@ -71,6 +72,6 @@ export function Dashboard() {
       <DashboardShell>
         <Outlet />
       </DashboardShell>
-    </>
+    </DashboardThemeProvider>
   );
 }

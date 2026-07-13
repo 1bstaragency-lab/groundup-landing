@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Check, MessageCircle, Monitor, Loader2, Sparkles } from "lucide-react"
 import { supabase } from "../../lib/supabaseClient"
+import { GOLD, GOLDD } from "../../lib/brand-tokens"
+import { INK, DIM, FAINT, CARD } from "../../lib/dashboard-theme"
 
 interface UpTask {
   id: string
@@ -55,21 +57,18 @@ export function UpTasksFeed({ userId }: { userId: string }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-full bg-[#FFD700]/15 border border-[#FFD700]/30 flex items-center justify-center">
-            <Sparkles size={10} className="text-[#FFD700]" />
+          <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,215,0,0.12)', border: '1px solid rgba(184,134,11,0.3)' }}>
+            <Sparkles size={10} style={{ color: GOLDD }} />
           </div>
-          <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em]">uP Tasks</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: 'rgba(var(--dash-fg),0.56)' }}>uP Tasks</p>
         </div>
-        <div className="flex items-center gap-1 p-0.5 bg-zinc-900/60 rounded-lg border border-white/5">
+        <div className="flex items-center gap-1 p-0.5 rounded-lg" style={{ background: 'rgba(var(--dash-fg),0.04)', border: `1px solid ${FAINT}` }}>
           {(['pending', 'done'] as const).map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1 rounded-md text-[9px] font-black uppercase tracking-widest transition-all ${
-                filter === f
-                  ? 'bg-[#FFD700] text-black'
-                  : 'text-white/30 hover:text-white/60'
-              }`}
+              className={filter === f ? 'gradient-button gradient-button-active px-3 py-1 rounded-md text-[9px] font-black uppercase tracking-widest transition-all' : 'px-3 py-1 rounded-md text-[9px] font-black uppercase tracking-widest transition-all dash-hover-text'}
+              style={filter === f ? { color: '#fff' } : { color: DIM }}
             >
               {f === 'pending' ? 'To-Do' : 'Done'}
             </button>
@@ -80,17 +79,17 @@ export function UpTasksFeed({ userId }: { userId: string }) {
       {/* Task list */}
       {loading ? (
         <div className="flex items-center justify-center py-6">
-          <Loader2 size={16} className="text-[#FFD700]/40 animate-spin" />
+          <Loader2 size={16} className="animate-spin" style={{ color: GOLDD, opacity: 0.5 }} />
         </div>
       ) : tasks.length === 0 ? (
-        <div className="py-6 text-center border border-dashed border-white/8 rounded-2xl">
-          <div className="w-8 h-8 rounded-full bg-[#FFD700]/10 flex items-center justify-center mx-auto mb-2">
-            <Sparkles size={14} className="text-[#FFD700]/40" />
+        <div className="py-6 text-center rounded-2xl" style={{ border: `1px dashed ${FAINT}` }}>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2" style={{ background: 'rgba(255,215,0,0.1)' }}>
+            <Sparkles size={14} style={{ color: GOLDD, opacity: 0.6 }} />
           </div>
-          <p className="text-white/20 text-[10px] font-black uppercase tracking-widest">
+          <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'rgba(var(--dash-fg),0.52)' }}>
             {filter === 'pending' ? 'No tasks yet' : 'Nothing completed yet'}
           </p>
-          <p className="text-white/10 text-[10px] font-medium mt-1">
+          <p className="text-[10px] font-medium mt-1" style={{ color: 'rgba(var(--dash-fg),0.45)' }}>
             {filter === 'pending' ? 'Chat with uP to generate action items' : 'Complete tasks to see them here'}
           </p>
         </div>
@@ -103,40 +102,32 @@ export function UpTasksFeed({ userId }: { userId: string }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, x: -12, scale: 0.97 }}
               transition={{ delay: i * 0.04, duration: 0.22 }}
-              className="flex items-start gap-3 p-3 bg-zinc-900/40 border border-white/5 rounded-2xl hover:border-white/10 transition-colors group"
+              className="flex items-start gap-3 p-3 rounded-2xl transition-colors group dash-hover-border"
+              style={{ background: CARD, border: `1px solid ${FAINT}` }}
             >
               {/* Checkbox */}
               <button
                 onClick={() => toggleTask(task)}
-                className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all mt-0.5 ${
-                  task.status === 'done'
-                    ? 'bg-[#FFD700] border-[#FFD700]'
-                    : 'border-white/20 hover:border-[#FFD700]/60 group-hover:border-white/40'
-                }`}
+                className="shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all mt-0.5"
+                style={task.status === 'done' ? { background: GOLD, borderColor: GOLD } : { borderColor: 'rgba(var(--dash-fg),0.45)' }}
               >
-                {task.status === 'done' && <Check size={9} strokeWidth={3} className="text-black" />}
+                {task.status === 'done' && <Check size={9} strokeWidth={3} style={{ color: INK }} />}
               </button>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium leading-snug ${
-                  task.status === 'done' ? 'text-white/25 line-through' : 'text-white/80'
-                }`}>
+                <p className="text-sm font-medium leading-snug" style={{ color: task.status === 'done' ? 'rgba(var(--dash-fg),0.56)' : DIM, textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>
                   {task.content}
                 </p>
                 <div className="flex items-center gap-2 mt-1.5">
-                  {/* Source badge */}
-                  <span className={`flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${
-                    task.source === 'imessage'
-                      ? 'text-green-400/70 border-green-500/15 bg-green-500/5'
-                      : 'text-[#FFD700]/50 border-[#FFD700]/15 bg-[#FFD700]/5'
-                  }`}>
+                  {/* Source badge — kept gold-monochrome for consistency */}
+                  <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ color: GOLDD, background: 'rgba(184,134,11,0.06)', border: '1px solid rgba(184,134,11,0.15)' }}>
                     {task.source === 'imessage'
                       ? <><MessageCircle size={8} /> iMessage</>
                       : <><Monitor size={8} /> App</>
                     }
                   </span>
-                  <span className="text-white/15 text-[9px] font-bold">{timeAgo(task.created_at)}</span>
+                  <span className="text-[9px] font-bold" style={{ color: 'rgba(var(--dash-fg),0.48)' }}>{timeAgo(task.created_at)}</span>
                 </div>
               </div>
             </motion.div>
