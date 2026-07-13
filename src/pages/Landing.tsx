@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp, Music2, Newspaper } from 'lucide-react';
+import { TrendingUp, Music2, Newspaper, Trophy, ListMusic } from 'lucide-react';
 import { PIXEL, SCRIPT, BG, INK, DIM, FAINT, GOLD, GOLDD, BLUE } from '../lib/brand-tokens';
 import { PricingSection } from '../components/ui/pricing-section';
 import DisplayCards from '../components/ui/display-cards';
@@ -130,7 +130,7 @@ function Keycap({ label, sub, className, delay = 0, rotate = -8 }: {
    Messages: schedule a release → uP builds the campaign →
    close to home screen → tap GrounduP icon → tour 4 app screens → repeat */
 
-const SCENE_MS = [1600, 1200, 1600, 1900, 1900, 1800, 1100, 2400, 2400, 2400, 2600];
+const SCENE_MS = [1600, 1200, 1600, 1700, 1400, 1500, 1900, 1900, 1800, 1100, 2400, 2400, 2400, 2400, 2600];
 
 function TypingDots() {
   return (
@@ -155,6 +155,19 @@ function MsgIn({ children, show }: { children: React.ReactNode; show: boolean })
   );
 }
 
+// Outgoing image attachment bubble — user sending their own cover art
+function MsgOutImage({ show, src }: { show: boolean; src: string }) {
+  if (!show) return null;
+  return (
+    <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} className="flex justify-end">
+      <div className="overflow-hidden" style={{ width: 96, height: 96, borderRadius: 16, boxShadow: '0 2px 10px rgba(0,0,0,0.18)' }}>
+        <img src={src} alt="" className="w-full h-full object-cover block" />
+      </div>
+    </motion.div>
+  );
+}
+
 function AppIcon({ label, hue, img, ring, contain }: { label: string; hue?: string; img?: string; ring?: boolean; contain?: boolean }) {
   return (
     <div className="flex flex-col items-center gap-1 relative">
@@ -175,7 +188,7 @@ function AppIcon({ label, hue, img, ring, contain }: { label: string; hue?: stri
   );
 }
 
-const APP_TABS = ['HOME', 'ROLLOUT', 'REACH', 'STATS'];
+const APP_TABS = ['HOME', 'ROLLOUT', 'REACH', 'TIKTOK', 'STATS'];
 
 function IPhoneDemo() {
   const [scene, setScene] = useState(0);
@@ -185,10 +198,10 @@ function IPhoneDemo() {
     return () => clearTimeout(t);
   }, [scene]);
 
-  const inMessages = scene <= 4;
-  const inHome     = scene === 5 || scene === 6;
-  const inApp      = scene >= 7;
-  const appPage    = Math.max(0, Math.min(3, scene - 7));
+  const inMessages = scene <= 7;
+  const inHome     = scene === 8 || scene === 9;
+  const inApp      = scene >= 10;
+  const appPage    = Math.max(0, Math.min(4, scene - 10));
 
   return (
     <div className="relative mx-auto" style={{ width: 300 }}>
@@ -216,10 +229,13 @@ function IPhoneDemo() {
                   </motion.div>
                   {scene === 1 && <TypingDots />}
                   <MsgIn show={scene >= 2}>LOCKED IN 🔒 “MIDNIGHT” DROPS FRI, JUL 17.</MsgIn>
-                  <MsgIn show={scene >= 3}>
+                  <MsgIn show={scene >= 3}>GOT COVER ART? I CAN MAKE SOME FROM SCRATCH IF YOU DON’T 🎨</MsgIn>
+                  <MsgOutImage show={scene >= 4} src="/demo/cover-art-demo.jpg" />
+                  <MsgIn show={scene >= 5}>SYNCED ✅ USING YOUR ART FOR THE RELEASE.</MsgIn>
+                  <MsgIn show={scene >= 6}>
                     CAMPAIGN LIVE:<br />✦ 14 CURATORS PITCHED<br />✦ $20/DAY AD RUNNING<br />✦ 6 POSTS QUEUED
                   </MsgIn>
-                  <MsgIn show={scene >= 4}>I’LL TEXT YOUR NUMBERS EVERY MORNING. GO CREATE 🚀</MsgIn>
+                  <MsgIn show={scene >= 7}>I’LL TEXT YOUR NUMBERS EVERY MORNING. GO CREATE 🚀</MsgIn>
                 </div>
                 <div className="px-3 pb-5">
                   <div className="h-8 rounded-full px-3 flex items-center text-[9px] font-semibold" style={{ border: '1px solid rgba(0,0,0,0.15)', color: '#8E8E93' }}>
@@ -239,7 +255,7 @@ function IPhoneDemo() {
                   <AppIcon label="Photos"   hue="#FFFFFF" />
                   <AppIcon label="Mail"     hue="linear-gradient(180deg,#1FB6FF,#0A84FF)" />
                   <AppIcon label="Camera"   hue="#3A3A3C" />
-                  <AppIcon label="GrounduP" hue="#0A0A0F" img="/logo.webp" contain ring={scene === 6} />
+                  <AppIcon label="GrounduP" hue="#0A0A0F" img="/logo.webp" contain ring={scene === 9} />
                   <AppIcon label="Spotify"  hue="#1DB954" />
                   <AppIcon label="TikTok"   hue="#000000" />
                   <AppIcon label="Notes"    hue="#FFD60A" />
@@ -267,9 +283,9 @@ function IPhoneDemo() {
                 </div>
 
                 <div className="flex-1 overflow-hidden">
-                  <motion.div className="flex h-full" animate={{ x: `-${appPage * 25}%` }} transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }} style={{ width: '400%' }}>
+                  <motion.div className="flex h-full" animate={{ x: `-${appPage * 20}%` }} transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }} style={{ width: '500%' }}>
 
-                    <div className="w-1/4 h-full shrink-0 px-4 pt-3 pb-2 flex flex-col gap-2.5">
+                    <div className="w-1/5 h-full shrink-0 px-4 pt-3 pb-2 flex flex-col gap-2.5">
                       <div className="flex items-center justify-between">
                         <span className="font-black text-white text-sm tracking-tight">YO, STASH 👋</span>
                         <span className="px-2 py-1 rounded-full font-black text-[8px]" style={{ background: 'rgba(255,215,0,0.15)', color: GOLD }}>🔥 12-DAY STREAK</span>
@@ -293,7 +309,7 @@ function IPhoneDemo() {
                       </div>
                     </div>
 
-                    <div className="w-1/4 h-full shrink-0 px-4 pt-3 pb-2 flex flex-col gap-2">
+                    <div className="w-1/5 h-full shrink-0 px-4 pt-3 pb-2 flex flex-col gap-2">
                       <span className="font-black text-white text-sm tracking-tight">MIDNIGHT — ROLLOUT</span>
                       {[
                         ['COVER ART', 'DONE', true], ['PRE-SAVE LINK', 'LIVE', true],
@@ -312,7 +328,7 @@ function IPhoneDemo() {
                       ))}
                     </div>
 
-                    <div className="w-1/4 h-full shrink-0 px-4 pt-3 pb-2 flex flex-col gap-2">
+                    <div className="w-1/5 h-full shrink-0 px-4 pt-3 pb-2 flex flex-col gap-2">
                       <span className="font-black text-white text-sm tracking-tight">CURATOR OUTREACH</span>
                       {[
                         ['NEON WAVES PLAYLIST', '128K FOLLOWERS', 'REPLIED ✓', '#30D158'],
@@ -333,7 +349,36 @@ function IPhoneDemo() {
                       </div>
                     </div>
 
-                    <div className="w-1/4 h-full shrink-0 px-4 pt-3 pb-2 flex flex-col gap-2.5">
+                    <div className="w-1/5 h-full shrink-0 px-4 pt-3 pb-2 flex flex-col gap-2">
+                      <span className="font-black text-white text-sm tracking-tight">TIKTOK SOUND</span>
+                      <div className="rounded-2xl p-3.5 grid grid-cols-2 gap-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,215,0,0.2)' }}>
+                        <div>
+                          <span className="block text-[7px] font-black tracking-widest text-white/40 mb-1">VIDEOS MADE</span>
+                          <span className="block font-black text-white text-lg tracking-tight">312</span>
+                        </div>
+                        <div>
+                          <span className="block text-[7px] font-black tracking-widest text-white/40 mb-1">SOUND VIEWS</span>
+                          <span className="block font-black text-white text-lg tracking-tight">2.4M</span>
+                        </div>
+                      </div>
+                      {[
+                        ['@rainwontmiss', '842K views', '#30D158'],
+                        ['@dielikejay', '410K views', '#FFD700'],
+                        ['@micchekmondays', '205K views', 'rgba(255,255,255,0.45)'],
+                        ['@unsignedhype', '98K views', 'rgba(255,255,255,0.35)'],
+                      ].map(([handle, views, c]) => (
+                        <div key={handle as string} className="rounded-xl px-2.5 py-2 flex items-center gap-2.5" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                          <div className="w-6 h-8 rounded-md shrink-0 flex items-center justify-center text-[9px]" style={{ background: 'linear-gradient(160deg,#2a2a2f,#0A0A0F)' }}>♪</div>
+                          <div className="flex-1 min-w-0">
+                            <span className="block text-[9px] font-black text-white/90 tracking-wide truncate">{handle as string}</span>
+                            <span className="text-[7px] font-black tracking-widest" style={{ color: c as string }}>{views as string}</span>
+                          </div>
+                        </div>
+                      ))}
+                      <span className="text-[7px] font-bold text-white/30 tracking-widest text-center mt-auto">UP TRACKS EVERY VIDEO USING YOUR SOUND</span>
+                    </div>
+
+                    <div className="w-1/5 h-full shrink-0 px-4 pt-3 pb-2 flex flex-col gap-2.5">
                       <span className="font-black text-white text-sm tracking-tight">YOUR NUMBERS</span>
                       <div className="rounded-2xl p-3.5" style={{ background: 'rgba(255,255,255,0.05)' }}>
                         <span className="block text-[8px] font-black tracking-widest text-white/40 mb-1">MONTHLY LISTENERS</span>
@@ -357,7 +402,7 @@ function IPhoneDemo() {
                   </motion.div>
                 </div>
 
-                <div className="shrink-0 px-4 pt-2 pb-6 grid grid-cols-4 gap-1" style={{ borderTop: '1px solid rgba(255,255,255,0.07)', background: 'rgba(0,0,0,0.4)' }}>
+                <div className="shrink-0 px-4 pt-2 pb-6 grid grid-cols-5 gap-1" style={{ borderTop: '1px solid rgba(255,255,255,0.07)', background: 'rgba(0,0,0,0.4)' }}>
                   {APP_TABS.map((t, i) => (
                     <div key={t} className="flex flex-col items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full" style={{ background: i === appPage ? GOLD : 'rgba(255,255,255,0.15)' }} />
@@ -711,7 +756,7 @@ function LandingPage() {
 
       {/* ── PROOF — stacked receipts on a black band ── */}
       <div className="relative z-10 mt-28 py-24 overflow-hidden" style={{ background: INK }}>
-        <div className="px-6 md:px-8 mb-16 text-center">
+        <div className="px-6 md:px-8 mb-9 text-center">
           <span className="block mb-3" style={{ fontFamily: PIXEL, fontSize: 12, letterSpacing: '0.15em', color: 'rgba(244,241,236,0.4)' }}>
             THE RECEIPTS
           </span>
@@ -719,35 +764,51 @@ function LandingPage() {
             NOT PROMISES. <span style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontWeight: 400, color: GOLD }}>Proof.</span>
           </h2>
         </div>
-        <div className="flex justify-center pb-10">
+        <div className="flex justify-center pb-20">
           {/* Cards fan rightward+downward from the base card, so the true
-              visual centroid sits half the max horizontal offset (128px) to
+              visual centroid sits half the max horizontal offset (176px) to
               the right of center — shift left to compensate. */}
-          <div className="w-full max-w-3xl -translate-x-16">
+          <div className="w-full max-w-3xl -translate-x-[88px]">
             <DisplayCards
               cards={[
                 {
-                  icon: <TrendingUp className="size-4" style={{ color: GOLD }} />,
+                  icon: <TrendingUp className="size-3.5" style={{ color: GOLD }} />,
                   title: 'CAMPAIGN RESULTS',
                   description: '38K STREAMS IN 30 DAYS',
                   date: 'MIDNIGHT ROLLOUT',
                   className:
-                    "[grid-area:stack] hover:-translate-y-10 before:absolute before:w-[100%] before:outline-1 before:rounded-2xl before:outline-white/10 before:h-[100%] before:content-[''] before:bg-black/40 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0",
+                    "[grid-area:stack] hover:-translate-y-6 before:absolute before:w-[100%] before:outline-1 before:rounded-2xl before:outline-white/10 before:h-[100%] before:content-[''] before:bg-black/40 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0",
                 },
                 {
-                  icon: <Music2 className="size-4" style={{ color: GOLD }} />,
+                  icon: <Music2 className="size-3.5" style={{ color: GOLD }} />,
                   title: 'SOUND ON TIKTOK',
-                  description: '1,204 VIDEOS MADE TO YOUR SOUND',
+                  description: '1,204 VIDEOS TO YOUR SOUND',
                   date: 'LAST 7 DAYS',
                   className:
-                    "[grid-area:stack] translate-x-16 translate-y-10 hover:-translate-y-1 before:absolute before:w-[100%] before:outline-1 before:rounded-2xl before:outline-white/10 before:h-[100%] before:content-[''] before:bg-black/40 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0",
+                    "[grid-area:stack] translate-x-[44px] translate-y-[26px] hover:-translate-y-1 before:absolute before:w-[100%] before:outline-1 before:rounded-2xl before:outline-white/10 before:h-[100%] before:content-[''] before:bg-black/40 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0",
                 },
                 {
-                  icon: <Newspaper className="size-4" style={{ color: GOLD }} />,
+                  icon: <Newspaper className="size-3.5" style={{ color: GOLD }} />,
                   title: 'BLOG COVERAGE',
-                  description: '12 FEATURES ACROSS INDIE BLOGS',
+                  description: '12 FEATURES ACROSS BLOGS',
                   date: 'THIS RELEASE',
-                  className: '[grid-area:stack] translate-x-32 translate-y-20 hover:translate-y-10',
+                  className:
+                    "[grid-area:stack] translate-x-[88px] translate-y-[52px] hover:translate-y-6 before:absolute before:w-[100%] before:outline-1 before:rounded-2xl before:outline-white/10 before:h-[100%] before:content-[''] before:bg-black/40 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0",
+                },
+                {
+                  icon: <Trophy className="size-3.5" style={{ color: GOLD }} />,
+                  title: 'BILLBOARD CHARTED',
+                  description: '#17 EMERGING R&B/HIP-HOP',
+                  date: 'BILLBOARD.COM',
+                  className:
+                    "[grid-area:stack] translate-x-[132px] translate-y-[78px] hover:translate-y-10 before:absolute before:w-[100%] before:outline-1 before:rounded-2xl before:outline-white/10 before:h-[100%] before:content-[''] before:bg-black/40 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0",
+                },
+                {
+                  icon: <ListMusic className="size-3.5" style={{ color: GOLD }} />,
+                  title: 'APPLE MUSIC CHART',
+                  description: '#9 ON NEW MUSIC DAILY',
+                  date: 'APPLE MUSIC',
+                  className: '[grid-area:stack] translate-x-[176px] translate-y-[104px] hover:translate-y-14',
                 },
               ]}
             />

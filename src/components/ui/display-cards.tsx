@@ -24,21 +24,21 @@ function DisplayCard({
   return (
     <div
       className={cn(
-        "relative flex h-36 w-[22rem] -skew-y-[8deg] select-none flex-col justify-between rounded-2xl border-2 backdrop-blur-sm px-5 py-4 transition-all duration-700",
-        "after:absolute after:-right-1 after:top-[-5%] after:h-[110%] after:w-[20rem] after:bg-gradient-to-l after:from-black after:to-transparent after:content-['']",
+        "relative flex h-24 w-64 -skew-y-[8deg] select-none flex-col justify-between rounded-2xl border-2 backdrop-blur-sm px-4 py-3 transition-all duration-700",
+        "after:absolute after:-right-1 after:top-[-5%] after:h-[110%] after:w-64 after:bg-gradient-to-l after:from-black after:to-transparent after:content-['']",
         "hover:border-white/25 [&>*]:flex [&>*]:items-center [&>*]:gap-2",
         className
       )}
       style={{ background: "rgba(17,17,17,0.75)", borderColor: "rgba(255,255,255,0.1)" }}
     >
       <div>
-        <span className="relative inline-block rounded-full p-1.5" style={{ background: "rgba(255,215,0,0.12)" }}>
+        <span className="relative inline-block rounded-full p-1" style={{ background: "rgba(255,215,0,0.12)" }}>
           {icon}
         </span>
-        <p className={cn("text-lg font-black tracking-tight text-white", titleClassName)}>{title}</p>
+        <p className={cn("text-sm font-black tracking-tight text-white", titleClassName)}>{title}</p>
       </div>
-      <p className="whitespace-nowrap text-base font-bold tracking-wide text-white/85">{description}</p>
-      <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{date}</p>
+      <p className="whitespace-nowrap text-xs font-bold tracking-wide text-white/85">{description}</p>
+      <p className="text-[9px] font-black uppercase tracking-widest text-white/35">{date}</p>
     </div>
   )
 }
