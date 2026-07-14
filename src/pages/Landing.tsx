@@ -11,6 +11,7 @@ import { SupportBot } from '../components/ui/support-bot';
 import { InfiniteBentoPan } from '../components/ui/infinite-bento-pan';
 import { CinematicFooter } from '../components/ui/motion-footer';
 import { GetStartedModal, GET_STARTED_EVENT } from '../components/ui/GetStartedModal';
+import { openWaitlistModal } from '../components/ui/WaitlistModal';
 import { DemoModal } from '../components/ui/DemoModal';
 import { UpBot } from '../components/ui/UpBot';
 import { handlePricingClick } from '../lib/pricingCheckout';
@@ -453,24 +454,20 @@ function LandingPage() {
 
   // Listen for the global "open the Get Started modal" event — any CTA can
   // trigger it via window.dispatchEvent(new CustomEvent('gup:get-started')).
-  // During WAITLIST_MODE this routes to the waitlist instead of the modal.
+  // During WAITLIST_MODE this opens the waitlist popup instead of the modal.
   useEffect(() => {
-    const h = () => { if (WAITLIST_MODE) { scrollToWaitlist(); } else { setGetStartedOpen(true); } };
+    const h = () => { if (WAITLIST_MODE) { openWaitlistModal(); } else { setGetStartedOpen(true); } };
     window.addEventListener(GET_STARTED_EVENT, h);
     return () => window.removeEventListener(GET_STARTED_EVENT, h);
   }, []);
 
-  function scrollToWaitlist() {
-    document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
   const openGetStarted = () => {
-    if (WAITLIST_MODE) { scrollToWaitlist(); return; }
+    if (WAITLIST_MODE) { openWaitlistModal(); return; }
     setGetStartedOpen(true);
   };
 
   async function onPlanSelect(planName: string) {
-    if (WAITLIST_MODE) { scrollToWaitlist(); return; }
+    if (WAITLIST_MODE) { openWaitlistModal(); return; }
     setPricingError(null);
     const result = await handlePricingClick({
       planName,

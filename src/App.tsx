@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { Loader } from './components/ui/loader';
+import { WaitlistModal } from './components/ui/WaitlistModal';
 import { useAuth } from './hooks/useAuth';
 import { WAITLIST_MODE } from './lib/featureFlags';
 import './App.css';
@@ -106,6 +107,7 @@ function App() {
       <AnimatePresence>
         {showSplash && <PageSplash key="splash" onDone={() => setShowSplash(false)} />}
       </AnimatePresence>
+      {WAITLIST_MODE && <WaitlistModal />}
       <Suspense fallback={<AuthLoader />}>
         <Routes>
           <Route path="/" element={<LandingPage />} />

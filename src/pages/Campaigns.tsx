@@ -6,6 +6,7 @@ import { ArrowUpRight, ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { CAMPAIGNS, type Campaign } from '../data/campaigns'
 import { WAITLIST_MODE } from '../lib/featureFlags'
+import { openWaitlistModal } from '../components/ui/WaitlistModal'
 
 function CampaignRow({ c, index }: { c: Campaign; index: number }) {
   const [hover, setHover] = useState(false)
@@ -77,9 +78,15 @@ export function CampaignsPage() {
         <button onClick={() => navigate('/')} className="flex items-center gap-2 text-white/40 hover:text-white text-[11px] font-black uppercase tracking-widest transition-colors">
           <ArrowLeft size={14} /> GrounduP
         </button>
-        <a href={WAITLIST_MODE ? '/waitlist' : '/signup'} className="px-4 py-2 rounded-xl bg-[#FFD700] text-black text-[10px] font-black uppercase tracking-widest hover:scale-[1.03] transition-transform">
-          {WAITLIST_MODE ? 'Join Waitlist' : 'Get Started'}
-        </a>
+        {WAITLIST_MODE ? (
+          <button onClick={openWaitlistModal} className="px-4 py-2 rounded-xl bg-[#FFD700] text-black text-[10px] font-black uppercase tracking-widest hover:scale-[1.03] transition-transform">
+            Join Waitlist
+          </button>
+        ) : (
+          <a href="/signup" className="px-4 py-2 rounded-xl bg-[#FFD700] text-black text-[10px] font-black uppercase tracking-widest hover:scale-[1.03] transition-transform">
+            Get Started
+          </a>
+        )}
       </header>
 
       <main className="max-w-5xl mx-auto px-5 sm:px-8 py-16 sm:py-24">
@@ -103,7 +110,7 @@ export function CampaignsPage() {
         <div className="mt-16 text-center">
           <p className="text-white/30 text-sm font-medium mb-5">Want this for your next release?</p>
           <button
-            onClick={() => navigate(WAITLIST_MODE ? '/waitlist' : '/signup')}
+            onClick={() => WAITLIST_MODE ? openWaitlistModal() : navigate('/signup')}
             className="inline-flex items-center gap-2 px-7 h-14 rounded-2xl bg-[#FFD700] text-black font-black text-base uppercase tracking-tight hover:scale-[1.02] transition-transform shadow-[0_8px_32px_rgba(255,215,0,0.25)]"
           >
             {WAITLIST_MODE ? 'Join the waitlist' : 'Start your rollout'}
