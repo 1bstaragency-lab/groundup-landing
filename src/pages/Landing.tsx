@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, Music2, Newspaper, Trophy, ListMusic } from 'lucide-react';
 import { PIXEL, SCRIPT, BG, INK, DIM, FAINT, GOLD, GOLDD, BLUE } from '../lib/brand-tokens';
+import { WAITLIST_MODE } from '../lib/featureFlags';
 import { PricingSection } from '../components/ui/pricing-section';
 import DisplayCards from '../components/ui/display-cards';
 import { GradientButton } from '../components/ui/gradient-button';
@@ -435,6 +436,7 @@ function LandingPage() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [referralCode, setReferralCode] = useState('');
+  const [inviteCopied, setInviteCopied] = useState(false);
   const [referredBy, setReferredBy] = useState<string | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
@@ -451,15 +453,24 @@ function LandingPage() {
 
   // Listen for the global "open the Get Started modal" event — any CTA can
   // trigger it via window.dispatchEvent(new CustomEvent('gup:get-started')).
+  // During WAITLIST_MODE this routes to the waitlist instead of the modal.
   useEffect(() => {
-    const h = () => setGetStartedOpen(true);
+    const h = () => { if (WAITLIST_MODE) { scrollToWaitlist(); } else { setGetStartedOpen(true); } };
     window.addEventListener(GET_STARTED_EVENT, h);
     return () => window.removeEventListener(GET_STARTED_EVENT, h);
   }, []);
 
-  const openGetStarted = () => setGetStartedOpen(true);
+  function scrollToWaitlist() {
+    document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  const openGetStarted = () => {
+    if (WAITLIST_MODE) { scrollToWaitlist(); return; }
+    setGetStartedOpen(true);
+  };
 
   async function onPlanSelect(planName: string) {
+    if (WAITLIST_MODE) { scrollToWaitlist(); return; }
     setPricingError(null);
     const result = await handlePricingClick({
       planName,
@@ -548,7 +559,7 @@ function LandingPage() {
             Sign In
           </button>
           <button onClick={openGetStarted} className="px-5 py-2.5 rounded-full font-black text-[11px] uppercase tracking-widest cursor-pointer" style={{ background: GOLD, color: INK }}>
-            Get In
+            {WAITLIST_MODE ? 'Join Waitlist' : 'Get In'}
           </button>
         </div>
 
@@ -595,7 +606,7 @@ function LandingPage() {
                 style={{ background: GOLD, color: INK }}
                 onClick={() => { setMobileNavOpen(false); openGetStarted(); }}
               >
-                Get In
+                {WAITLIST_MODE ? 'Join Waitlist' : 'Get In'}
               </button>
             </div>
 
@@ -642,7 +653,7 @@ function LandingPage() {
             RUN ADS, READ YOUR NUMBERS. YOUR MUSIC, YOUR MOVES, YOUR MONEY.
           </p>
           <div className="flex items-center gap-3 mt-8 flex-wrap">
-            <GradientButton onClick={openGetStarted}>START FREE →</GradientButton>
+            <GradientButton onClick={openGetStarted}>{WAITLIST_MODE ? 'JOIN WAITLIST →' : 'START FREE →'}</GradientButton>
             <button onClick={() => setShowDemo(true)} className="px-8 py-4 rounded-full font-black text-[12px] uppercase tracking-widest cursor-pointer border bg-transparent" style={{ borderColor: FAINT, color: INK }}>
               WATCH 60S DEMO
             </button>
@@ -864,10 +875,16 @@ function LandingPage() {
 
             <div className="text-center mb-12">
               <h2 className="m-0 mb-4 font-black tracking-tighter" style={{ fontSize: 'clamp(40px, 7vw, 96px)', lineHeight: 0.95 }}>
-                YOUR<span style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontWeight: 400, color: GOLD }}> MOVE.</span>
+                {WAITLIST_MODE ? (
+                  <>GET ON<span style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontWeight: 400, color: GOLD }}> THE LIST.</span></>
+                ) : (
+                  <>YOUR<span style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontWeight: 400, color: GOLD }}> MOVE.</span></>
+                )}
               </h2>
               <p className="m-0 text-[12px] font-bold tracking-[0.15em]" style={{ color: 'rgba(244,241,236,0.5)' }}>
-                THE ARTIST OS. FREE TO START. TWO MINUTES TO SET UP.
+                {WAITLIST_MODE
+                  ? "LIMITED EARLY ACCESS. WE'RE APPROVING ARTISTS IN WAVES — JOIN NOW TO GET IN EARLY."
+                  : 'THE ARTIST OS. FREE TO START. TWO MINUTES TO SET UP.'}
               </p>
             </div>
 
@@ -915,7 +932,7 @@ function LandingPage() {
                       style={{ background: 'rgba(244,241,236,0.08)', border: '1px solid rgba(244,241,236,0.2)', color: BG }}
                     />
                     <div className="pt-2">
-                      <GradientButton type="submit" className="w-full h-14 min-w-0">GET IN →</GradientButton>
+                      <GradientButton type="submit" className="w-full h-14 min-w-0">{WAITLIST_MODE ? 'JOIN WAITLIST →' : 'GET IN →'}</GradientButton>
                     </div>
                   </motion.form>
                 ) : (
@@ -925,12 +942,34 @@ function LandingPage() {
                     className="text-center p-10 rounded-3xl"
                     style={{ background: 'rgba(244,241,236,0.06)', border: '1px solid rgba(255,215,0,0.3)' }}
                   >
-                    <h3 className="m-0 mb-5 font-black uppercase tracking-tighter" style={{ fontSize: 28 }}>YOU'RE IN. LET'S GO.</h3>
-                    <p className="m-0 mb-3 text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: GOLD }}>YOUR ACCESS CODE</p>
+                    <h3 className="m-0 mb-5 font-black uppercase tracking-tighter" style={{ fontSize: 28 }}>
+                      {WAITLIST_MODE ? "YOU'RE ON THE LIST." : "YOU'RE IN. LET'S GO."}
+                    </h3>
+                    <p className="m-0 mb-3 text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: GOLD }}>
+                      {WAITLIST_MODE ? 'YOUR INVITE CODE' : 'YOUR ACCESS CODE'}
+                    </p>
                     <div className="rounded-xl px-4 py-3 mb-6 select-all" style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(244,241,236,0.15)' }}>
                       <code className="text-sm font-mono tracking-wider" style={{ color: BG }}>{referralCode}</code>
                     </div>
-                    <GradientButton onClick={() => navigate('/signup')} className="w-full h-14 min-w-0">CREATE YOUR ACCOUNT</GradientButton>
+                    {WAITLIST_MODE ? (
+                      <>
+                        <p className="m-0 mb-4 text-[11px] font-bold leading-relaxed" style={{ color: 'rgba(244,241,236,0.5)' }}>
+                          WE'LL TEXT YOU WHEN YOUR SPOT OPENS. SHARE YOUR CODE — EVERY ARTIST WHO JOINS WITH IT MOVES YOU UP THE LIST.
+                        </p>
+                        <GradientButton
+                          onClick={() => {
+                            navigator.clipboard.writeText(`https://groundupapp.com/?ref=${referralCode}`).catch(() => {});
+                            setInviteCopied(true);
+                            setTimeout(() => setInviteCopied(false), 2000);
+                          }}
+                          className="w-full h-14 min-w-0"
+                        >
+                          {inviteCopied ? 'COPIED ✓' : 'COPY INVITE LINK'}
+                        </GradientButton>
+                      </>
+                    ) : (
+                      <GradientButton onClick={() => navigate('/signup')} className="w-full h-14 min-w-0">CREATE YOUR ACCOUNT</GradientButton>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>

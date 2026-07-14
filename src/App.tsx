@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { Loader } from './components/ui/loader';
 import { useAuth } from './hooks/useAuth';
+import { WAITLIST_MODE } from './lib/featureFlags';
 import './App.css';
 
 // ─── Route-level code splitting ───────────────────────────────────────────────
@@ -118,12 +119,16 @@ function App() {
           <Route
             path="/signup"
             element={
-              <RedirectIfAuthed>
-                <SignUpPage
-                  onComplete={() => window.location.replace('/dashboard')}
-                  onSwitchToLogin={() => window.location.replace('/login')}
-                />
-              </RedirectIfAuthed>
+              WAITLIST_MODE ? (
+                <Navigate to="/waitlist" replace />
+              ) : (
+                <RedirectIfAuthed>
+                  <SignUpPage
+                    onComplete={() => window.location.replace('/dashboard')}
+                    onSwitchToLogin={() => window.location.replace('/login')}
+                  />
+                </RedirectIfAuthed>
+              )
             }
           />
           <Route

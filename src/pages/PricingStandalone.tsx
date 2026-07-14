@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PricingPage } from '../components/ui/pricing-page';
 import { handlePricingClick } from '../lib/pricingCheckout';
 import { useAuth } from '../hooks/useAuth';
+import { WAITLIST_MODE } from '../lib/featureFlags';
 
 function PricingStandalonePage() {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ function PricingStandalonePage() {
   const [err, setErr] = useState<string | null>(null);
 
   async function onPlanSelect(planName: string) {
+    if (WAITLIST_MODE) { navigate('/waitlist'); return; }
     setErr(null);
     const result = await handlePricingClick({
       planName,
@@ -27,7 +29,9 @@ function PricingStandalonePage() {
           {!user ? (
             <>
               <a href="/login" className="text-white/40 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors">Sign In</a>
-              <a href="/signup" className="px-4 py-2 rounded-xl bg-[#FFD700] text-black text-[10px] font-black uppercase tracking-widest hover:scale-[1.03] transition-transform">Get Started</a>
+              <a href={WAITLIST_MODE ? '/waitlist' : '/signup'} className="px-4 py-2 rounded-xl bg-[#FFD700] text-black text-[10px] font-black uppercase tracking-widest hover:scale-[1.03] transition-transform">
+                {WAITLIST_MODE ? 'Join Waitlist' : 'Get Started'}
+              </a>
             </>
           ) : (
             <a href="/dashboard/home" className="px-4 py-2 rounded-xl bg-[#FFD700] text-black text-[10px] font-black uppercase tracking-widest hover:scale-[1.03] transition-transform">Dashboard</a>

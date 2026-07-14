@@ -7,6 +7,7 @@ import { Rocket, CalendarClock, BarChart3, Send, Megaphone, Sparkles, Building2,
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { TimelineContent } from "@/components/ui/timeline-animation"
 import { PIXEL, INK, DIM, FAINT, GOLD } from "@/lib/brand-tokens"
+import { WAITLIST_MODE } from "@/lib/featureFlags"
 
 interface Plan {
   name: string
@@ -167,7 +168,7 @@ export function PricingSection({ onSelect }: { onSelect?: (planName: string) => 
                     className="w-full mb-8 py-4 rounded-full font-black text-[11px] uppercase tracking-widest cursor-pointer transition-transform hover:scale-[1.02]"
                     style={{ background: plan.popular ? GOLD : INK, color: plan.popular ? INK : "#F4F1EC" }}
                   >
-                    {isCustom ? "TALK TO US" : "START FREE"}
+                    {isCustom ? "TALK TO US" : WAITLIST_MODE ? "JOIN WAITLIST" : "START FREE"}
                   </button>
 
                   <ul className="m-0 p-0 list-none space-y-3 mb-8">
