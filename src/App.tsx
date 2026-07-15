@@ -16,6 +16,7 @@ const PricingStandalone = lazy(() => import('./pages/PricingStandalone'));
 const AppPageV1         = lazy(() => import('./pages/AppPageV1'));
 const AppPageV2         = lazy(() => import('./pages/AppPageV2'));
 const PrivacyPolicy     = lazy(() => import('./pages/PrivacyPolicy'));
+const NotFoundPage      = lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFoundPage })));
 
 const CampaignsPage      = lazy(() => import('./pages/Campaigns').then(m => ({ default: m.CampaignsPage })));
 const Dashboard          = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -198,8 +199,8 @@ function App() {
           <Route path="/rollout"   element={<OfferPage offerId="rollout" />} />
           <Route path="/manager"   element={<OfferPage offerId="manager" />} />
           <Route path="/comeback"  element={<OfferPage offerId="comeback" />} />
-          {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Catch-all — public/_redirects serves this with a real 404 status */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
     </>

@@ -1,4 +1,39 @@
 # Real app (Expo web build) lives under /mvp — deep links + refreshes
 /mvp/*    /mvp/index.html    200
 
-/*    /index.html    200
+# Known app routes (mirrors src/App.tsx's <Routes>) — each resolves to the
+# SPA shell with a normal 200 so React Router can render the right page.
+# IMPORTANT: this list must stay in sync with App.tsx. Add new top-level
+# routes here too, or they'll incorrectly fall through to the 404 catch-all
+# below. Nested /dashboard/* routes are covered by the single wildcard entry.
+/                 /index.html   200
+/pricing          /index.html   200
+/app              /index.html   200
+/app-v1           /index.html   200
+/app-v2           /index.html   200
+/get-app          /index.html   200
+/campaigns        /index.html   200
+/onboarding       /index.html   200
+/signup           /index.html   200
+/login            /index.html   200
+/dashboard        /index.html   200
+/dashboard/*      /index.html   200
+/forgot-password  /index.html   200
+/reset-password   /index.html   200
+/join/*           /index.html   200
+/contact          /index.html   200
+/admin            /index.html   200
+/creators         /index.html   200
+/privacy          /index.html   200
+/waitlist         /index.html   200
+/free             /index.html   200
+/curators         /index.html   200
+/ads              /index.html   200
+/rollout          /index.html   200
+/manager          /index.html   200
+/comeback         /index.html   200
+
+# Anything else is genuinely unknown — serve the SPA shell (App.tsx's
+# catch-all route renders a distinct NotFound page) but with a real 404
+# status so crawlers/AI answer engines don't treat it as duplicate content.
+/*    /index.html    404
