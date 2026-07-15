@@ -21,10 +21,93 @@ export function openWaitlistModal() {
   window.dispatchEvent(new CustomEvent(WAITLIST_OPEN_EVENT))
 }
 
+// ─── Data-referenced sliders ──────────────────────────────────────────────
+// Each stop pairs a plain-English label with a concrete number range, so the
+// slider reads as a real self-assessment instead of a vague 1-5 scale.
+interface SliderStop { label: string; sub: string }
+
+const YEARS_ACTIVE: SliderStop[] = [
+  { label: 'Just Starting Out', sub: '< 1 year' },
+  { label: 'New Artist',        sub: '1–3 years' },
+  { label: 'Developing',        sub: '3–5 years' },
+  { label: 'Experienced',       sub: '5–10 years' },
+  { label: 'Veteran',           sub: '10+ years' },
+]
+
+const MOMENTUM: SliderStop[] = [
+  { label: 'Just Starting Out', sub: '0–1K monthly listeners' },
+  { label: 'Building Buzz',     sub: '1K–10K monthly listeners' },
+  { label: 'Bubbling Up',       sub: '10K–50K monthly listeners' },
+  { label: 'On The Rise',       sub: '50K–250K monthly listeners' },
+  { label: 'Taking Off',        sub: '250K+ monthly listeners' },
+]
+
+const FANBASE: SliderStop[] = [
+  { label: 'Just Starting Out', sub: '0–500 total followers' },
+  { label: 'Small But Loyal',   sub: '500–5K total followers' },
+  { label: 'Growing Fast',      sub: '5K–25K total followers' },
+  { label: 'Established',       sub: '25K–100K total followers' },
+  { label: 'Major',             sub: '100K+ total followers' },
+]
+
+const RELEASE_ACTIVITY: SliderStop[] = [
+  { label: 'None Yet',          sub: '0 releases/yr' },
+  { label: 'Getting Started',   sub: '1–2 releases/yr' },
+  { label: 'Consistent',        sub: '3–5 releases/yr' },
+  { label: 'Prolific',          sub: '6–10 releases/yr' },
+  { label: 'Machine',           sub: '10+ releases/yr' },
+]
+
+const MONTHLY_INCOME: SliderStop[] = [
+  { label: 'Not Yet',           sub: '$0/mo from music' },
+  { label: 'Getting There',     sub: '$1–500/mo' },
+  { label: 'Side Income',       sub: '$500–2K/mo' },
+  { label: 'Solid Income',      sub: '$2K–10K/mo' },
+  { label: 'Full-Time',         sub: '$10K+/mo' },
+]
+
+function DataSlider({
+  label, stops, value, onChange,
+}: {
+  label:    string
+  stops:    SliderStop[]
+  value:    number
+  onChange: (v: number) => void
+}) {
+  const current = stops[value]
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <label className="text-[9px] font-black uppercase tracking-widest text-white/45">{label}</label>
+        <span className="text-[#FFD700] text-[10px] font-black text-right">{current.label}</span>
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={stops.length - 1}
+        step={1}
+        value={value}
+        onChange={e => onChange(Number(e.target.value))}
+        className="w-full h-1.5 accent-[#FFD700] cursor-pointer"
+      />
+      <div className="flex items-center justify-between mt-1">
+        <span className="text-white/25 text-[8px] font-bold uppercase tracking-wide">{stops[0].sub}</span>
+        <span className="text-[#FFD700]/70 text-[9px] font-bold">{current.sub}</span>
+        <span className="text-white/25 text-[8px] font-bold uppercase tracking-wide">{stops[stops.length - 1].sub}</span>
+      </div>
+    </div>
+  )
+}
+
 export function WaitlistModal() {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [yearsActive, setYearsActive]           = useState(0)
+  const [momentum, setMomentum]                 = useState(0)
+  const [fanbase, setFanbase]                   = useState(0)
+  const [releaseActivity, setReleaseActivity]   = useState(0)
+  const [monthlyIncome, setMonthlyIncome]       = useState(0)
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -57,6 +140,11 @@ export function WaitlistModal() {
       setError(null)
       setName('')
       setEmail('')
+      setYearsActive(0)
+      setMomentum(0)
+      setFanbase(0)
+      setReleaseActivity(0)
+      setMonthlyIncome(0)
       setCopied(false)
     }, 250)
   }
@@ -80,6 +168,16 @@ export function WaitlistModal() {
         artist_name: name.trim() || null,
         referral_code: refCode,
         source: 'popup',
+        years_active:            YEARS_ACTIVE[yearsActive].label,
+        years_active_score:      yearsActive,
+        momentum_level:          MOMENTUM[momentum].label,
+        momentum_score:          momentum,
+        fanbase_level:           FANBASE[fanbase].label,
+        fanbase_score:           fanbase,
+        release_activity_level:  RELEASE_ACTIVITY[releaseActivity].label,
+        release_activity_score:  releaseActivity,
+        monthly_income_level:    MONTHLY_INCOME[monthlyIncome].label,
+        monthly_income_score:    monthlyIncome,
       }])
       if (insertErr && !/duplicate|unique/i.test(insertErr.message)) {
         console.warn('[waitlist] insert error:', insertErr)
@@ -123,7 +221,7 @@ export function WaitlistModal() {
             className="fixed inset-0 z-[210] flex items-center justify-center p-4 pointer-events-none"
           >
             <div
-              className="relative w-full max-w-md pointer-events-auto rounded-3xl border border-white/10 overflow-hidden"
+              className="relative w-full max-w-md pointer-events-auto rounded-3xl border border-white/10 overflow-hidden max-h-[92vh] flex flex-col"
               style={{
                 background: 'linear-gradient(160deg, #0F0F0F 0%, #0A0A0A 100%)',
                 boxShadow:  '0 40px 80px rgba(0,0,0,0.6), 0 0 80px rgba(255,215,0,0.08)',
@@ -143,10 +241,10 @@ export function WaitlistModal() {
                 </svg>
               </button>
 
-              <div className="relative px-8 pt-10 pb-8 text-center">
+              <div className="relative px-8 pt-10 pb-8 overflow-y-auto">
                 <AnimatePresence mode="wait">
                   {!submitted ? (
-                    <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#FFD700]/30 bg-[#FFD700]/10 mb-5">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#FFD700] shadow-[0_0_8px_rgba(255,215,0,0.6)]" />
                         <span className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.25em]">Early Access Waitlist</span>
@@ -172,11 +270,21 @@ export function WaitlistModal() {
                           onChange={e => setEmail(e.target.value)}
                           className="w-full h-13 px-5 py-3.5 rounded-2xl font-bold text-sm outline-none bg-white/5 border border-white/10 text-white placeholder-white/25 focus:border-[#FFD700]/40 transition-colors"
                         />
+
+                        {/* Data-referenced self-assessment sliders */}
+                        <div className="pt-3 pb-1 space-y-4 border-t border-white/8 mt-4">
+                          <DataSlider label="How long have you been making music?" stops={YEARS_ACTIVE} value={yearsActive} onChange={setYearsActive} />
+                          <DataSlider label="Momentum in the industry"            stops={MOMENTUM} value={momentum} onChange={setMomentum} />
+                          <DataSlider label="Fanbase size"                        stops={FANBASE} value={fanbase} onChange={setFanbase} />
+                          <DataSlider label="Release activity"                    stops={RELEASE_ACTIVITY} value={releaseActivity} onChange={setReleaseActivity} />
+                          <DataSlider label="Monthly income from music"           stops={MONTHLY_INCOME} value={monthlyIncome} onChange={setMonthlyIncome} />
+                        </div>
+
                         {error && <p className="text-red-400 text-[11px] font-bold px-1">{error}</p>}
                         <button
                           type="submit"
                           disabled={loading}
-                          className="w-full h-13 py-3.5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                          className="w-full h-13 py-3.5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none mt-1"
                           style={{ background: '#FFD700', color: '#000', boxShadow: '0 4px 20px rgba(255,215,0,0.35)' }}
                         >
                           {loading ? 'Joining…' : 'Join Waitlist →'}
@@ -187,6 +295,7 @@ export function WaitlistModal() {
                     <motion.div
                       key="success"
                       initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
+                      className="text-center"
                     >
                       <div className="w-14 h-14 mx-auto rounded-2xl bg-[#FFD700]/10 border border-[#FFD700]/30 flex items-center justify-center mb-5">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="2.5">
