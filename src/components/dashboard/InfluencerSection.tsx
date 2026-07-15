@@ -4,12 +4,12 @@ import {
   Search, TrendingUp, Music2, Globe, ExternalLink, Zap, Play, Radio,
   Lock, Crown, X, Mail, Check, Sparkles, ArrowRight, ArrowLeft,
   Flame, BarChart2, Star, Users, Pen, MessageSquare, ListMusic,
-  Info,
+  Info, Upload, FileAudio, Plus, XCircle,
 } from 'lucide-react';
 import { CampaignBuilder } from './CampaignBuilder';
 import { INFLUENCERS, NETWORK_STATS, type Platform, type TikTokTier, type Influencer } from '../../data/influencers';
 import { useAuth } from '../../hooks/useAuth';
-import { GlassCheckoutCard } from '../ui/glass-checkout-card';
+import { openCheckout } from '../../lib/pricingCheckout';
 import { OutreachPanel, GmailConnectButton, type OutreachTarget } from '../ui/GmailCompose';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -109,6 +109,25 @@ function sortByGoal(list: Influencer[], goal: CampaignGoal): Influencer[] {
     default:
       return sorted.sort((a, b) => b.followers - a.followers);
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Audio-match — broad genre/mood tags an artist can pick for their track,
+// matched against the free-text `niche` field on the curator dataset.
+// ─────────────────────────────────────────────────────────────────────────────
+const MATCH_TAG_OPTIONS = [
+  'Hip-Hop', 'Rap', 'R&B', 'Pop', 'Afrobeats', 'Trap', 'Drill',
+  'Indie', 'Electronic', 'Latin', 'Rock', 'Gospel', 'Jazz',
+  'Neo-Soul', 'Lo-fi', 'Alternative', 'Country', 'Reggae',
+];
+
+/** Score a curator against a set of loosely-matched genre/mood tags. */
+function tagMatchScore(inf: Influencer, tags: string[]): number {
+  const niche = inf.niche.toLowerCase();
+  return tags.reduce((score, tag) => {
+    const t = tag.toLowerCase();
+    return niche.includes(t) || t.includes(niche) ? score + 1 : score;
+  }, 0);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -218,7 +237,19 @@ function ExampleBubble({ text }: { text: string }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Upgrade modal
 // ─────────────────────────────────────────────────────────────────────────────
-function UpgradeModal({ onClose }: { onClose: () => void }) {
+function UpgradeModal({ userId, onClose }: { userId: string | undefined; onClose: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr]   = useState<string | null>(null);
+
+  async function handleUpgrade() {
+    if (!userId) { onClose(); return; }
+    setBusy(true);
+    setErr(null);
+    const result = await openCheckout(userId, 'pro');
+    if (!result.ok) { setErr(result.message ?? 'Could not start checkout.'); setBusy(false); }
+    // On success openCheckout redirects the page — nothing left to do here.
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -230,13 +261,194 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-        className="relative"
+        className="relative w-full max-w-[400px]"
         onClick={e => e.stopPropagation()}
       >
         <button onClick={onClose} className="absolute -top-3 -right-3 z-10 w-7 h-7 rounded-full bg-[var(--dash-card)] border border-[rgba(var(--dash-fg),0.15)] flex items-center justify-center text-[rgba(var(--dash-fg),0.5)] hover:text-[rgb(var(--dash-fg))] transition-colors">
           <X size={13} />
         </button>
-        <GlassCheckoutCard amount={29} planName="Pro" onSuccess={onClose} />
+        <div className="relative overflow-hidden rounded-2xl bg-zinc-950/90 border border-white/10 backdrop-blur-md p-8 text-center">
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FFD700]/40 to-transparent" />
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-[#FFD700]/10 border border-[#FFD700]/30 flex items-center justify-center mb-5">
+            <Crown size={22} className="text-[#FFD700]" />
+          </div>
+          <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-3">Pro Plan · $29/mo</p>
+          <h3 className="text-white text-2xl font-black tracking-tighter mb-3">Unlock the Full Network</h3>
+          <p className="text-white/50 text-sm leading-relaxed mb-6">
+            Every curator, unlimited outreach, and priority placement — included with{' '}
+            <span className="text-[#FFD700] font-bold">uP Pro</span>.
+          </p>
+          <button
+            onClick={handleUpgrade}
+            disabled={busy}
+            className="w-full h-12 rounded-2xl font-black text-[13px] tracking-wide flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
+            style={{ background: '#FFD700', color: '#000', boxShadow: '0 4px 20px rgba(255,215,0,0.35), inset 0 1px 0 rgba(255,255,255,0.4)' }}
+          >
+            {busy ? 'Opening checkout…' : <>Continue to Stripe <ArrowRight size={16} /></>}
+          </button>
+          {err && <p className="mt-3 text-[10px] font-medium text-[#FFD700]/70">{err}</p>}
+          <p className="mt-4 text-center text-[10px] text-white/20 font-bold uppercase tracking-widest">
+            <Lock size={10} className="inline mr-1" />
+            Payments are secure and encrypted
+          </p>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Audio match modal — drop a track, tag its genre/mood/niche, jump straight
+// into the pick step ranked by curator fit. No audio analysis — the artist
+// tags it themselves, same way they'd describe it to a real playlist rep.
+// ─────────────────────────────────────────────────────────────────────────────
+function AudioMatchModal({
+  initialTag, onMatch, onClose,
+}: {
+  initialTag?: string;
+  onMatch:     (tags: string[]) => void;
+  onClose:     () => void;
+}) {
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [tags, setTags]         = useState<string[]>(initialTag ? [initialTag] : []);
+  const [customTag, setCustomTag] = useState('');
+  const [dragOver, setDragOver] = useState(false);
+
+  function handleFile(file: File | undefined) {
+    if (!file) return;
+    setFileName(file.name);
+  }
+
+  function toggleTag(tag: string) {
+    setTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+  }
+
+  function addCustomTag() {
+    const t = customTag.trim();
+    if (!t || tags.some(x => x.toLowerCase() === t.toLowerCase())) { setCustomTag(''); return; }
+    setTags(prev => [...prev, t]);
+    setCustomTag('');
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ type: 'spring', damping: 26, stiffness: 300 }}
+        className="relative w-full max-w-md"
+        onClick={e => e.stopPropagation()}
+      >
+        <button onClick={onClose} className="absolute -top-3 -right-3 z-10 w-7 h-7 rounded-full bg-[var(--dash-card)] border border-[rgba(var(--dash-fg),0.15)] flex items-center justify-center text-[rgba(var(--dash-fg),0.5)] hover:text-[rgb(var(--dash-fg))] transition-colors">
+          <X size={13} />
+        </button>
+
+        <div className="rounded-2xl bg-zinc-950/90 border border-white/10 backdrop-blur-md p-7">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-9 h-9 rounded-xl bg-[#FFD700]/15 border border-[#FFD700]/25 flex items-center justify-center shrink-0">
+              <FileAudio size={15} className="text-[#FFD700]" />
+            </div>
+            <div>
+              <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest leading-none">Match My Track</p>
+              <h3 className="text-white font-black text-lg leading-tight mt-0.5">Find curators in your niche</h3>
+            </div>
+          </div>
+
+          {/* Drop zone */}
+          <label
+            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={e => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files?.[0]); }}
+            className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-6 cursor-pointer transition-colors ${
+              dragOver ? 'border-[#FFD700]/50 bg-[#FFD700]/5' : 'border-white/10 hover:border-white/20'
+            }`}
+          >
+            <input
+              type="file"
+              accept="audio/*"
+              className="hidden"
+              onChange={e => handleFile(e.target.files?.[0])}
+            />
+            <Upload size={20} className={fileName ? 'text-[#FFD700]' : 'text-white/30'} />
+            {fileName ? (
+              <p className="text-white text-xs font-bold truncate max-w-full">{fileName}</p>
+            ) : (
+              <>
+                <p className="text-white/60 text-xs font-bold">Drop your audio file here</p>
+                <p className="text-white/30 text-[10px] font-medium">or click to browse — mp3, wav, m4a</p>
+              </>
+            )}
+          </label>
+
+          {/* Tags */}
+          <div className="mt-5">
+            <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-2">
+              Tag the genre / mood / niche
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {MATCH_TAG_OPTIONS.map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => toggleTag(tag)}
+                  className={`px-2.5 py-1.5 rounded-lg border font-black text-[9px] uppercase tracking-widest transition-all ${
+                    tags.includes(tag)
+                      ? 'bg-[#FFD700] border-transparent text-black'
+                      : 'bg-white/[0.03] border-white/10 text-white/50 hover:text-white/80 hover:border-white/20'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom tags already added */}
+            {tags.filter(t => !MATCH_TAG_OPTIONS.includes(t)).length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {tags.filter(t => !MATCH_TAG_OPTIONS.includes(t)).map(tag => (
+                  <span key={tag} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#FFD700]/10 border border-[#FFD700]/25 text-[#FFD700] font-black text-[9px] uppercase tracking-widest">
+                    {tag}
+                    <button onClick={() => toggleTag(tag)}><XCircle size={11} /></button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Add custom tag */}
+            <div className="flex gap-1.5 mt-2.5">
+              <input
+                type="text"
+                value={customTag}
+                onChange={e => setCustomTag(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomTag(); } }}
+                placeholder="Add a custom tag…"
+                className="flex-1 bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-[#FFD700]/30 transition-colors min-w-0"
+              />
+              <button
+                onClick={addCustomTag}
+                className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/[0.03] border border-white/10 text-white/50 hover:text-white shrink-0"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+          </div>
+
+          <button
+            onClick={() => onMatch(tags)}
+            disabled={tags.length === 0}
+            className="w-full h-12 rounded-2xl font-black text-[12px] uppercase tracking-widest flex items-center justify-center gap-2 mt-6 transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:hover:scale-100"
+            style={{ background: '#FFD700', color: '#000', boxShadow: '0 4px 20px rgba(255,215,0,0.35)' }}
+          >
+            Find My Curators <ArrowRight size={14} />
+          </button>
+          <p className="text-center text-[10px] text-white/25 font-medium mt-3">
+            {tags.length === 0 ? 'Pick at least one tag to match against.' : `Matching on ${tags.length} tag${tags.length > 1 ? 's' : ''}.`}
+          </p>
+        </div>
       </motion.div>
     </motion.div>
   );
@@ -345,10 +557,12 @@ function InfluencerCard({
 // Main component
 // ─────────────────────────────────────────────────────────────────────────────
 export function InfluencerSection() {
-  const { profile, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
 
   const [showUpgrade, setShowUpgrade]       = useState(false);
   const [showCampaign, setShowCampaign]     = useState(false);
+  const [showAudioMatch, setShowAudioMatch] = useState(false);
+  const [matchTags, setMatchTags]           = useState<string[]>([]);
   const [outreachTarget, setOutreachTarget] = useState<OutreachTarget | null>(null);
 
   // ── Guided flow ────────────────────────────────────────────────────────────
@@ -394,8 +608,15 @@ export function InfluencerSection() {
         i.niche.toLowerCase().includes(q),
       );
     }
+    if (matchTags.length > 0) {
+      return list
+        .map(i => ({ i, score: tagMatchScore(i, matchTags) }))
+        .filter(({ score }) => score > 0)
+        .sort((a, b) => b.score - a.score || b.i.engagementRate - a.i.engagementRate)
+        .map(({ i }) => i);
+    }
     return sortByGoal(list, campaignGoal);
-  }, [pickPlatform, pickTier, search, campaignGoal]);
+  }, [pickPlatform, pickTier, search, campaignGoal, matchTags]);
 
   const unlocked    = isPro ? pickList : pickList.slice(0, FREE_ROW_LIMIT);
   const lockedCards = isPro ? []       : pickList.slice(FREE_ROW_LIMIT);
@@ -424,6 +645,16 @@ export function InfluencerSection() {
     setFlowStep('pick');
   }
 
+  function applyTrackMatch(tags: string[]) {
+    setMatchTags(tags);
+    setPickPlatform('All');
+    setPickTier('All');
+    setSearch('');
+    setTipDismissed(false);
+    setShowAudioMatch(false);
+    setFlowStep('pick');
+  }
+
   function launchCampaignBuilder() {
     if (!isPro) { setShowUpgrade(true); return; }
     setShowCampaign(true);
@@ -436,7 +667,14 @@ export function InfluencerSection() {
   return (
     <>
       <AnimatePresence>
-        {showUpgrade  && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
+        {showUpgrade  && <UpgradeModal userId={user?.id} onClose={() => setShowUpgrade(false)} />}
+        {showAudioMatch && (
+          <AudioMatchModal
+            initialTag={(profile as any)?.genre || undefined}
+            onMatch={applyTrackMatch}
+            onClose={() => setShowAudioMatch(false)}
+          />
+        )}
         {showCampaign && (
           <CampaignBuilder
             song={campaignSong || undefined}
@@ -594,6 +832,13 @@ export function InfluencerSection() {
                 Browse creators <ArrowRight size={14} />
               </button>
 
+              <button
+                onClick={() => setShowAudioMatch(true)}
+                className="w-full flex items-center justify-center gap-2 h-11 rounded-2xl bg-[var(--dash-card-alt)] border border-[var(--dash-border)] text-[rgba(var(--dash-fg),0.7)] font-black text-[11px] uppercase tracking-widest hover:border-[#FFD700]/30 hover:text-[rgb(var(--dash-fg))] transition-colors"
+              >
+                <FileAudio size={13} className="text-[#FFD700]" /> Match my track to curators
+              </button>
+
               <div className="text-center -mt-2">
                 <p className="text-[rgba(var(--dash-fg),0.42)] text-[10px] font-medium">You choose who to include — no suggestions imposed.</p>
               </div>
@@ -622,19 +867,39 @@ export function InfluencerSection() {
 
           {/* Context chips */}
           <div>
-            <h2 className="text-2xl lg:text-4xl font-black text-[rgb(var(--dash-fg))] tracking-tighter uppercase mb-3">Pick your team</h2>
+            <h2 className="text-2xl lg:text-4xl font-black text-[rgb(var(--dash-fg))] tracking-tighter uppercase mb-3">
+              {matchTags.length > 0 ? 'Matched to your track' : 'Pick your team'}
+            </h2>
             <div className="flex flex-wrap gap-2">
               {campaignSong && (
                 <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFD700]/10 border border-[#FFD700]/20 text-[#FFD700] text-[10px] font-black uppercase tracking-widest">
                   🎵 {campaignSong}
                 </span>
               )}
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[rgba(var(--dash-fg),0.05)] border border-[rgba(var(--dash-fg),0.15)] text-[rgba(var(--dash-fg),0.6)] text-[10px] font-black uppercase tracking-widest">
-                {platformObj.label}
-              </span>
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[rgba(var(--dash-fg),0.05)] border border-[rgba(var(--dash-fg),0.15)] text-[rgba(var(--dash-fg),0.6)] text-[10px] font-black uppercase tracking-widest">
-                {goalObj.label}
-              </span>
+              {matchTags.length > 0 ? (
+                <>
+                  {matchTags.map(tag => (
+                    <span key={tag} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFD700]/10 border border-[#FFD700]/20 text-[#FFD700] text-[10px] font-black uppercase tracking-widest">
+                      <FileAudio size={10} /> {tag}
+                    </span>
+                  ))}
+                  <button
+                    onClick={() => setMatchTags([])}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[rgba(var(--dash-fg),0.05)] border border-[rgba(var(--dash-fg),0.15)] text-[rgba(var(--dash-fg),0.6)] hover:text-[rgb(var(--dash-fg))] text-[10px] font-black uppercase tracking-widest transition-colors"
+                  >
+                    <XCircle size={11} /> Clear match
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[rgba(var(--dash-fg),0.05)] border border-[rgba(var(--dash-fg),0.15)] text-[rgba(var(--dash-fg),0.6)] text-[10px] font-black uppercase tracking-widest">
+                    {platformObj.label}
+                  </span>
+                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[rgba(var(--dash-fg),0.05)] border border-[rgba(var(--dash-fg),0.15)] text-[rgba(var(--dash-fg),0.6)] text-[10px] font-black uppercase tracking-widest">
+                    {goalObj.label}
+                  </span>
+                </>
+              )}
             </div>
           </div>
 

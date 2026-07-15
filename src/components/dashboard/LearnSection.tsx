@@ -10,6 +10,8 @@ import {
 import { useNavigate } from "react-router-dom"
 import { ArticleCard } from "../ui/article-card"
 import { usePlan } from "../../hooks/usePlan"
+import { useAuth } from "../../hooks/useAuth"
+import { openCheckout } from "../../lib/pricingCheckout"
 
 // ─── PDF Library ──────────────────────────────────────────────────────────────
 
@@ -654,6 +656,7 @@ function PlaylistModal({ playlist, onClose }: { playlist: Playlist; onClose: () 
 // ─── Main Section ─────────────────────────────────────────────────────────────
 export function LearnSection() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const plan = usePlan()
   const canReadPro = plan.isAtLeast('pro')
 
@@ -661,6 +664,15 @@ export function LearnSection() {
   const [openGuide, setOpenGuide]           = useState<PdfGuide | null>(null)
   const [openPlaylist, setOpenPlaylist]     = useState<typeof VIDEO_PLAYLISTS[number] | null>(null)
   const [showUpgrade, setShowUpgrade]       = useState<{ blockedItem: string } | null>(null)
+
+  // Locked content → Pro click: go straight to Stripe Checkout for a signed-in
+  // user instead of bouncing through /pricing. Falls back to /pricing if
+  // checkout can't start (e.g. Stripe keys not configured yet).
+  async function upgradeToProCheckout() {
+    if (!user) { navigate('/pricing'); return }
+    const result = await openCheckout(user.id, 'pro')
+    if (!result.ok) navigate('/pricing')
+  }
 
   const filteredGuides = activeCategory === 'All'
     ? PDF_LIBRARY
@@ -844,7 +856,7 @@ export function LearnSection() {
           <UpgradeGate
             blockedItem={showUpgrade.blockedItem}
             onClose={() => setShowUpgrade(null)}
-            onUpgrade={() => { setShowUpgrade(null); navigate('/pricing') }}
+            onUpgrade={() => { setShowUpgrade(null); upgradeToProCheckout() }}
           />
         )}
       </AnimatePresence>

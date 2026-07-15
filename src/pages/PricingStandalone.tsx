@@ -12,7 +12,9 @@ function PricingStandalonePage() {
   const [err, setErr] = useState<string | null>(null);
 
   async function onPlanSelect(planName: string) {
-    if (WAITLIST_MODE) { openWaitlistModal(); return; }
+    // Waitlist mode only blocks new-visitor signups — a signed-in user
+    // (already past the waitlist) always goes straight to real checkout.
+    if (WAITLIST_MODE && !user) { openWaitlistModal(); return; }
     setErr(null);
     const result = await handlePricingClick({
       planName,
