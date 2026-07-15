@@ -26,14 +26,6 @@ export function openWaitlistModal() {
 // slider reads as a real self-assessment instead of a vague 1-5 scale.
 interface SliderStop { label: string; sub: string }
 
-const YEARS_ACTIVE: SliderStop[] = [
-  { label: 'Just Starting Out', sub: '< 1 year' },
-  { label: 'New Artist',        sub: '1–3 years' },
-  { label: 'Developing',        sub: '3–5 years' },
-  { label: 'Experienced',       sub: '5–10 years' },
-  { label: 'Veteran',           sub: '10+ years' },
-]
-
 const MOMENTUM: SliderStop[] = [
   { label: 'Just Starting Out', sub: '0–1K monthly listeners' },
   { label: 'Building Buzz',     sub: '1K–10K monthly listeners' },
@@ -42,28 +34,12 @@ const MOMENTUM: SliderStop[] = [
   { label: 'Taking Off',        sub: '250K+ monthly listeners' },
 ]
 
-const FANBASE: SliderStop[] = [
-  { label: 'Just Starting Out', sub: '0–500 total followers' },
-  { label: 'Small But Loyal',   sub: '500–5K total followers' },
-  { label: 'Growing Fast',      sub: '5K–25K total followers' },
-  { label: 'Established',       sub: '25K–100K total followers' },
-  { label: 'Major',             sub: '100K+ total followers' },
-]
-
-const RELEASE_ACTIVITY: SliderStop[] = [
-  { label: 'None Yet',          sub: '0 releases/yr' },
-  { label: 'Getting Started',   sub: '1–2 releases/yr' },
-  { label: 'Consistent',        sub: '3–5 releases/yr' },
-  { label: 'Prolific',          sub: '6–10 releases/yr' },
-  { label: 'Machine',           sub: '10+ releases/yr' },
-]
-
-const MONTHLY_INCOME: SliderStop[] = [
-  { label: 'Not Yet',           sub: '$0/mo from music' },
-  { label: 'Getting There',     sub: '$1–500/mo' },
-  { label: 'Side Income',       sub: '$500–2K/mo' },
-  { label: 'Solid Income',      sub: '$2K–10K/mo' },
-  { label: 'Full-Time',         sub: '$10K+/mo' },
+const INVESTMENT: SliderStop[] = [
+  { label: 'Not Much Yet',        sub: '$0–500 invested' },
+  { label: 'Getting Started',     sub: '$500–2K invested' },
+  { label: 'Building It Out',     sub: '$2K–10K invested' },
+  { label: 'Serious Investment',  sub: '$10K–50K invested' },
+  { label: 'All In',              sub: '$50K+ invested' },
 ]
 
 function DataSlider({
@@ -103,11 +79,9 @@ export function WaitlistModal() {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [yearsActive, setYearsActive]           = useState(0)
-  const [momentum, setMomentum]                 = useState(0)
-  const [fanbase, setFanbase]                   = useState(0)
-  const [releaseActivity, setReleaseActivity]   = useState(0)
-  const [monthlyIncome, setMonthlyIncome]       = useState(0)
+  const [yearsActive, setYearsActive] = useState('')
+  const [momentum, setMomentum]       = useState(0)
+  const [investment, setInvestment]   = useState(0)
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -140,11 +114,9 @@ export function WaitlistModal() {
       setError(null)
       setName('')
       setEmail('')
-      setYearsActive(0)
+      setYearsActive('')
       setMomentum(0)
-      setFanbase(0)
-      setReleaseActivity(0)
-      setMonthlyIncome(0)
+      setInvestment(0)
       setCopied(false)
     }, 250)
   }
@@ -168,16 +140,11 @@ export function WaitlistModal() {
         artist_name: name.trim() || null,
         referral_code: refCode,
         source: 'popup',
-        years_active:            YEARS_ACTIVE[yearsActive].label,
-        years_active_score:      yearsActive,
-        momentum_level:          MOMENTUM[momentum].label,
-        momentum_score:          momentum,
-        fanbase_level:           FANBASE[fanbase].label,
-        fanbase_score:           fanbase,
-        release_activity_level:  RELEASE_ACTIVITY[releaseActivity].label,
-        release_activity_score:  releaseActivity,
-        monthly_income_level:    MONTHLY_INCOME[monthlyIncome].label,
-        monthly_income_score:    monthlyIncome,
+        years_active:       yearsActive.trim() || null,
+        momentum_level:     MOMENTUM[momentum].label,
+        momentum_score:     momentum,
+        investment_level:   INVESTMENT[investment].label,
+        investment_score:   investment,
       }])
       if (insertErr && !/duplicate|unique/i.test(insertErr.message)) {
         console.warn('[waitlist] insert error:', insertErr)
@@ -241,26 +208,26 @@ export function WaitlistModal() {
                 </svg>
               </button>
 
-              <div className="relative px-8 pt-10 pb-8 overflow-y-auto">
+              <div className="relative px-8 pt-8 pb-6 overflow-y-auto">
                 <AnimatePresence mode="wait">
                   {!submitted ? (
                     <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#FFD700]/30 bg-[#FFD700]/10 mb-5">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#FFD700]/30 bg-[#FFD700]/10 mb-3">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#FFD700] shadow-[0_0_8px_rgba(255,215,0,0.6)]" />
                         <span className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.25em]">Early Access Waitlist</span>
                       </div>
-                      <h2 className="text-white text-3xl font-black tracking-tighter leading-tight mb-2">Get on the list.</h2>
-                      <p className="text-white/40 text-sm font-medium mb-7">
+                      <h2 className="text-white text-2xl font-black tracking-tighter leading-tight mb-1.5">Get on the list.</h2>
+                      <p className="text-white/40 text-xs font-medium mb-5">
                         Limited early access. We're approving artists in waves — join now to get in early.
                       </p>
 
-                      <form onSubmit={handleSubmit} className="space-y-3 text-left">
+                      <form onSubmit={handleSubmit} className="space-y-2.5 text-left">
                         <input
                           type="text"
                           placeholder="ARTIST NAME (OPTIONAL)"
                           value={name}
                           onChange={e => setName(e.target.value)}
-                          className="w-full h-13 px-5 py-3.5 rounded-2xl font-bold text-sm outline-none bg-white/5 border border-white/10 text-white placeholder-white/25 focus:border-[#FFD700]/40 transition-colors"
+                          className="w-full h-11 px-4 rounded-xl font-bold text-sm outline-none bg-white/5 border border-white/10 text-white placeholder-white/25 focus:border-[#FFD700]/40 transition-colors"
                         />
                         <input
                           type="email"
@@ -268,23 +235,27 @@ export function WaitlistModal() {
                           required
                           value={email}
                           onChange={e => setEmail(e.target.value)}
-                          className="w-full h-13 px-5 py-3.5 rounded-2xl font-bold text-sm outline-none bg-white/5 border border-white/10 text-white placeholder-white/25 focus:border-[#FFD700]/40 transition-colors"
+                          className="w-full h-11 px-4 rounded-xl font-bold text-sm outline-none bg-white/5 border border-white/10 text-white placeholder-white/25 focus:border-[#FFD700]/40 transition-colors"
+                        />
+                        <input
+                          type="text"
+                          placeholder="HOW LONG HAVE YOU BEEN MAKING MUSIC?"
+                          value={yearsActive}
+                          onChange={e => setYearsActive(e.target.value)}
+                          className="w-full h-11 px-4 rounded-xl font-bold text-sm outline-none bg-white/5 border border-white/10 text-white placeholder-white/25 focus:border-[#FFD700]/40 transition-colors"
                         />
 
                         {/* Data-referenced self-assessment sliders */}
-                        <div className="pt-3 pb-1 space-y-4 border-t border-white/8 mt-4">
-                          <DataSlider label="How long have you been making music?" stops={YEARS_ACTIVE} value={yearsActive} onChange={setYearsActive} />
-                          <DataSlider label="Momentum in the industry"            stops={MOMENTUM} value={momentum} onChange={setMomentum} />
-                          <DataSlider label="Fanbase size"                        stops={FANBASE} value={fanbase} onChange={setFanbase} />
-                          <DataSlider label="Release activity"                    stops={RELEASE_ACTIVITY} value={releaseActivity} onChange={setReleaseActivity} />
-                          <DataSlider label="Monthly income from music"           stops={MONTHLY_INCOME} value={monthlyIncome} onChange={setMonthlyIncome} />
+                        <div className="pt-2 pb-0.5 space-y-3 border-t border-white/8 mt-3">
+                          <DataSlider label="Overall motion in the industry" stops={MOMENTUM} value={momentum} onChange={setMomentum} />
+                          <DataSlider label="Invested in your career"       stops={INVESTMENT} value={investment} onChange={setInvestment} />
                         </div>
 
                         {error && <p className="text-red-400 text-[11px] font-bold px-1">{error}</p>}
                         <button
                           type="submit"
                           disabled={loading}
-                          className="w-full h-13 py-3.5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none mt-1"
+                          className="w-full h-12 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none mt-1"
                           style={{ background: '#FFD700', color: '#000', boxShadow: '0 4px 20px rgba(255,215,0,0.35)' }}
                         >
                           {loading ? 'Joining…' : 'Join Waitlist →'}
