@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Music2, Loader2, RefreshCw, Check, ExternalLink, AlertCircle } from "lucide-react"
 import { supabase } from "../../lib/supabaseClient"
+import { STATS_REFRESHED_EVENT } from "../../lib/statsRefreshEvent"
 
 export type PlatformId = 'spotify' | 'soundcloud' | 'youtube'
 
@@ -147,6 +148,21 @@ export function PlatformDataCard({ userId, platform }: { userId: string; platfor
     })()
     return () => { cancelled = true }
   }, [userId, platform, meta.urlField])
+
+  // Auto-refresh-on-login (stats-refresh.ts) writes fresh snapshots straight
+  // to Supabase — re-pull ours when it announces a completed sync, so the
+  // card updates live without a manual "Refresh" click or a page reload.
+  useEffect(() => {
+    function onStatsRefreshed() {
+      supabase.from('platform_snapshots')
+        .select('profile_id, display_name, stats, top_items, image_url, fetched_at')
+        .eq('user_id', userId).eq('platform', platform)
+        .order('fetched_at', { ascending: false }).limit(1).maybeSingle()
+        .then(({ data }) => { if (data) setLatest(data as Snapshot) })
+    }
+    window.addEventListener(STATS_REFRESHED_EVENT, onStatsRefreshed)
+    return () => window.removeEventListener(STATS_REFRESHED_EVENT, onStatsRefreshed)
+  }, [userId, platform])
 
   async function syncNow(submitUrl: string) {
     setFetching(true)
