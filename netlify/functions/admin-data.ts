@@ -40,17 +40,20 @@ const handler: Handler = async (_event) => {
       { data: bugs },
       { data: modelUsage },
       { data: creators },
+      { data: waitlist },
     ] = await Promise.all([
       admin.from('support_tickets').select('*').order('created_at', { ascending: false }),
       admin.from('bugs').select('*').order('created_at', { ascending: false }),
       admin.from('model_usage').select('*').order('created_at', { ascending: false }),
       admin.from('creators').select('*').order('created_at', { ascending: false }),
+      admin.from('waitlist').select('*').order('created_at', { ascending: false }),
     ])
 
     const safeTickets   = tickets   ?? []
     const safeBugs      = bugs      ?? []
     const safeModelUsage = modelUsage ?? []
     const safeCreators  = creators  ?? []
+    const safeWaitlist  = waitlist  ?? []
 
     // ── Build merged user rows ─────────────────────────────────────────────────
     const today = new Date().toDateString()
@@ -93,6 +96,7 @@ const handler: Handler = async (_event) => {
       open_bugs:          safeBugs.filter((b: any)    => b.status === 'open').length,
       total_model_cost_usd: safeModelUsage.reduce((s: number, m: any) => s + (m.cost_usd || 0), 0),
       active_creators:    safeCreators.filter((c: any) => c.status === 'active').length,
+      waitlist_count:     safeWaitlist.length,
       plan_breakdown: {
         free:   users.filter(u => u.plan_tier === 'free').length,
         pro:    users.filter(u => u.plan_tier === 'pro').length,
@@ -103,7 +107,7 @@ const handler: Handler = async (_event) => {
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stats, users, tickets: safeTickets, bugs: safeBugs, model_usage: safeModelUsage, creators: safeCreators }),
+      body: JSON.stringify({ stats, users, tickets: safeTickets, bugs: safeBugs, model_usage: safeModelUsage, creators: safeCreators, waitlist: safeWaitlist }),
     }
   } catch (err: any) {
     console.error('admin-data error:', err)

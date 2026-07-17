@@ -73,6 +73,23 @@ interface Creator {
   created_at: string
 }
 
+interface WaitlistEntry {
+  id: string
+  created_at: string
+  email: string
+  phone: string | null
+  artist_name: string | null
+  platform: string | null
+  social_handle: string | null
+  role: string | null
+  referral_code: string | null
+  referred_by: string | null
+  years_active: string | null
+  momentum_level: string | null
+  investment_level: string | null
+  source: string | null
+}
+
 interface AdminData {
   stats: {
     total_users: number
@@ -85,6 +102,7 @@ interface AdminData {
     open_bugs: number
     total_model_cost_usd: number
     active_creators: number
+    waitlist_count: number
     plan_breakdown: Record<string, number>
   }
   users: AdminUser[]
@@ -92,6 +110,7 @@ interface AdminData {
   bugs: Bug[]
   model_usage: ModelUsage[]
   creators: Creator[]
+  waitlist: WaitlistEntry[]
 }
 
 const GOLD = '#FFD700'
@@ -111,7 +130,7 @@ function statusColor(s: Creator['status']) {
 
 // ── Root export ───────────────────────────────────────────────────────────────
 export function AdminDashboard() {
-  const [tab, setTab]       = useState<'users' | 'tickets' | 'bugs' | 'costs' | 'creators'>('users')
+  const [tab, setTab]       = useState<'users' | 'tickets' | 'bugs' | 'costs' | 'creators' | 'waitlist'>('users')
   const [search, setSearch] = useState('')
   const [sort, setSort]     = useState<{ col: keyof AdminUser; dir: 1 | -1 }>({ col: 'joined_at', dir: -1 })
 
@@ -183,8 +202,8 @@ export function AdminDashboard() {
 // ── Dashboard view ────────────────────────────────────────────────────────────
 function DashboardView({ data, tab, setTab, search, setSearch, sort, setSort, onRefresh, onCreatorAction, actionLoading, lastRefresh }: {
   data: AdminData
-  tab: 'users' | 'tickets' | 'bugs' | 'costs' | 'creators'
-  setTab: (t: 'users' | 'tickets' | 'bugs' | 'costs' | 'creators') => void
+  tab: 'users' | 'tickets' | 'bugs' | 'costs' | 'creators' | 'waitlist'
+  setTab: (t: 'users' | 'tickets' | 'bugs' | 'costs' | 'creators' | 'waitlist') => void
   search: string; setSearch: (s: string) => void
   sort: { col: keyof AdminUser; dir: 1 | -1 }; setSort: (s: { col: keyof AdminUser; dir: 1 | -1 }) => void
   onRefresh: () => void
@@ -206,6 +225,15 @@ function DashboardView({ data, tab, setTab, search, setSearch, sort, setSort, on
       return String(av ?? '').localeCompare(String(bv ?? '')) * sort.dir
     })
   }, [data.users, search, sort])
+
+  const waitlistRows = useMemo(() => {
+    let r = data.waitlist
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      r = r.filter(w => w.email.toLowerCase().includes(q) || w.artist_name?.toLowerCase().includes(q))
+    }
+    return [...r].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  }, [data.waitlist, search])
 
   const setCol = (col: keyof AdminUser) =>
     setSort(sort.col === col ? { col, dir: (sort.dir * -1) as 1 | -1 } : { col, dir: -1 })
@@ -231,6 +259,7 @@ function DashboardView({ data, tab, setTab, search, setSearch, sort, setSort, on
         <Card label="Open bugs"       value={String(stats.open_bugs)} alert={stats.open_bugs > 0} />
         <Card label="Open tickets"    value={String(stats.open_tickets)} alert={stats.open_tickets > 0} />
         <Card label="Active creators" value={String(stats.active_creators)} accent />
+        <Card label="Waitlist"        value={String(stats.waitlist_count)} accent />
       </div>
 
       <div style={S.planRow}>
@@ -242,12 +271,13 @@ function DashboardView({ data, tab, setTab, search, setSearch, sort, setSort, on
       </div>
 
       <div style={S.tabs}>
-        {(['users', 'tickets', 'bugs', 'costs', 'creators'] as const).map(t => (
+        {(['users', 'waitlist', 'tickets', 'bugs', 'costs', 'creators'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} style={{ ...S.tab, ...(tab === t ? S.tabActive : {}) }}>
             {t === 'tickets' ? `Tickets (${data.tickets.length})`
              : t === 'bugs' ? `Bugs (${data.bugs.length})`
              : t === 'costs' ? 'Model Costs'
              : t === 'creators' ? `Creators (${data.creators.length})`
+             : t === 'waitlist' ? `Waitlist (${data.waitlist.length})`
              : 'Users'}
           </button>
         ))}
@@ -280,6 +310,39 @@ function DashboardView({ data, tab, setTab, search, setSearch, sort, setSort, on
                   </tr>
                 ))}
                 {rows.length === 0 && <tr><td style={{ ...S.td, ...S.dim }} colSpan={11}>No users match.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      {tab === 'waitlist' && (
+        <>
+          <input style={S.search} placeholder="Search email or artist name…" value={search} onChange={e => setSearch(e.target.value)} />
+          <div style={S.tableWrap}>
+            <table style={S.table}>
+              <thead><tr>
+                <th style={S.th}>Artist</th><th style={S.th}>Email</th><th style={S.th}>Phone</th>
+                <th style={S.th}>Years Active</th><th style={S.th}>Motion</th><th style={S.th}>Investment</th>
+                <th style={S.th}>Source</th><th style={S.th}>Ref Code</th><th style={S.th}>Referred By</th>
+                <th style={S.th}>Joined</th>
+              </tr></thead>
+              <tbody>
+                {waitlistRows.map(w => (
+                  <tr key={w.id} style={S.tr}>
+                    <td style={S.td}>{w.artist_name || <span style={S.dim}>—</span>}</td>
+                    <td style={{ ...S.td, ...S.dim }}>{w.email}</td>
+                    <td style={{ ...S.td, ...S.dim }}>{w.phone || '—'}</td>
+                    <td style={S.td}>{w.years_active || <span style={S.dim}>—</span>}</td>
+                    <td style={S.td}>{w.momentum_level || <span style={S.dim}>—</span>}</td>
+                    <td style={S.td}>{w.investment_level || <span style={S.dim}>—</span>}</td>
+                    <td style={S.td}><span style={{ ...S.catChip }}>{w.source || 'unknown'}</span></td>
+                    <td style={{ ...S.td, fontSize: 11, fontFamily: 'monospace' }}>{w.referral_code || '—'}</td>
+                    <td style={{ ...S.td, ...S.dim }}>{w.referred_by || '—'}</td>
+                    <td style={{ ...S.tdNum, ...S.dim }}>{dateShort(w.created_at)}</td>
+                  </tr>
+                ))}
+                {waitlistRows.length === 0 && <tr><td style={{ ...S.td, ...S.dim }} colSpan={10}>No waitlist signups match.</td></tr>}
               </tbody>
             </table>
           </div>
