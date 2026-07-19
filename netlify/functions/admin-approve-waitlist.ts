@@ -74,6 +74,7 @@ export const handler: Handler = async (event) => {
 
   let userId = inviteData?.user?.id ?? null
   let alreadyExisted = false
+  let resentSetupEmail = false
 
   if (inviteErr) {
     // Already-registered emails (signed up on their own, or a previous
@@ -93,6 +94,18 @@ export const handler: Handler = async (event) => {
       }
       userId = existing.id
       alreadyExisted = true
+
+      // They have an auth record but have never actually signed in —
+      // their account setup was never finished (e.g. an invite that
+      // never got completed). Send a fresh "set your password" email
+      // instead of silently marking them approved with no way in.
+      if (!existing.last_sign_in_at) {
+        const { error: resetErr } = await admin.auth.resetPasswordForEmail(email, {
+          redirectTo: 'https://groundupapp.com/reset-password',
+        })
+        if (resetErr) console.error('[admin-approve-waitlist] resend setup email failed:', email, resetErr.message)
+        else resentSetupEmail = true
+      }
     } else {
       console.error('[admin-approve-waitlist] invite error:', waitlist_id, email, inviteErr.message)
       return {
@@ -118,11 +131,14 @@ export const handler: Handler = async (event) => {
     approved_user_id:  userId,
   }).eq('id', waitlist_id)
 
-  console.log('[admin-approve-waitlist] approved:', waitlist_id, email, alreadyExisted ? '(already had account)' : '(invited)')
+  console.log(
+    '[admin-approve-waitlist] approved:', waitlist_id, email,
+    alreadyExisted ? (resentSetupEmail ? '(existing account, resent setup email)' : '(existing, already active)') : '(invited)',
+  )
 
   return {
     statusCode: 200,
     headers: { ...CORS, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ok: true, user_id: userId, already_existed: alreadyExisted }),
+    body: JSON.stringify({ ok: true, user_id: userId, already_existed: alreadyExisted, resent_setup_email: resentSetupEmail }),
   }
 }
