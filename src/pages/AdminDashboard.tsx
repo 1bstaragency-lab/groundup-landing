@@ -88,6 +88,8 @@ interface WaitlistEntry {
   momentum_level: string | null
   investment_level: string | null
   source: string | null
+  status: 'pending' | 'approved'
+  approved_at: string | null
 }
 
 interface AdminData {
@@ -172,6 +174,32 @@ export function AdminDashboard() {
     setActionLoading(null)
   }
 
+  const [waitlistActionError, setWaitlistActionError] = useState<string | null>(null)
+
+  async function handleWaitlistApprove(waitlistId: string) {
+    setActionLoading(waitlistId)
+    setWaitlistActionError(null)
+    try {
+      const res = await fetch('/.netlify/functions/admin-approve-waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ waitlist_id: waitlistId }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (json.ok && data) {
+        setData({
+          ...data,
+          waitlist: data.waitlist.map(w => w.id === waitlistId ? { ...w, status: 'approved', approved_at: new Date().toISOString() } : w),
+        })
+      } else {
+        setWaitlistActionError(json.error ?? 'Could not approve — try again.')
+      }
+    } catch {
+      setWaitlistActionError('Network error — try again.')
+    }
+    setActionLoading(null)
+  }
+
   if (fetchLoading || !data) {
     return (
       <div style={S.shell}>
@@ -193,6 +221,8 @@ export function AdminDashboard() {
       sort={sort} setSort={setSort}
       onRefresh={loadData}
       onCreatorAction={handleCreatorAction}
+      onWaitlistApprove={handleWaitlistApprove}
+      waitlistActionError={waitlistActionError}
       actionLoading={actionLoading}
       lastRefresh={lastRefresh}
     />
@@ -200,7 +230,7 @@ export function AdminDashboard() {
 }
 
 // ── Dashboard view ────────────────────────────────────────────────────────────
-function DashboardView({ data, tab, setTab, search, setSearch, sort, setSort, onRefresh, onCreatorAction, actionLoading, lastRefresh }: {
+function DashboardView({ data, tab, setTab, search, setSearch, sort, setSort, onRefresh, onCreatorAction, onWaitlistApprove, waitlistActionError, actionLoading, lastRefresh }: {
   data: AdminData
   tab: 'users' | 'tickets' | 'bugs' | 'costs' | 'creators' | 'waitlist'
   setTab: (t: 'users' | 'tickets' | 'bugs' | 'costs' | 'creators' | 'waitlist') => void
@@ -208,6 +238,8 @@ function DashboardView({ data, tab, setTab, search, setSearch, sort, setSort, on
   sort: { col: keyof AdminUser; dir: 1 | -1 }; setSort: (s: { col: keyof AdminUser; dir: 1 | -1 }) => void
   onRefresh: () => void
   onCreatorAction: (id: string, status: Creator['status']) => void
+  onWaitlistApprove: (id: string) => void
+  waitlistActionError: string | null
   actionLoading: string | null
   lastRefresh: Date | null
 }) {
@@ -319,30 +351,41 @@ function DashboardView({ data, tab, setTab, search, setSearch, sort, setSort, on
       {tab === 'waitlist' && (
         <>
           <input style={S.search} placeholder="Search email or artist name…" value={search} onChange={e => setSearch(e.target.value)} />
+          {waitlistActionError && <p style={{ ...S.errMsg, marginBottom: 10 }}>{waitlistActionError}</p>}
           <div style={S.tableWrap}>
             <table style={S.table}>
               <thead><tr>
                 <th style={S.th}>Artist</th><th style={S.th}>Email</th><th style={S.th}>Phone</th>
                 <th style={S.th}>Years Active</th><th style={S.th}>Motion</th><th style={S.th}>Investment</th>
                 <th style={S.th}>Source</th><th style={S.th}>Ref Code</th><th style={S.th}>Referred By</th>
-                <th style={S.th}>Joined</th>
+                <th style={S.th}>Joined</th><th style={S.th}>Status</th>
               </tr></thead>
               <tbody>
-                {waitlistRows.map(w => (
-                  <tr key={w.id} style={S.tr}>
-                    <td style={S.td}>{w.artist_name || <span style={S.dim}>—</span>}</td>
-                    <td style={{ ...S.td, ...S.dim }}>{w.email}</td>
-                    <td style={{ ...S.td, ...S.dim }}>{w.phone || '—'}</td>
-                    <td style={S.td}>{w.years_active || <span style={S.dim}>—</span>}</td>
-                    <td style={S.td}>{w.momentum_level || <span style={S.dim}>—</span>}</td>
-                    <td style={S.td}>{w.investment_level || <span style={S.dim}>—</span>}</td>
-                    <td style={S.td}><span style={{ ...S.catChip }}>{w.source || 'unknown'}</span></td>
-                    <td style={{ ...S.td, fontSize: 11, fontFamily: 'monospace' }}>{w.referral_code || '—'}</td>
-                    <td style={{ ...S.td, ...S.dim }}>{w.referred_by || '—'}</td>
-                    <td style={{ ...S.tdNum, ...S.dim }}>{dateShort(w.created_at)}</td>
-                  </tr>
-                ))}
-                {waitlistRows.length === 0 && <tr><td style={{ ...S.td, ...S.dim }} colSpan={10}>No waitlist signups match.</td></tr>}
+                {waitlistRows.map(w => {
+                  const busy = actionLoading === w.id
+                  return (
+                    <tr key={w.id} style={S.tr}>
+                      <td style={S.td}>{w.artist_name || <span style={S.dim}>—</span>}</td>
+                      <td style={{ ...S.td, ...S.dim }}>{w.email}</td>
+                      <td style={{ ...S.td, ...S.dim }}>{w.phone || '—'}</td>
+                      <td style={S.td}>{w.years_active || <span style={S.dim}>—</span>}</td>
+                      <td style={S.td}>{w.momentum_level || <span style={S.dim}>—</span>}</td>
+                      <td style={S.td}>{w.investment_level || <span style={S.dim}>—</span>}</td>
+                      <td style={S.td}><span style={{ ...S.catChip }}>{w.source || 'unknown'}</span></td>
+                      <td style={{ ...S.td, fontSize: 11, fontFamily: 'monospace' }}>{w.referral_code || '—'}</td>
+                      <td style={{ ...S.td, ...S.dim }}>{w.referred_by || '—'}</td>
+                      <td style={{ ...S.tdNum, ...S.dim }}>{dateShort(w.created_at)}</td>
+                      <td style={S.td}>
+                        {w.status === 'approved' ? (
+                          <span style={{ ...S.planChip, borderColor: '#81C78466', color: '#81C784' }}>Approved</span>
+                        ) : (
+                          <Btn color={GOLD} disabled={busy} onClick={() => onWaitlistApprove(w.id)}>{busy ? '…' : 'Approve'}</Btn>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+                {waitlistRows.length === 0 && <tr><td style={{ ...S.td, ...S.dim }} colSpan={11}>No waitlist signups match.</td></tr>}
               </tbody>
             </table>
           </div>
