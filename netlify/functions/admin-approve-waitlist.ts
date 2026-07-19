@@ -64,25 +64,49 @@ export const handler: Handler = async (event) => {
     }
   }
 
-  const { data: inviteData, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(entry.email, {
+  const email:      string = entry.email
+  const artistName: string | null = entry.artist_name ?? null
+
+  const { data: inviteData, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
     redirectTo: 'https://groundupapp.com/reset-password',
-    data: { artist_name: entry.artist_name ?? undefined },
+    data: { artist_name: artistName ?? undefined },
   })
 
+  let userId = inviteData?.user?.id ?? null
+  let alreadyExisted = false
+
   if (inviteErr) {
-    return {
-      statusCode: 200,
-      headers: { ...CORS, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ok: false, error: inviteErr.message }),
+    // Already-registered emails (signed up on their own, or a previous
+    // approve attempt already invited them) aren't a real failure — look
+    // up the existing account and reconcile the waitlist row instead of
+    // leaving it stuck on "Approve" forever.
+    if (/already.*registered|already.*exists/i.test(inviteErr.message)) {
+      const { data: existingList, error: listErr } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
+      const existing = existingList?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase())
+      if (!existing) {
+        console.error('[admin-approve-waitlist] "already registered" but no matching user found:', email, listErr?.message)
+        return {
+          statusCode: 200,
+          headers: { ...CORS, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ok: false, error: 'Email is already registered, but the matching account could not be found.' }),
+        }
+      }
+      userId = existing.id
+      alreadyExisted = true
+    } else {
+      console.error('[admin-approve-waitlist] invite error:', waitlist_id, email, inviteErr.message)
+      return {
+        statusCode: 200,
+        headers: { ...CORS, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ok: false, error: inviteErr.message }),
+      }
     }
   }
 
-  const userId = inviteData.user?.id ?? null
-
-  if (userId) {
+  if (userId && !alreadyExisted) {
     await admin.from('artist_preferences').upsert({
       user_id:     userId,
-      artist_name: entry.artist_name ?? 'Artist',
+      artist_name: artistName ?? 'Artist',
       plan_tier:   'free',
       onboarding_complete: false,
     }, { onConflict: 'user_id' })
@@ -94,9 +118,11 @@ export const handler: Handler = async (event) => {
     approved_user_id:  userId,
   }).eq('id', waitlist_id)
 
+  console.log('[admin-approve-waitlist] approved:', waitlist_id, email, alreadyExisted ? '(already had account)' : '(invited)')
+
   return {
     statusCode: 200,
     headers: { ...CORS, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ok: true, user_id: userId }),
+    body: JSON.stringify({ ok: true, user_id: userId, already_existed: alreadyExisted }),
   }
 }
