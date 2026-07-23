@@ -86,6 +86,7 @@ export function WaitlistModal() {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [referralCode, setReferralCode] = useState('')
+  const [position, setPosition] = useState<number | null>(null)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
@@ -117,6 +118,7 @@ export function WaitlistModal() {
       setYearsActive('')
       setMomentum(0)
       setInvestment(0)
+      setPosition(null)
       setCopied(false)
     }, 250)
   }
@@ -149,6 +151,15 @@ export function WaitlistModal() {
       if (insertErr && !/duplicate|unique/i.test(insertErr.message)) {
         console.warn('[waitlist] insert error:', insertErr)
       }
+
+      // Same "position" convention as the standalone /waitlist page —
+      // base offset + real signup count, so numbers are consistent
+      // across every entry point.
+      const { count } = await supabase
+        .from('waitlist')
+        .select('*', { count: 'exact', head: true })
+      if (typeof count === 'number') setPosition(count + 200)
+
       setReferralCode(refCode)
       setSubmitted(true)
     } catch (err) {
@@ -208,7 +219,7 @@ export function WaitlistModal() {
                 </svg>
               </button>
 
-              <div className="relative px-8 pt-8 pb-6 overflow-y-auto">
+              <div className="relative px-8 pt-8 pb-6 overflow-y-auto" data-lenis-prevent>
                 <AnimatePresence mode="wait">
                   {!submitted ? (
                     <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
@@ -268,12 +279,8 @@ export function WaitlistModal() {
                       initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
                       className="text-center"
                     >
-                      <div className="w-14 h-14 mx-auto rounded-2xl bg-[#FFD700]/10 border border-[#FFD700]/30 flex items-center justify-center mb-5">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="2.5">
-                          <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </div>
-                      <h3 className="text-white text-2xl font-black tracking-tighter mb-2">You're on the list.</h3>
+                      <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-[0.4em] mb-1.5">You're on the list</p>
+                      <p className="text-6xl font-black tracking-tighter text-white leading-none mb-4">#{position ?? '—'}</p>
                       <p className="text-white/40 text-sm font-medium mb-6">
                         We'll text or email you when your spot opens.
                       </p>

@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { Loader } from './components/ui/loader';
 import { WaitlistModal } from './components/ui/WaitlistModal';
+import { SmoothScroll } from './components/SmoothScroll';
 import { useAuth } from './hooks/useAuth';
 import { WAITLIST_MODE } from './lib/featureFlags';
+import 'lenis/dist/lenis.css';
 import './App.css';
 
 // ─── Route-level code splitting ───────────────────────────────────────────────
@@ -104,7 +106,7 @@ function App() {
   });
 
   return (
-    <>
+    <SmoothScroll>
       <AnimatePresence>
         {showSplash && <PageSplash key="splash" onDone={() => setShowSplash(false)} />}
       </AnimatePresence>
@@ -203,7 +205,7 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
-    </>
+    </SmoothScroll>
   );
 }
 

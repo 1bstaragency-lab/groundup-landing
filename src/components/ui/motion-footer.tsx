@@ -4,6 +4,7 @@ import * as React from "react";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useLenis } from "lenis/react";
 import { cn } from "@/lib/utils";
 import { WAITLIST_MODE } from "../../lib/featureFlags";
 import { openWaitlistModal } from "./WaitlistModal";
@@ -116,6 +117,16 @@ const MarqueeItem = () => (
 export function CinematicFooter({ onViewDemo }: { onViewDemo?: () => void }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const giantTextRef = useRef<HTMLDivElement>(null);
+  const lenis = useLenis();
+
+  // Keep ScrollTrigger in step with Lenis's smoothed scroll position instead
+  // of the raw native scroll event (avoids a frame or two of lag on the
+  // scrub-tied animation below).
+  useEffect(() => {
+    if (!lenis) return;
+    lenis.on("scroll", ScrollTrigger.update);
+    return () => { lenis.off("scroll", ScrollTrigger.update); };
+  }, [lenis]);
 
   useEffect(() => {
     if (!wrapperRef.current) return;
@@ -173,7 +184,7 @@ export function CinematicFooter({ onViewDemo }: { onViewDemo?: () => void }) {
               <span className="text-white/20 text-[10px] font-black uppercase tracking-widest">Built for the</span>
               <span className="text-[#FFD700] font-black text-xs tracking-widest ml-1">NEW WAVE</span>
             </div>
-            <MagneticButton as="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="w-12 h-12 rounded-full footer-glass-pill flex items-center justify-center text-[#FFD700] group">
+            <MagneticButton as="button" onClick={() => (lenis ? lenis.scrollTo(0) : window.scrollTo({ top: 0, behavior: "smooth" }))} className="w-12 h-12 rounded-full footer-glass-pill flex items-center justify-center text-[#FFD700] group">
               <svg className="w-5 h-5 transform group-hover:-translate-y-1.5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
               </svg>
