@@ -4,7 +4,7 @@ import {
   Search, TrendingUp, Music2, Globe, ExternalLink, Zap, Play, Radio,
   Lock, Crown, X, Mail, Check, Sparkles, ArrowRight, ArrowLeft,
   Flame, BarChart2, Star, Users, Pen, MessageSquare, ListMusic,
-  Info, Upload, FileAudio, Plus, XCircle,
+  Info, Upload, FileAudio, Plus, XCircle, Download,
 } from 'lucide-react';
 import { CampaignBuilder } from './CampaignBuilder';
 import { INFLUENCERS, NETWORK_STATS, type Platform, type TikTokTier, type Influencer } from '../../data/influencers';
@@ -314,9 +314,41 @@ function AudioMatchModal({
   const [customTag, setCustomTag] = useState('');
   const [dragOver, setDragOver] = useState(false);
 
+  const [ytUrl, setYtUrl]             = useState('');
+  const [ytLoading, setYtLoading]     = useState(false);
+  const [ytError, setYtError]         = useState<string | null>(null);
+  const [ytDownloadUrl, setYtDownloadUrl] = useState<string | null>(null);
+
   function handleFile(file: File | undefined) {
     if (!file) return;
     setFileName(file.name);
+  }
+
+  async function fetchFromYoutube() {
+    const url = ytUrl.trim();
+    if (!url || ytLoading) return;
+    setYtLoading(true);
+    setYtError(null);
+    try {
+      const res = await fetch('/.netlify/functions/youtube-audio', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ url }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setYtError(data.message || 'Could not fetch audio from that link.');
+        return;
+      }
+      const blob = await (await fetch(`data:${data.mimeType};base64,${data.dataBase64}`)).blob();
+      if (ytDownloadUrl) URL.revokeObjectURL(ytDownloadUrl);
+      setYtDownloadUrl(URL.createObjectURL(blob));
+      setFileName(data.filename);
+    } catch {
+      setYtError('Could not reach the server — try again.');
+    } finally {
+      setYtLoading(false);
+    }
   }
 
   function toggleTag(tag: string) {
@@ -384,6 +416,40 @@ function AudioMatchModal({
               </>
             )}
           </label>
+
+          {/* Or fetch straight from a YouTube link */}
+          <div className="flex items-center gap-2 mt-3">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-white/25 text-[9px] font-black uppercase tracking-widest">or paste a link</span>
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
+          <div className="flex gap-1.5 mt-3">
+            <input
+              type="url"
+              value={ytUrl}
+              onChange={e => setYtUrl(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); fetchFromYoutube(); } }}
+              placeholder="Paste a YouTube link…"
+              className="flex-1 bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-[#FFD700]/30 transition-colors min-w-0"
+            />
+            <button
+              onClick={fetchFromYoutube}
+              disabled={!ytUrl.trim() || ytLoading}
+              className="flex items-center justify-center px-3 h-9 rounded-lg bg-white/[0.03] border border-white/10 text-white/50 hover:text-white shrink-0 disabled:opacity-40 text-[9px] font-black uppercase tracking-widest transition-colors"
+            >
+              {ytLoading ? 'Fetching…' : 'Fetch'}
+            </button>
+          </div>
+          {ytError && <p className="text-red-400 text-[10px] font-medium mt-1.5">{ytError}</p>}
+          {ytDownloadUrl && (
+            <a
+              href={ytDownloadUrl}
+              download={fileName ?? 'audio'}
+              className="inline-flex items-center gap-1 text-[#FFD700] text-[10px] font-black uppercase tracking-widest mt-1.5 hover:underline"
+            >
+              <Download size={11} /> Download audio
+            </a>
+          )}
 
           {/* Tags */}
           <div className="mt-5">

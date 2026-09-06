@@ -18,6 +18,12 @@
 [functions]
   node_bundler = "esbuild"
 
+# The yt-dlp binary yt-dlp-exec fetches at install time is a plain file,
+# not JS — esbuild won't pick it up on its own, so it has to be listed
+# explicitly to land in the function's zip.
+[functions."youtube-audio"]
+  included_files = ["node_modules/yt-dlp-exec/bin/**"]
+
 [functions."scheduled-texts"]
   schedule = "0 14 * * 0,3"
 
