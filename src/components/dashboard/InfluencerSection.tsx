@@ -170,6 +170,7 @@ const PLATFORM_COLORS: Record<Platform, string> = {
   Blog:       'bg-purple-500/15 text-purple-400',
   YouTube:    'bg-red-500/15 text-red-400',
   SoundCloud: 'bg-orange-500/15 text-orange-400',
+  Instagram:  'bg-pink-500/15 text-pink-400',
 }
 
 const PLATFORM_AVATAR: Record<Platform, string> = {
@@ -179,6 +180,7 @@ const PLATFORM_AVATAR: Record<Platform, string> = {
   Blog:       'bg-purple-500/20 text-purple-300',
   YouTube:    'bg-red-500/20 text-red-300',
   SoundCloud: 'bg-orange-500/20 text-orange-300',
+  Instagram:  'bg-pink-500/20 text-pink-300',
 }
 
 const PLATFORM_CARD: Record<Platform, { border: string; borderOn: string; bgOn: string }> = {
@@ -188,6 +190,7 @@ const PLATFORM_CARD: Record<Platform, { border: string; borderOn: string; bgOn: 
   Blog:       { border: 'border-purple-500/15', borderOn: 'border-purple-400/45', bgOn: 'bg-purple-500/8' },
   YouTube:    { border: 'border-red-500/15',    borderOn: 'border-red-400/45',    bgOn: 'bg-red-500/8' },
   SoundCloud: { border: 'border-orange-500/15', borderOn: 'border-orange-400/45', bgOn: 'bg-orange-500/8' },
+  Instagram:  { border: 'border-pink-500/15',   borderOn: 'border-pink-400/45',   bgOn: 'bg-pink-500/8' },
 }
 
 function fmtFollowers(n: number): string {

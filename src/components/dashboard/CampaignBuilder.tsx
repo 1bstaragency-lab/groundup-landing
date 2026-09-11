@@ -18,6 +18,7 @@ const PLATFORM_TAB_ACTIVE: Record<Platform | 'All', string> = {
   Blog:       'bg-purple-500 text-white',
   YouTube:    'bg-red-500 text-white',
   SoundCloud: 'bg-orange-500 text-white',
+  Instagram:  'bg-pink-500 text-white',
 }
 
 // Left-border accent color strip on each brief card
@@ -28,6 +29,7 @@ const PLATFORM_ACCENT_BAR: Record<Platform, string> = {
   Blog:       'bg-purple-500',
   YouTube:    'bg-red-500',
   SoundCloud: 'bg-orange-500',
+  Instagram:  'bg-pink-500',
 }
 
 // Card border/bg when checked in the pick-list
@@ -38,6 +40,7 @@ const PLATFORM_CHECKED: Record<Platform, { border: string; bg: string }> = {
   Blog:       { border: 'border-purple-400/40', bg: 'bg-purple-500/8' },
   YouTube:    { border: 'border-red-400/40',    bg: 'bg-red-500/8' },
   SoundCloud: { border: 'border-orange-400/40', bg: 'bg-orange-500/8' },
+  Instagram:  { border: 'border-pink-400/40',   bg: 'bg-pink-500/8' },
 }
 
 // Brief card header background tint
@@ -48,6 +51,7 @@ const PLATFORM_BRIEF_BG: Record<Platform, string> = {
   Blog:       'bg-purple-500/6',
   YouTube:    'bg-red-500/6',
   SoundCloud: 'bg-orange-500/6',
+  Instagram:  'bg-pink-500/6',
 }
 
 // Platform badge styles (same as InfluencerSection for consistency)
@@ -58,6 +62,7 @@ const PLATFORM_BADGE: Record<Platform, string> = {
   Blog:       'bg-purple-500/15 text-purple-400',
   YouTube:    'bg-red-500/15 text-red-400',
   SoundCloud: 'bg-orange-500/15 text-orange-400',
+  Instagram:  'bg-pink-500/15 text-pink-400',
 }
 
 const PLATFORM_AVATAR: Record<Platform, string> = {
@@ -67,6 +72,7 @@ const PLATFORM_AVATAR: Record<Platform, string> = {
   Blog:       'bg-purple-500/20 text-purple-300',
   YouTube:    'bg-red-500/20 text-red-300',
   SoundCloud: 'bg-orange-500/20 text-orange-300',
+  Instagram:  'bg-pink-500/20 text-pink-300',
 }
 
 interface Props {
