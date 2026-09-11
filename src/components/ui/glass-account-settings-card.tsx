@@ -30,7 +30,7 @@ const BASE_PLANS: Omit<PlanTier, 'current'>[] = [
   {
     id: "pro",
     name: "Pro",
-    price: "$29",
+    price: "$19.99",
     period: "month",
     features: ["Unlimited releases", "uP iMessage + 100/day", "Real-time analytics", "Playlist pitching"],
     badge: "Popular",
@@ -38,7 +38,7 @@ const BASE_PLANS: Omit<PlanTier, 'current'>[] = [
   {
     id: "agency",
     name: "Growth",
-    price: "$55",
+    price: "$29.99",
     period: "month",
     features: ["Everything in Pro", "uP 500 msgs/day", "Team (3 seats)", "Influencer network"],
     badge: "Best Value",

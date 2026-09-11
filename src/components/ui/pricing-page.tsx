@@ -103,8 +103,8 @@ export function PricingPage({ onSelect }: PricingPageProps) {
   const plans = [
     {
       planName: "Pro", description: "For serious artists",
-      price: "$29", priceDescription: "/ month",
-      trialBadge: "7-day free trial",
+      price: "$19.99", priceDescription: "/ month",
+      trialBadge: "14-day free trial",
       icon: <Star size={18} />, accentColor: "#FFD700",
       features: [
         "Full Artist OS dashboard",
@@ -119,7 +119,7 @@ export function PricingPage({ onSelect }: PricingPageProps) {
     },
     {
       planName: "Growth", description: "For established artists",
-      price: "$55", priceDescription: "/ month",
+      price: "$29.99", priceDescription: "/ month",
       trialBadge: undefined,
       icon: <Zap size={18} />, accentColor: "#9ca3af",
       features: [
@@ -159,7 +159,7 @@ export function PricingPage({ onSelect }: PricingPageProps) {
           Find the plan that's right for you
         </h2>
         <p className="text-white/40 text-lg font-medium max-w-md mx-auto">
-          Start with a 7-day free trial. No credit card required to begin.
+          Start with a 14-day free trial. No credit card required to begin.
         </p>
       </div>
 

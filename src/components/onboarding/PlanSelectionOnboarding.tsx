@@ -43,7 +43,7 @@ const OTHER_PLANS: OtherPlan[] = [
   {
     tier:    'growth',
     name:    'Growth',
-    price:   '$55',
+    price:   '$29.99',
     period:  '/ month',
     icon:    <Zap size={14} />,
     features: ['Everything in Pro', 'uP AI — 500 msgs/day', 'Team collab (3 seats)', 'Influencer network'],
@@ -132,7 +132,7 @@ export function PlanSelectionOnboarding({ userId, artistName, onComplete }: Prop
   }
 
   const ctaLabel =
-    choice === 'trial'  ? 'Start 7-Day Free Trial' :
+    choice === 'trial'  ? 'Start 14-Day Free Trial' :
     choice === 'free'   ? 'Continue with Starter' :
     choice === 'growth' ? 'Get Growth' :
                           'Talk to Sales'
@@ -153,7 +153,7 @@ export function PlanSelectionOnboarding({ userId, artistName, onComplete }: Prop
           How do you want to start?
         </h2>
         <p className="text-white/40 text-sm font-medium max-w-md mx-auto">
-          Try Pro free for 7 days — no charge until your trial ends. Cancel anytime.
+          Try Pro free for 14 days — no charge until your trial ends. Cancel anytime.
         </p>
       </div>
 
@@ -182,17 +182,17 @@ export function PlanSelectionOnboarding({ userId, artistName, onComplete }: Prop
                 <Star size={16} />
               </div>
               <div>
-                <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest leading-none">7-Day Free Trial</p>
+                <p className="text-[#FFD700] text-[9px] font-black uppercase tracking-widest leading-none">14-Day Free Trial</p>
                 <p className="text-white font-black text-xl tracking-tight">Pro</p>
               </div>
             </div>
 
             <div className="flex items-baseline gap-1 mb-1">
-              <span className="text-white/60 text-sm font-bold line-through">$29/mo</span>
-              <span className="text-[#FFD700] font-black text-sm ml-2">Free for 7 days</span>
+              <span className="text-white/60 text-sm font-bold line-through">$19.99/mo</span>
+              <span className="text-[#FFD700] font-black text-sm ml-2">Free for 14 days</span>
             </div>
             <p className="text-white/40 text-[10px] font-medium mb-4">
-              Then $29/mo. Cancel anytime in the trial — no charge.
+              Then $19.99/mo. Cancel anytime in the trial — no charge.
             </p>
 
             <ul className="space-y-2 mb-4 flex-1">

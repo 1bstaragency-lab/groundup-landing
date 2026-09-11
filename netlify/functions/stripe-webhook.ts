@@ -141,10 +141,10 @@ export const handler: Handler = async (event) => {
 
           if (magicLink) {
             await sendBlooioMsg(phone,
-              `You're in! 🔥 Your 7-day free trial just started.\n\nTap this link to set up your GrounduP dashboard — no password needed:\n${magicLink}\n\nThen come back here and keep texting me 🎵`);
+              `You're in! 🔥 Your 14-day free trial just started.\n\nTap this link to set up your GrounduP dashboard — no password needed:\n${magicLink}\n\nThen come back here and keep texting me 🎵`);
           } else {
             await sendBlooioMsg(phone,
-              `You're in! 🔥 Your 7-day free trial just started.\n\nCheck your email (${email}) for your GrounduP login link.\n\nThen keep texting me — your conversations carry over.`);
+              `You're in! 🔥 Your 14-day free trial just started.\n\nCheck your email (${email}) for your GrounduP login link.\n\nThen keep texting me — your conversations carry over.`);
           }
         }
 

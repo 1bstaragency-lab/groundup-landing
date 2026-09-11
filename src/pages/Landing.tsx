@@ -16,7 +16,6 @@ import { DemoModal } from '../components/ui/DemoModal';
 import { UpBot } from '../components/ui/UpBot';
 import { handlePricingClick } from '../lib/pricingCheckout';
 import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../supabaseClient';
 
 const FONTS_HREF =
   'https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Instrument+Serif:ital@0;1&display=swap';
@@ -78,26 +77,6 @@ function Reveal({ children, delay = 0, className }: { children: React.ReactNode;
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-/**
- * Same stagger-fade look as Reveal, but animates on mount instead of on
- * scroll-into-view. Used for content that must always be visible (real CTAs,
- * not just decorative below-the-fold flourishes) — sidesteps any edge case
- * where a grid/items-center layout repositions an element without the
- * IntersectionObserver re-crossing its threshold.
- */
-function FadeIn({ children, delay = 0, className }: { children: React.ReactNode; delay?: number; className?: string }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
       className={className}
     >
@@ -432,13 +411,6 @@ function IPhoneDemo() {
 function LandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', socialHandle: '', role: 'Artist'
-  });
-  const [submitted, setSubmitted] = useState(false);
-  const [referralCode, setReferralCode] = useState('');
-  const [inviteCopied, setInviteCopied] = useState(false);
-  const [referredBy, setReferredBy] = useState<string | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
   const [pricingError, setPricingError] = useState<string | null>(null);
@@ -494,38 +466,9 @@ function LandingPage() {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref');
     if (ref) {
-      setReferredBy(ref);
       try { localStorage.setItem('gup_ref_code', ref) } catch { /* noop */ }
     }
   }, []);
-
-  const handleJoin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const newRefCode = btoa(formData.email).substring(0, 8);
-    setReferralCode(newRefCode);
-    try {
-      const { error } = await supabase.from('waitlist').insert([{
-        email: formData.email, phone: formData.phone, artist_name: formData.name,
-        role: formData.role, social_handle: formData.socialHandle,
-        referral_code: newRefCode, referred_by: referredBy,
-        source: 'homepage',
-      }]);
-      if (error) console.warn('Waitlist insert failed, proceeding anyway:', error);
-
-      if (formData.phone) {
-        fetch('/.netlify/functions/waitlist-sms', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: formData.phone, name: formData.name }),
-        }).catch(() => {/* swallow — SMS is best-effort */});
-      }
-
-      setSubmitted(true);
-    } catch (err) {
-      console.error('Waitlist error:', err);
-      setSubmitted(true);
-    }
-  };
 
   return (
     <div className="min-h-screen font-sans overflow-x-hidden relative" style={{ background: BG, color: INK }}>
@@ -861,118 +804,6 @@ function LandingPage() {
       {/* ── FAQ — real interactive uP concierge, needs a dark backdrop ── */}
       <div className="relative z-10 mt-28 py-24" id="faq" style={{ background: INK }}>
         <SupportBot />
-      </div>
-
-      {/* ── SIGNUP — real waitlist form ── */}
-      <div className="relative z-10 mt-28 px-6 md:px-8" id="signup">
-        <FadeIn>
-          <div className="relative overflow-hidden rounded-[40px] px-6 md:px-8 py-20" style={{ background: INK, color: BG }}>
-            <span aria-hidden className="absolute left-8 top-8 hidden sm:inline" style={{ fontFamily: PIXEL, fontSize: 11, color: 'rgba(244,241,236,0.35)' }}>READY?</span>
-            <span aria-hidden className="absolute right-8 top-8 hidden sm:inline" style={{ color: 'rgba(244,241,236,0.35)' }}>✛</span>
-
-            <div className="text-center mb-12">
-              <h2 className="m-0 mb-4 font-black tracking-tighter" style={{ fontSize: 'clamp(40px, 7vw, 96px)', lineHeight: 0.95 }}>
-                {WAITLIST_MODE ? (
-                  <>GET ON<span style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontWeight: 400, color: GOLD }}> THE LIST.</span></>
-                ) : (
-                  <>YOUR<span style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontWeight: 400, color: GOLD }}> MOVE.</span></>
-                )}
-              </h2>
-              <p className="m-0 text-[12px] font-bold tracking-[0.15em]" style={{ color: 'rgba(244,241,236,0.5)' }}>
-                {WAITLIST_MODE
-                  ? "LIMITED EARLY ACCESS. WE'RE APPROVING ARTISTS IN WAVES — JOIN NOW TO GET IN EARLY."
-                  : 'THE ARTIST OS. FREE TO START. TWO MINUTES TO SET UP.'}
-              </p>
-            </div>
-
-            <div className="max-w-xl mx-auto relative z-10">
-              <AnimatePresence mode="wait">
-                {!submitted ? (
-                  <motion.form
-                    key="form"
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="space-y-4" onSubmit={handleJoin}
-                  >
-                    <input
-                      type="text" placeholder="ARTIST NAME" required
-                      value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full h-14 px-6 rounded-full font-bold text-sm outline-none"
-                      style={{ background: 'rgba(244,241,236,0.08)', border: '1px solid rgba(244,241,236,0.2)', color: BG }}
-                    />
-                    <input
-                      type="email" placeholder="EMAIL ADDRESS" required
-                      value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full h-14 px-6 rounded-full font-bold text-sm outline-none"
-                      style={{ background: 'rgba(244,241,236,0.08)', border: '1px solid rgba(244,241,236,0.2)', color: BG }}
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                      <select
-                        value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}
-                        className="w-full h-14 px-6 rounded-full font-bold text-sm outline-none"
-                        style={{ background: 'rgba(244,241,236,0.08)', border: '1px solid rgba(244,241,236,0.2)', color: BG }}
-                      >
-                        <option value="Artist" style={{ color: INK }}>ARTIST</option>
-                        <option value="Manager" style={{ color: INK }}>MANAGER</option>
-                        <option value="Label" style={{ color: INK }}>LABEL</option>
-                      </select>
-                      <input
-                        type="tel" placeholder="PHONE"
-                        value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full h-14 px-6 rounded-full font-bold text-sm outline-none"
-                        style={{ background: 'rgba(244,241,236,0.08)', border: '1px solid rgba(244,241,236,0.2)', color: BG }}
-                      />
-                    </div>
-                    <input
-                      type="text" placeholder="SOCIAL HANDLE (@...)"
-                      value={formData.socialHandle} onChange={e => setFormData({ ...formData, socialHandle: e.target.value })}
-                      className="w-full h-14 px-6 rounded-full font-bold text-sm outline-none"
-                      style={{ background: 'rgba(244,241,236,0.08)', border: '1px solid rgba(244,241,236,0.2)', color: BG }}
-                    />
-                    <div className="pt-2">
-                      <GradientButton type="submit" className="w-full h-14 min-w-0">{WAITLIST_MODE ? 'JOIN WAITLIST →' : 'GET IN →'}</GradientButton>
-                    </div>
-                  </motion.form>
-                ) : (
-                  <motion.div
-                    key="success"
-                    initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
-                    className="text-center p-10 rounded-3xl"
-                    style={{ background: 'rgba(244,241,236,0.06)', border: '1px solid rgba(255,215,0,0.3)' }}
-                  >
-                    <h3 className="m-0 mb-5 font-black uppercase tracking-tighter" style={{ fontSize: 28 }}>
-                      {WAITLIST_MODE ? "YOU'RE ON THE LIST." : "YOU'RE IN. LET'S GO."}
-                    </h3>
-                    <p className="m-0 mb-3 text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: GOLD }}>
-                      {WAITLIST_MODE ? 'YOUR INVITE CODE' : 'YOUR ACCESS CODE'}
-                    </p>
-                    <div className="rounded-xl px-4 py-3 mb-6 select-all" style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(244,241,236,0.15)' }}>
-                      <code className="text-sm font-mono tracking-wider" style={{ color: BG }}>{referralCode}</code>
-                    </div>
-                    {WAITLIST_MODE ? (
-                      <>
-                        <p className="m-0 mb-4 text-[11px] font-bold leading-relaxed" style={{ color: 'rgba(244,241,236,0.5)' }}>
-                          WE'LL TEXT YOU WHEN YOUR SPOT OPENS. SHARE YOUR CODE — EVERY ARTIST WHO JOINS WITH IT MOVES YOU UP THE LIST.
-                        </p>
-                        <GradientButton
-                          onClick={() => {
-                            navigator.clipboard.writeText(`https://groundupapp.com/?ref=${referralCode}`).catch(() => {});
-                            setInviteCopied(true);
-                            setTimeout(() => setInviteCopied(false), 2000);
-                          }}
-                          className="w-full h-14 min-w-0"
-                        >
-                          {inviteCopied ? 'COPIED ✓' : 'COPY INVITE LINK'}
-                        </GradientButton>
-                      </>
-                    ) : (
-                      <GradientButton onClick={() => navigate('/signup')} className="w-full h-14 min-w-0">CREATE YOUR ACCOUNT</GradientButton>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-        </FadeIn>
       </div>
 
       {/* ── FOOTER — real footer, already gold/black-branded ── */}

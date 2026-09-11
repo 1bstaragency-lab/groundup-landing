@@ -406,7 +406,7 @@ export const handler: Handler = async (event) => {
       const checkoutUrl = await createGuestCheckoutUrl(fromPhone)
       if (checkoutUrl) {
         await sendBlooio(fromPhone,
-          `You've used all ${GUEST_FREE_LIMIT} free messages with uP 🎵\n\nStart your 7-day free trial to keep your career moving — Spotify pitching, Meta ads, rollout plans, and more. No charge until the trial ends.\n\n👉 ${checkoutUrl}`)
+          `You've used all ${GUEST_FREE_LIMIT} free messages with uP 🎵\n\nStart your 14-day free trial to keep your career moving — Spotify pitching, Meta ads, rollout plans, and more. No charge until the trial ends.\n\n👉 ${checkoutUrl}`)
       } else {
         await sendBlooio(fromPhone,
           `You've used all ${GUEST_FREE_LIMIT} free messages with uP 🎵\n\nCreate your full account to keep going — release planning, Spotify curator pitching, Meta ads, and your career dashboard.\n\n👉 groundupapp.com/signup`)
@@ -1046,7 +1046,7 @@ async function createGuestCheckoutUrl(phone: string): Promise<string | null> {
       success_url:          `https://groundupapp.com/signup?phone=${encodedPhone}&from=checkout`,
       cancel_url:           'https://groundupapp.com/app',
       subscription_data: {
-        trial_period_days: 7,
+        trial_period_days: 14,
         metadata: { guest_phone: phone },
       },
       metadata: { guest_phone: phone },

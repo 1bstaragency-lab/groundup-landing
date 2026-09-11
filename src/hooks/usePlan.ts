@@ -12,8 +12,8 @@ const PLAN_LABELS: Record<PlanTier, string> = {
 
 const PLAN_PRICES: Record<PlanTier, string> = {
   free:   '$0',
-  pro:    '$29/mo',
-  growth: '$55/mo',
+  pro:    '$19.99/mo',
+  growth: '$29.99/mo',
 }
 
 // Storage tiers — bytes. Powers the Content Studio → Asset Bank quota bar.

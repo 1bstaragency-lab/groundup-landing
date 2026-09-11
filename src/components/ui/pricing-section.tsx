@@ -24,21 +24,21 @@ const PLANS: Plan[] = [
   {
     name: "PRO",
     description: "FOR ARTISTS DROPPING THEIR FIRST RELEASE ON THEIR OWN TERMS.",
-    price: 29,
-    yearlyPrice: 290,
+    price: 19.99,
+    yearlyPrice: 199.9,
     features: [
       { text: "RELEASE PLANNING", icon: <Rocket size={16} /> },
       { text: "CONTENT SCHEDULER", icon: <CalendarClock size={16} /> },
       { text: "STREAMING ANALYTICS", icon: <BarChart3 size={16} /> },
     ],
     includesHeader: "FREE TRIAL INCLUDES:",
-    includes: ["UP IN YOUR IMESSAGE", "7-DAY FREE TRIAL", "NO CARD REQUIRED"],
+    includes: ["UP IN YOUR IMESSAGE", "14-DAY FREE TRIAL", "NO CARD REQUIRED"],
   },
   {
     name: "GROWTH",
     description: "FOR ARTISTS READY TO PITCH, ADVERTISE, AND SCALE THE CATALOG.",
-    price: 55,
-    yearlyPrice: 550,
+    price: 29.99,
+    yearlyPrice: 299.9,
     popular: true,
     features: [
       { text: "CURATOR OUTREACH", icon: <Send size={16} /> },

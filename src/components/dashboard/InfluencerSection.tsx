@@ -272,7 +272,7 @@ function UpgradeModal({ userId, onClose }: { userId: string | undefined; onClose
           <div className="w-14 h-14 mx-auto rounded-2xl bg-[#FFD700]/10 border border-[#FFD700]/30 flex items-center justify-center mb-5">
             <Crown size={22} className="text-[#FFD700]" />
           </div>
-          <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-3">Pro Plan · $29/mo</p>
+          <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-[0.25em] mb-3">Pro Plan · $19.99/mo</p>
           <h3 className="text-white text-2xl font-black tracking-tighter mb-3">Unlock the Full Network</h3>
           <p className="text-white/50 text-sm leading-relaxed mb-6">
             Every curator, unlimited outreach, and priority placement — included with{' '}

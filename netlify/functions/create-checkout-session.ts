@@ -10,8 +10,8 @@
  *
  * Required Netlify env vars:
  *   STRIPE_SECRET_KEY
- *   STRIPE_PRICE_PRO     — recurring Price ID for the $29/mo Pro plan
- *   STRIPE_PRICE_GROWTH  — recurring Price ID for the $55/mo Growth plan
+ *   STRIPE_PRICE_PRO     — recurring Price ID for the $19.99/mo Pro plan
+ *   STRIPE_PRICE_GROWTH  — recurring Price ID for the $29.99/mo Growth plan
  *   VITE_SUPABASE_URL
  *   SUPABASE_SERVICE_ROLE_KEY
  */
@@ -87,7 +87,7 @@ export const handler: Handler = async (event) => {
       customer,
       customer_email:       customer ? undefined : userEmail,
       subscription_data: {
-        trial_period_days: tier === 'pro' ? 7 : undefined,
+        trial_period_days: tier === 'pro' ? 14 : undefined,
         metadata:          { supabase_user_id: userId, tier },
       },
       metadata:             { supabase_user_id: userId, tier },

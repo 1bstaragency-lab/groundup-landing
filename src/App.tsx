@@ -15,6 +15,8 @@ import './App.css';
 // the existing splash/auth loaders, so transitions look seamless.
 const LandingPage       = lazy(() => import('./pages/Landing'));
 const PricingStandalone = lazy(() => import('./pages/PricingStandalone'));
+const NetworkStandalone  = lazy(() => import('./pages/NetworkStandalone'));
+const ClientDashboard    = lazy(() => import('./pages/ClientDashboard'));
 const AppPageV1         = lazy(() => import('./pages/AppPageV1'));
 const AppPageV2         = lazy(() => import('./pages/AppPageV2'));
 const PrivacyPolicy     = lazy(() => import('./pages/PrivacyPolicy'));
@@ -115,6 +117,8 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/pricing" element={<PricingStandalone />} />
+          <Route path="/network" element={<NetworkStandalone />} />
+          <Route path="/client/:slug" element={<ClientDashboard />} />
           <Route path="/app" element={<AppPageV2 />} />
           <Route path="/app-v1" element={<AppPageV1 />} />
           <Route path="/app-v2" element={<AppPageV2 />} />
