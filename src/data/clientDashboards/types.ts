@@ -16,27 +16,37 @@ export interface PlatformTimeline {
   tiktok?:  { startDate: string; note?: string }
 }
 
+/**
+ * Every field here is individually optional — real data availability is
+ * usually partial (e.g. public view/like/comment counts are known, but
+ * watch time / ad views need YouTube Analytics API access we may not
+ * have yet). Fill in only what's actually real; the dashboard renders
+ * each known stat and quietly omits the rest, rather than forcing an
+ * all-or-nothing block that tempts filling gaps with guesses.
+ */
 export interface YouTubePerformance {
-  views: number
-  adViews: number
-  watchTimeHours: number
-  avgViewDuration: string   // e.g. "1:42"
-  likes: number
-  comments: number
-  shares: number
-  subscribersGained: number
+  views?: number
+  adViews?: number
+  watchTimeHours?: number
+  avgViewDuration?: string   // e.g. "1:42"
+  likes?: number
+  comments?: number
+  shares?: number
+  subscribersGained?: number
 }
 
 export interface GoogleAdsPerformance {
-  spend: number             // USD
-  impressions: number
-  reach: number               // estimated unique users reached
-  views: number
-  cpv: number                // cost per view, USD
-  cpc: number                 // cost per click, USD
-  viewRate: number           // percent, e.g. 24.5
-  clicks: number
-  targeting: string[]         // e.g. "Interest: Hip-Hop & Rap", "Age 18-34"
+  spend?: number             // USD
+  impressions?: number
+  reach?: number               // estimated unique users reached
+  views?: number
+  cpv?: number                // cost per view, USD
+  cpc?: number                 // cost per click, USD
+  viewRate?: number           // percent, e.g. 24.5
+  clicks?: number
+  /** Who/what we're targeting — real even before real performance
+   *  numbers exist, e.g. "Fans of Don Toliver", "Interest: R&B". */
+  targeting?: string[]
 }
 
 export interface TrafficSource {
@@ -45,17 +55,17 @@ export interface TrafficSource {
 }
 
 export interface WebsiteAnalytics {
-  users: number
-  trafficSources: TrafficSource[]
-  musicVideoClicks: number
-  conversions: number
+  users?: number
+  trafficSources?: TrafficSource[]
+  musicVideoClicks?: number
+  conversions?: number
 }
 
 export interface TikTokPerformance {
-  impressions: number
-  videoViews: number
-  engagement: number         // percent
-  clicks: number
+  impressions?: number
+  videoViews?: number
+  engagement?: number         // percent
+  clicks?: number
   bestCreative?: string       // label of the top-performing ad/creative
 }
 

@@ -232,65 +232,58 @@ function Dashboard({ data }: { data: import('../data/clientDashboards/types').Cl
       </div>
       <p className="text-white/30 text-[11px] font-medium mb-12">Last updated {fmtDateTime(data.lastUpdated)}</p>
 
-      {/* ── Platform launch timeline ── */}
+      {/* ── Platform launch timeline (TikTok omitted for now — see note below) ── */}
       <Section title="Platform Launch Timeline" icon={<Sparkles size={14} />}>
-        <div className="grid sm:grid-cols-2 gap-3">
+        <div className={data.timeline.tiktok ? 'grid sm:grid-cols-2 gap-3' : 'grid gap-3 max-w-sm'}>
           <TimelineCard icon={<SquarePlay size={16} />} platform="YouTube" entry={data.timeline.youtube} />
-          <TimelineCard icon={<Music2 size={16} />} platform="TikTok" entry={data.timeline.tiktok} />
+          {data.timeline.tiktok && (
+            <TimelineCard icon={<Music2 size={16} />} platform="TikTok" entry={data.timeline.tiktok} />
+          )}
         </div>
       </Section>
 
-      {/* ── YouTube performance ── */}
+      {/* ── YouTube performance — only real, known stats render ── */}
       <MetricSection
         title="YouTube Performance"
         icon={<SquarePlay size={14} />}
-        empty={!data.youtube}
-      >
-        {data.youtube && (
-          <StatGrid stats={[
-            { label: 'Views', value: fmtNum(data.youtube.views) },
-            { label: 'Ad Views', value: fmtNum(data.youtube.adViews) },
-            { label: 'Watch Time', value: `${fmtNum(data.youtube.watchTimeHours)} hrs` },
-            { label: 'Avg. View Duration', value: data.youtube.avgViewDuration },
-            { label: 'Likes', value: fmtNum(data.youtube.likes) },
-            { label: 'Comments', value: fmtNum(data.youtube.comments) },
-            { label: 'Shares', value: fmtNum(data.youtube.shares) },
-            { label: 'Subscribers Gained', value: fmtNum(data.youtube.subscribersGained) },
-          ]} />
-        )}
-      </MetricSection>
+        stats={data.youtube ? [
+          num('Views', data.youtube.views),
+          num('Ad Views', data.youtube.adViews),
+          data.youtube.watchTimeHours != null ? { label: 'Watch Time', value: `${fmtNum(data.youtube.watchTimeHours)} hrs` } : null,
+          data.youtube.avgViewDuration ? { label: 'Avg. View Duration', value: data.youtube.avgViewDuration } : null,
+          num('Likes', data.youtube.likes),
+          num('Comments', data.youtube.comments),
+          num('Shares', data.youtube.shares),
+          num('Subscribers Gained', data.youtube.subscribersGained),
+        ] : []}
+      />
 
       {/* ── Google Ads performance ── */}
       <MetricSection
         title="Google Ads Performance"
         icon={<TrendingUp size={14} />}
-        empty={!data.googleAds}
+        stats={data.googleAds ? [
+          data.googleAds.spend != null ? { label: 'Spend', value: `$${fmtNum(Math.round(data.googleAds.spend))}` } : null,
+          num('Reach', data.googleAds.reach),
+          num('Impressions', data.googleAds.impressions),
+          num('Views', data.googleAds.views),
+          num('Clicks', data.googleAds.clicks),
+          data.googleAds.cpv != null ? { label: 'Cost per View', value: `$${data.googleAds.cpv.toFixed(3)}` } : null,
+          data.googleAds.cpc != null ? { label: 'Cost per Click', value: `$${data.googleAds.cpc.toFixed(2)}` } : null,
+          data.googleAds.viewRate != null ? { label: 'View Rate', value: `${data.googleAds.viewRate.toFixed(1)}%` } : null,
+        ] : []}
       >
-        {data.googleAds && (
-          <>
-            <StatGrid stats={[
-              { label: 'Spend', value: `$${fmtNum(Math.round(data.googleAds.spend))}` },
-              { label: 'Reach', value: fmtNum(data.googleAds.reach) },
-              { label: 'Impressions', value: fmtNum(data.googleAds.impressions) },
-              { label: 'Views', value: fmtNum(data.googleAds.views) },
-              { label: 'Clicks', value: fmtNum(data.googleAds.clicks) },
-              { label: 'Cost per View', value: `$${data.googleAds.cpv.toFixed(3)}` },
-              { label: 'Cost per Click', value: `$${data.googleAds.cpc.toFixed(2)}` },
-              { label: 'View Rate', value: `${data.googleAds.viewRate.toFixed(1)}%` },
-            ]} />
-            {data.googleAds.targeting.length > 0 && (
-              <div className="mt-4">
-                <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-2">What We're Targeting</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {data.googleAds.targeting.map((t) => (
-                    <span key={t} className="px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 text-[11px] font-bold text-white/70">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
+        {data.googleAds?.targeting && data.googleAds.targeting.length > 0 && (
+          <div className="mt-4">
+            <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-2">What We're Targeting</p>
+            <div className="flex flex-wrap gap-1.5">
+              {data.googleAds.targeting.map((t) => (
+                <span key={t} className="px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 text-[11px] font-bold text-white/70">
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
         )}
       </MetricSection>
 
@@ -298,80 +291,35 @@ function Dashboard({ data }: { data: import('../data/clientDashboards/types').Cl
       <MetricSection
         title="Website Analytics"
         icon={<Globe size={14} />}
-        empty={!data.website}
+        stats={data.website ? [
+          num('Users', data.website.users),
+          num('Music-Video Clicks', data.website.musicVideoClicks),
+          num('Conversions', data.website.conversions),
+        ] : []}
       >
-        {data.website && (
-          <>
-            <StatGrid stats={[
-              { label: 'Users', value: fmtNum(data.website.users) },
-              { label: 'Music-Video Clicks', value: fmtNum(data.website.musicVideoClicks) },
-              { label: 'Conversions', value: fmtNum(data.website.conversions) },
-            ]} />
-            {data.website.trafficSources.length > 0 && (
-              <div className="mt-4 space-y-2">
-                <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-2">Traffic Sources</p>
-                {data.website.trafficSources.map((s) => {
-                  const max = Math.max(...data.website!.trafficSources.map((x) => x.users), 1);
-                  return (
-                    <div key={s.source} className="flex items-center gap-3">
-                      <span className="w-28 text-white/50 text-[11px] font-bold shrink-0">{s.source}</span>
-                      <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
-                        <div className="h-full rounded-full bg-[#FFD700]" style={{ width: `${(s.users / max) * 100}%` }} />
-                      </div>
-                      <span className="text-white/40 text-[11px] font-bold w-14 text-right shrink-0">{fmtNum(s.users)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </>
-        )}
-      </MetricSection>
-
-      {/* ── TikTok performance ── */}
-      <MetricSection
-        title="TikTok Performance"
-        icon={<Music2 size={14} />}
-        empty={!data.tiktok}
-      >
-        {data.tiktok && (
-          <>
-            <StatGrid stats={[
-              { label: 'Impressions', value: fmtNum(data.tiktok.impressions) },
-              { label: 'Video Views', value: fmtNum(data.tiktok.videoViews) },
-              { label: 'Engagement', value: `${data.tiktok.engagement.toFixed(1)}%` },
-              { label: 'Clicks', value: fmtNum(data.tiktok.clicks) },
-            ]} />
-            {data.tiktok.bestCreative && (
-              <p className="text-white/40 text-[12px] font-medium mt-4">
-                Best-performing creative: <span className="text-[#FFD700] font-bold">{data.tiktok.bestCreative}</span>
-              </p>
-            )}
-          </>
-        )}
-      </MetricSection>
-
-      {/* ── TikTok creations ── */}
-      <Section title="TikTok Creations Using the Sound" icon={<Music2 size={14} />}>
-        {data.tiktokCreations.length === 0 ? (
-          <EmptyState text="No creations linked yet — they'll show up here as they're found." />
-        ) : (
-          <div className="grid sm:grid-cols-2 gap-3">
-            {data.tiktokCreations.map((c) => (
-              <a
-                key={c.url}
-                href={c.url}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 hover:border-[#FFD700]/30 transition-colors"
-              >
-                <span className="text-[13px] font-bold">{c.label}</span>
-                <ExternalLink size={14} className="text-white/30 shrink-0" />
-              </a>
-            ))}
+        {data.website?.trafficSources && data.website.trafficSources.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-2">Traffic Sources</p>
+            {data.website.trafficSources.map((s) => {
+              const max = Math.max(...data.website!.trafficSources!.map((x) => x.users), 1);
+              return (
+                <div key={s.source} className="flex items-center gap-3">
+                  <span className="w-28 text-white/50 text-[11px] font-bold shrink-0">{s.source}</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                    <div className="h-full rounded-full bg-[#FFD700]" style={{ width: `${(s.users / max) * 100}%` }} />
+                  </div>
+                  <span className="text-white/40 text-[11px] font-bold w-14 text-right shrink-0">{fmtNum(s.users)}</span>
+                </div>
+              );
+            })}
           </div>
         )}
-      </Section>
+      </MetricSection>
+
+      {/* ── TikTok — removed for now (no TikTok data on this dashboard);
+           both the performance section and the creations list are fully
+           hidden rather than shown empty. Re-add by populating data.tiktok
+           / data.tiktokCreations in the client's data file. ── */}
 
       {/* ── Audience avatars ── */}
       <Section title="Audience Avatars" icon={<Users size={14} />}>
@@ -447,10 +395,32 @@ function Section({ title, icon, children, last }: { title: string; icon: ReactNo
   );
 }
 
-function MetricSection({ title, icon, empty, children }: { title: string; icon: ReactNode; empty: boolean; children: ReactNode }) {
+type Stat = { label: string; value: string };
+
+/** Build a stat entry only when the value is actually known — pass the
+ *  result straight into a `stats` array; `null`s are filtered out before
+ *  rendering, so partial real data never forces a fabricated number. */
+function num(label: string, value: number | undefined): Stat | null {
+  return value != null ? { label, value: fmtNum(value) } : null;
+}
+
+/** A metric block: shows a stat grid for whatever's known, plus optional
+ *  extra content (targeting chips, traffic sources), and falls back to
+ *  an honest empty state only when there's truly nothing — no stats and
+ *  no extra content — to show. */
+function MetricSection({ title, icon, stats, children }: { title: string; icon: ReactNode; stats: (Stat | null)[]; children?: ReactNode }) {
+  const known = stats.filter((s): s is Stat => s !== null);
+  const hasNothing = known.length === 0 && !children;
   return (
     <Section title={title} icon={icon}>
-      {empty ? <EmptyState text="Awaiting launch data — this fills in once the campaign is live." /> : children}
+      {hasNothing ? (
+        <EmptyState text="Awaiting data — this fills in as real numbers come in." />
+      ) : (
+        <>
+          {known.length > 0 && <StatGrid stats={known} />}
+          {children}
+        </>
+      )}
     </Section>
   );
 }
@@ -463,7 +433,7 @@ function EmptyState({ text }: { text: string }) {
   );
 }
 
-function StatGrid({ stats }: { stats: { label: string; value: string }[] }) {
+function StatGrid({ stats }: { stats: Stat[] }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {stats.map((s) => (
