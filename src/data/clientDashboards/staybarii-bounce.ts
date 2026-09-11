@@ -12,8 +12,11 @@
  * `lastUpdated`. The shape (YouTubePerformance / GoogleAdsPerformance /
  * etc.) is in ./types.ts.
  *
- * Password: CLIENT_DASHBOARD_PASSWORD_STAYBARII_BOUNCE + CLIENT_DASHBOARD_SECRET
- * still need to be set in Netlify env vars before this is reachable live.
+ * `passwordProtected: false` — open to anyone with the link, no gate.
+ * Flip to true (or delete the line) once you want this locked down —
+ * at that point set CLIENT_DASHBOARD_PASSWORD_STAYBARII_BOUNCE +
+ * CLIENT_DASHBOARD_SECRET in Netlify env vars, or the login will always
+ * fail with "not configured."
  */
 import type { ClientDashboardData } from './types'
 
@@ -23,6 +26,7 @@ export const STAYBARII_BOUNCE: ClientDashboardData = {
   campaignName: '"Bounce" — YouTube & TikTok Ad Campaign',
   status:      'optimizing',
   lastUpdated: '2026-09-11T14:00:00Z',
+  passwordProtected: false,
   isSample:    true,
 
   videoUrl:       'https://www.youtube.com/watch?v=FDjdBhXLIeo',

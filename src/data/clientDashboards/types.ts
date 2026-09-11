@@ -101,6 +101,11 @@ export interface ClientDashboardData {
    *  the file. */
   isSample?: boolean
 
+  /** false = skip the password gate entirely, page is open to anyone with
+   *  the link. Defaults to true (protected) when omitted — set false
+   *  explicitly per client, e.g. while sharing a sample/demo link. */
+  passwordProtected?: boolean
+
   videoUrl?: string             // the actual YouTube watch URL, if there is one
   videoThumbnail?: string
 

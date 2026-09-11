@@ -56,6 +56,13 @@ export default function ClientDashboardPage() {
     if (!data) { setChecking(false); return; }
     let cancelled = false;
 
+    // This dashboard has no password gate — skip the check entirely.
+    if (data.passwordProtected === false) {
+      setAuthed(true);
+      setChecking(false);
+      return;
+    }
+
     // Dev-only convenience: `?preview=1` skips the live password check so
     // the page can be visually verified without netlify functions running
     // locally. Inert in production — import.meta.env.DEV is false there.
