@@ -37,10 +37,17 @@ function fmtDate(iso: string): string {
   } catch { return iso; }
 }
 
-function fmtDateTime(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
-  } catch { return iso; }
+/** "Last updated" shows the moment the page was opened, in Dallas
+ *  (America/Chicago) time regardless of the viewer's own timezone —
+ *  it's a freshness signal for the client, not a record of when the
+ *  underlying data file was last edited. Computed once per page load. */
+function fmtDallasNow(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Chicago',
+    month: 'short', day: 'numeric', year: 'numeric',
+    hour: 'numeric', minute: '2-digit',
+    timeZoneName: 'short',
+  }).format(date);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -189,6 +196,9 @@ function PasswordGate({ slug, clientName, onAuthed }: { slug: string; clientName
 // ─────────────────────────────────────────────────────────────────────────────
 function Dashboard({ data }: { data: import('../data/clientDashboards/types').ClientDashboardData }) {
   const status = STATUS_STYLE[data.status];
+  // Captured once when the page is opened — "Last updated" reflects the
+  // moment the client is viewing, not the data file's own edit history.
+  const [viewedAt] = useState(() => new Date());
 
   return (
     <>
@@ -230,7 +240,7 @@ function Dashboard({ data }: { data: import('../data/clientDashboards/types').Cl
           {status.label}
         </span>
       </div>
-      <p className="text-white/30 text-[11px] font-medium mb-12">Last updated {fmtDateTime(data.lastUpdated)}</p>
+      <p className="text-white/30 text-[11px] font-medium mb-12">Last updated {fmtDallasNow(viewedAt)}</p>
 
       {/* ── Platform launch timeline (TikTok omitted for now — see note below) ── */}
       <Section title="Platform Launch Timeline" icon={<Sparkles size={14} />}>
