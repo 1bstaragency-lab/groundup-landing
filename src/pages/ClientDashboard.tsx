@@ -287,6 +287,35 @@ function Dashboard({ data }: { data: import('../data/clientDashboards/types').Cl
         )}
       </MetricSection>
 
+      {/* ── Ad placements — the specific videos the ad runs against ── */}
+      {data.placements.length > 0 && (
+        <Section title="Ad Placements" icon={<SquarePlay size={14} />}>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {data.placements.map((p) => (
+              <a
+                key={p.videoUrl}
+                href={p.videoUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="group rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden hover:border-[#FFD700]/30 transition-colors"
+              >
+                <div className="aspect-video bg-white/[0.04] flex items-center justify-center relative">
+                  {p.thumbnail
+                    ? <img src={p.thumbnail} alt={p.videoTitle} className="w-full h-full object-cover" />
+                    : <SquarePlay size={18} className="text-white/15" />}
+                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
+                </div>
+                <div className="p-3">
+                  <p className="text-[#FFD700] text-[10px] font-black uppercase tracking-widest mb-1">{p.artistName}</p>
+                  <p className="text-[12px] font-bold leading-snug truncate">{p.videoTitle}</p>
+                  {p.note && <p className="text-white/30 text-[10px] font-medium mt-1">{p.note}</p>}
+                </div>
+              </a>
+            ))}
+          </div>
+        </Section>
+      )}
+
       {/* ── Website analytics ── */}
       <MetricSection
         title="Website Analytics"

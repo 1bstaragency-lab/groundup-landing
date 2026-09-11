@@ -98,6 +98,17 @@ export interface InsightEntry {
   text: string
 }
 
+/** Where the ad actually runs — e.g. placement targeting a specific
+ *  video (in-stream ad shown on another artist's most recent upload),
+ *  rather than broad interest/affinity targeting. */
+export interface AdPlacement {
+  artistName: string
+  videoTitle: string
+  videoUrl: string
+  thumbnail?: string
+  note?: string   // e.g. "Most recent upload — placement target"
+}
+
 export interface ClientDashboardData {
   slug: string
   clientName: string
@@ -125,6 +136,7 @@ export interface ClientDashboardData {
   website?: WebsiteAnalytics
   tiktok?: TikTokPerformance
   tiktokCreations: TikTokCreation[]
+  placements: AdPlacement[]
   audience: AudienceAvatar
   creativeLibrary: CreativeAsset[]
   insights: InsightEntry[]      // most recent first
