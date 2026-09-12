@@ -2,7 +2,7 @@
  * Data for /client/staybarii-bounce.
  *
  * Real numbers only from here on. YouTube stats pulled via yt-dlp
- * against the public YouTube page (2026-09-11). Ad placement videos
+ * against the public YouTube page (last refreshed 2026-09-12). Ad placement videos
  * pulled the same way — each is the actual most-recent upload on that
  * artist's official channel as of 2026-09-11, confirmed via yt-dlp
  * against /channel/<id>/videos (not guessed).
@@ -33,8 +33,8 @@ export const STAYBARII_BOUNCE: ClientDashboardData = {
   slug:        'staybarii-bounce',
   clientName:  'Staybarii',
   campaignName: '"Bounce" — YouTube Ad Campaign',
-  status:      'optimizing',
-  lastUpdated: '2026-09-11T20:00:00Z',
+  status:      'live',
+  lastUpdated: '2026-09-12T00:00:00Z',
   passwordProtected: false,
 
   videoUrl:       'https://www.youtube.com/watch?v=FDjdBhXLIeo',
@@ -48,18 +48,22 @@ export const STAYBARII_BOUNCE: ClientDashboardData = {
     // tiktok: omitted — no TikTok campaign yet
   },
 
-  // Real, pulled from the public YouTube page (yt-dlp, 2026-09-11).
+  // Real, pulled from the public YouTube page (yt-dlp, 2026-09-12).
   // Ad views / watch time / avg view duration / shares aren't public —
   // those need YouTube Analytics API access from the channel owner.
   youtube: {
-    views:    15_873,
-    likes:    9,
-    comments: 5,
+    views:    18_209,
+    likes:    238,
+    comments: 11,
   },
 
-  // No Google Ads account is connected yet, so there's no real spend/
-  // impressions/CPV data to show — only fill in `targeting`, which is
-  // real (the actual plan), not a pulled metric.
+  // Ads are live and converting per Joseph (2026-09-12), but no Google
+  // Ads or GA4 account is connected yet, so there's no real spend/
+  // impressions/CPV/conversions data to pull — only `targeting` is
+  // filled in below (the real plan). TODO: once Ads/GA4 access exists,
+  // or Joseph sends the numbers directly, fill in spend/impressions/
+  // reach/views/clicks/cpv/cpc/viewRate here and `website` below with
+  // real conversions.
   googleAds: {
     targeting: [
       'Fans of Don Toliver',
@@ -104,8 +108,12 @@ export const STAYBARII_BOUNCE: ClientDashboardData = {
 
   insights: [
     {
+      date: '2026-09-12',
+      text: 'The retargeted campaign is live and converting. Views, likes, and comments are all climbing faster than the previous 24 hours (238 likes vs. 9 the day before). Spend/impression/conversion numbers from Google Ads aren\'t connected here yet — once those are available, this section will break down exactly which placement (Don Toliver, Brent Faiyaz, Kanii, Jordan Adetunji, or The Weeknd) is driving the conversions.',
+    },
+    {
       date: '2026-09-11',
-      text: 'The artist\'s initial self-run ads used broad interest targeting and burned through views faster than the spend could sustain efficiently. We paused that round, rebuilt targeting around direct placements on new uploads from Don Toliver, Brent Faiyaz, Kanii, Jordan Adetunji, and The Weeknd — plus R&B and Jersey Club interest — and relaunched at 12pm today. This section will fill in with real performance signals as the new campaign runs.',
+      text: 'The artist\'s initial self-run ads used broad interest targeting and burned through views faster than the spend could sustain efficiently. We paused that round, rebuilt targeting around direct placements on new uploads from Don Toliver, Brent Faiyaz, Kanii, Jordan Adetunji, and The Weeknd — plus R&B and Jersey Club interest — and relaunched at 12pm.',
     },
   ],
 }
