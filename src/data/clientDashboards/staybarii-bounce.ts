@@ -48,23 +48,29 @@ export const STAYBARII_BOUNCE: ClientDashboardData = {
     // tiktok: omitted — no TikTok campaign yet
   },
 
-  // Real, pulled from the public YouTube page (yt-dlp, 2026-09-12).
-  // Ad views / watch time / avg view duration / shares aren't public —
-  // those need YouTube Analytics API access from the channel owner.
+  // Views/likes/comments: real, pulled from the public YouTube page
+  // (yt-dlp, 2026-09-12). trafficBreakdown: real, per Joseph (2026-09-12)
+  // — 45% of views from ad placements, the rest from YouTube search +
+  // suggested/algorithmic recommendations. Ad views / watch time / avg
+  // view duration / shares still aren't public — need YouTube Analytics
+  // API access from the channel owner.
   youtube: {
     views:    18_209,
     likes:    238,
     comments: 11,
+    trafficBreakdown: [
+      { source: 'Ad Placements', percent: 45 },
+      { source: 'Search & Suggested (organic)', percent: 55 },
+    ],
   },
 
-  // Ads are live and converting per Joseph (2026-09-12), but no Google
-  // Ads or GA4 account is connected yet, so there's no real spend/
-  // impressions/CPV/conversions data to pull — only `targeting` is
-  // filled in below (the real plan). TODO: once Ads/GA4 access exists,
-  // or Joseph sends the numbers directly, fill in spend/impressions/
-  // reach/views/clicks/cpv/cpc/viewRate here and `website` below with
-  // real conversions.
+  // spend: real, ~$76 as of 2026-09-12 per Joseph. No Google Ads or GA4
+  // account is connected here yet, so impressions/CPV/CPC/conversions
+  // still aren't pullable — TODO: once Ads/GA4 access exists, or Joseph
+  // sends more numbers, fill those in plus `website` below.
   googleAds: {
+    spend: 76,
+    recommendation: 'Add $130–160 to the retargeting campaign starting today.',
     targeting: [
       'Fans of Don Toliver',
       'Fans of Brent Faiyaz',
@@ -109,7 +115,7 @@ export const STAYBARII_BOUNCE: ClientDashboardData = {
   insights: [
     {
       date: '2026-09-12',
-      text: 'The retargeted campaign is live and converting. Views, likes, and comments are all climbing faster than the previous 24 hours (238 likes vs. 9 the day before). Spend/impression/conversion numbers from Google Ads aren\'t connected here yet — once those are available, this section will break down exactly which placement (Don Toliver, Brent Faiyaz, Kanii, Jordan Adetunji, or The Weeknd) is driving the conversions.',
+      text: 'The retargeted campaign is live and converting — spend is about $76 so far. Of the views, 45% are coming from the artist ad placements (Don Toliver, Brent Faiyaz, Kanii, Jordan Adetunji, The Weeknd) and the rest from YouTube search and suggested/algorithmic recommendations, meaning the placements are earning organic pickup on top of the paid reach. Recommending an additional $130–160 into the retargeting campaign starting today to keep that momentum going.',
     },
     {
       date: '2026-09-11',

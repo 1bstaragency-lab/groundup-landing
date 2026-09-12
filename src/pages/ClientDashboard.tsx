@@ -266,7 +266,22 @@ function Dashboard({ data }: { data: import('../data/clientDashboards/types').Cl
           num('Shares', data.youtube.shares),
           num('Subscribers Gained', data.youtube.subscribersGained),
         ] : []}
-      />
+      >
+        {data.youtube?.trafficBreakdown && data.youtube.trafficBreakdown.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-2">Where Views Are Coming From</p>
+            {data.youtube.trafficBreakdown.map((s) => (
+              <div key={s.source} className="flex items-center gap-3">
+                <span className="w-44 text-white/50 text-[11px] font-bold shrink-0">{s.source}</span>
+                <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                  <div className="h-full rounded-full bg-[#FFD700]" style={{ width: `${s.percent}%` }} />
+                </div>
+                <span className="text-white/40 text-[11px] font-bold w-10 text-right shrink-0">{s.percent}%</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </MetricSection>
 
       {/* ── Google Ads performance ── */}
       <MetricSection
@@ -293,6 +308,14 @@ function Dashboard({ data }: { data: import('../data/clientDashboards/types').Cl
                 </span>
               ))}
             </div>
+          </div>
+        )}
+        {data.googleAds?.recommendation && (
+          <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/25 px-4 py-3">
+            <TrendingUp size={13} className="text-[#FFD700] shrink-0 mt-0.5" />
+            <p className="text-[#FFD700] text-[11px] font-bold leading-relaxed">
+              <span className="uppercase tracking-widest">Recommendation:</span> {data.googleAds.recommendation}
+            </p>
           </div>
         )}
       </MetricSection>

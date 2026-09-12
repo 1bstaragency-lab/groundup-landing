@@ -33,6 +33,9 @@ export interface YouTubePerformance {
   comments?: number
   shares?: number
   subscribersGained?: number
+  /** Where the views are coming from, as percentages (should sum to
+   *  ~100) — e.g. [{source:'Ad Placements', percent:45}, {source:'Search & Suggested (organic)', percent:55}]. */
+  trafficBreakdown?: { source: string; percent: number }[]
 }
 
 export interface GoogleAdsPerformance {
@@ -47,6 +50,9 @@ export interface GoogleAdsPerformance {
   /** Who/what we're targeting — real even before real performance
    *  numbers exist, e.g. "Fans of Don Toliver", "Interest: R&B". */
   targeting?: string[]
+  /** A short, actionable next step — e.g. "Add $130-160 to the
+   *  retargeting campaign starting today." Rendered as a callout. */
+  recommendation?: string
 }
 
 export interface TrafficSource {
