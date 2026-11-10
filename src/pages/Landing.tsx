@@ -106,6 +106,64 @@ function Keycap({ label, sub, className, delay = 0, rotate = -8 }: {
   );
 }
 
+/* ── Static iMessage preview — mobile-hero only, dark iMessage thread,
+   plays once on scroll-into-view (no infinite timer loop, so it stays
+   light on ad/social click-through traffic). ── */
+
+function MobileThreadBubble({ side, children, delay }: { side: 'in' | 'out'; children: React.ReactNode; delay: number }) {
+  const isIn = side === 'in';
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10, scale: 0.96 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.35, delay, ease: [0.22, 1, 0.36, 1] }}
+      className={`flex ${isIn ? 'justify-start' : 'justify-end'}`}
+    >
+      <span
+        className="px-3.5 py-2.5 font-bold text-[12.5px] leading-snug max-w-[82%]"
+        style={{
+          background: isIn ? '#1C1C1E' : BLUE,
+          color: '#fff',
+          borderRadius: 17,
+        }}
+      >
+        {children}
+      </span>
+    </motion.div>
+  );
+}
+
+function MobileHeroPhone() {
+  return (
+    <div className="relative mx-auto" style={{ width: 'min(84vw, 320px)' }}>
+      <div className="relative rounded-[42px] p-[9px]" style={{ background: '#111', boxShadow: '0 30px 60px rgba(0,0,0,0.45), inset 0 0 0 2px #333' }}>
+        <div className="relative rounded-[33px] overflow-hidden" style={{ background: '#000' }}>
+          <div className="absolute left-1/2 -translate-x-1/2 top-2.5 z-10 rounded-full" style={{ width: 78, height: 22, background: '#000' }} />
+          <div className="pt-10 pb-2.5 px-4 flex flex-col items-center gap-1.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-[10px]" style={{ background: GOLD, color: INK }}>UP</div>
+            <span className="font-semibold text-[11px] text-white">uP ›</span>
+          </div>
+          <div className="px-3.5 py-4 space-y-2.5">
+            <span className="block text-center text-[9px] font-bold tracking-wide mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              IMESSAGE · TODAY 9:41 AM
+            </span>
+            <MobileThreadBubble side="in" delay={0.1}>
+              “MIDNIGHT” WEEK 1 IS IN — PITCHED IT TO 9 MORE CURATORS AND QUEUED 3 TIKTOK CUTS FOR THE WEEKEND.
+            </MobileThreadBubble>
+            <MobileThreadBubble side="out" delay={0.35}>
+              let's go 🔥
+            </MobileThreadBubble>
+            <MobileThreadBubble side="in" delay={0.6}>
+              ALREADY ON IT. YOUR AD IS OUTPERFORMING — WANT ME TO SCALE IT TO $40/DAY?
+            </MobileThreadBubble>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── iPhone auto-demo ─────────────────────────────────────────────────────
    Scripted loop the visitor watches on landing:
    Messages: schedule a release → uP builds the campaign →
@@ -503,17 +561,22 @@ function LandingPage() {
           </button>
         </div>
 
-        {/* Mobile hamburger */}
-        <button
-          className="md:hidden flex flex-col justify-center items-center w-10 h-10 gap-1.5 rounded-xl"
-          style={{ border: `1px solid ${FAINT}` }}
-          onClick={() => setMobileNavOpen(true)}
-          aria-label="Open menu"
-        >
-          <span className="w-5 h-0.5 rounded-full" style={{ background: INK }} />
-          <span className="w-5 h-0.5 rounded-full" style={{ background: INK }} />
-          <span className="w-3.5 h-0.5 rounded-full" style={{ background: DIM }} />
-        </button>
+        {/* Mobile: CTA pill always visible + hamburger for the rest */}
+        <div className="md:hidden flex items-center gap-2.5">
+          <button onClick={openGetStarted} className="px-4 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest cursor-pointer" style={{ background: GOLD, color: INK }}>
+            {WAITLIST_MODE ? 'Join Waitlist' : 'Get In'}
+          </button>
+          <button
+            className="flex flex-col justify-center items-center w-10 h-10 gap-1.5 rounded-xl shrink-0"
+            style={{ border: `1px solid ${FAINT}` }}
+            onClick={() => setMobileNavOpen(true)}
+            aria-label="Open menu"
+          >
+            <span className="w-5 h-0.5 rounded-full" style={{ background: INK }} />
+            <span className="w-5 h-0.5 rounded-full" style={{ background: INK }} />
+            <span className="w-3.5 h-0.5 rounded-full" style={{ background: DIM }} />
+          </button>
+        </div>
       </div>
 
       {/* Mobile nav drawer */}
@@ -567,8 +630,63 @@ function LandingPage() {
         </>
       )}
 
-      {/* ── HERO — type left, live iPhone demo right ── */}
-      <div className="relative z-10 px-6 md:px-8 pt-12 pb-16 grid lg:grid-cols-[1.4fr_1fr] gap-12 items-center">
+      {/* ── MOBILE HERO — gradient, ad-click-friendly: headline, pill CTA, static iMessage proof ── */}
+      <div
+        className="lg:hidden relative z-10 overflow-hidden"
+        style={{ background: `radial-gradient(130% 70% at 50% -15%, ${GOLDD} 0%, ${INK} 58%, #0A0A0A 100%)` }}
+      >
+        <div className="relative px-6 pt-10 pb-12">
+          <span className="block text-center font-black text-[10px] uppercase tracking-[0.25em] mb-5" style={{ color: 'rgba(244,241,236,0.55)' }}>
+            YOUR CAREER NEVER SLEEPS. NEITHER DOES UP.
+          </span>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="m-0 text-center leading-[0.95] select-none"
+          >
+            <span className="block font-black tracking-tighter" style={{ color: BG, fontSize: 'clamp(38px, 11vw, 54px)' }}>
+              NO LABEL.
+            </span>
+            <span className="block font-black tracking-tighter" style={{ color: BG, fontSize: 'clamp(38px, 11vw, 54px)' }}>
+              NO MANAGER.
+            </span>
+            <span className="block" style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontWeight: 400, color: GOLD, fontSize: 'clamp(44px, 13vw, 62px)', letterSpacing: '-0.01em' }}>
+              No problem.
+            </span>
+          </motion.h1>
+
+          <p className="text-center mt-6 mx-auto max-w-xs text-[13px] font-semibold leading-relaxed" style={{ color: 'rgba(244,241,236,0.8)' }}>
+            GrounduP is the artist-run backend for your career. uP watches your releases, outreach, and numbers — then texts you the next move to grow it.
+          </p>
+
+          <div className="flex flex-col items-center gap-3 mt-8">
+            <button
+              onClick={openGetStarted}
+              className="px-10 py-4 rounded-full font-black text-[13px] uppercase tracking-widest cursor-pointer"
+              style={{ background: BG, color: INK }}
+            >
+              {WAITLIST_MODE ? 'Join Waitlist →' : 'Start Free →'}
+            </button>
+            <a
+              href="#mobile-proof"
+              onClick={(e) => { e.preventDefault(); document.getElementById('mobile-proof')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}
+              className="text-[12px] font-bold tracking-wide"
+              style={{ color: 'rgba(244,241,236,0.65)' }}
+            >
+              see how it works ↓
+            </a>
+          </div>
+        </div>
+
+        <div id="mobile-proof" className="relative px-6 pb-14">
+          <MobileHeroPhone />
+        </div>
+      </div>
+
+      {/* ── HERO — type left, live iPhone demo right (desktop) ── */}
+      <div className="hidden lg:grid relative z-10 px-6 md:px-8 pt-12 pb-16 lg:grid-cols-[1.4fr_1fr] gap-12 items-center">
         <div className="relative">
           <span aria-hidden className="absolute right-4 -top-4 hidden lg:inline" style={{ color: DIM, fontSize: 18 }}>✛</span>
           <motion.h1
