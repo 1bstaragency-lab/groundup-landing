@@ -18,9 +18,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: spotifyImage('0SL3lfuoRP67mrvkdnwIMA'),
     genre: 'Hip-Hop / Melodic Rap',
     tier: 'Growth',
-    campaign: { budgetSpent: 1450, startDate: '2026-08-15', endDate: '2026-10-10' },
-    before: { monthlyListeners: 14_200, instagramFollowers: 6_800, tiktokFollowers: 11_300, spotifyFollowers: 3_900 },
-    after:  { monthlyListeners: 29_600, instagramFollowers: 9_950, tiktokFollowers: 21_800, spotifyFollowers: 8_100 },
+    campaign: { budgetSpent: 3770, startDate: '2026-08-15', endDate: '2026-10-10' },
+    before: { monthlyListeners: 736_842, instagramFollowers: 162_105, tiktokFollowers: 280_000, spotifyFollowers: 110_526 },
+    after:  { monthlyListeners: 1_400_000, instagramFollowers: 308_000, tiktokFollowers: 532_000, spotifyFollowers: 210_000 },
     songs: [
       {
         id: 'nightcrawler', title: 'Nightcrawler', releaseDate: '2026-08-22',
@@ -48,9 +48,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: spotifyImage('56MdwFrWGvYtq9wGACLZCK'),
     genre: 'Rage Rap / Experimental',
     tier: 'Pro',
-    campaign: { budgetSpent: 520, startDate: '2026-09-01', endDate: '2026-10-06' },
-    before: { monthlyListeners: 5_100, instagramFollowers: 2_300, tiktokFollowers: 4_600, spotifyFollowers: 1_400 },
-    after:  { monthlyListeners: 9_800, instagramFollowers: 3_150, tiktokFollowers: 7_900, spotifyFollowers: 2_650 },
+    campaign: { budgetSpent: 1090, startDate: '2026-09-01', endDate: '2026-10-06' },
+    before: { monthlyListeners: 223_548, instagramFollowers: 62_593, tiktokFollowers: 100_597, spotifyFollowers: 40_239 },
+    after:  { monthlyListeners: 346_500, instagramFollowers: 97_020, tiktokFollowers: 155_925, spotifyFollowers: 62_370 },
     songs: [
       {
         id: 'low-beam', title: 'Low Beam', releaseDate: '2026-09-05',
@@ -78,9 +78,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: spotifyImage('41GfvEtCZu3KXaThpF01c1'),
     genre: 'Rage Rap',
     tier: 'Growth',
-    campaign: { budgetSpent: 1890, startDate: '2026-07-20', endDate: '2026-09-28' },
-    before: { monthlyListeners: 21_000, instagramFollowers: 9_200, tiktokFollowers: 18_400, spotifyFollowers: 5_600 },
-    after:  { monthlyListeners: 46_300, instagramFollowers: 15_100, tiktokFollowers: 38_700, spotifyFollowers: 12_950 },
+    campaign: { budgetSpent: 5290, startDate: '2026-07-20', endDate: '2026-09-28' },
+    before: { monthlyListeners: 259_500, instagramFollowers: 51_900, tiktokFollowers: 108_990, spotifyFollowers: 36_330 },
+    after:  { monthlyListeners: 519_000, instagramFollowers: 103_800, tiktokFollowers: 217_980, spotifyFollowers: 72_660 },
     songs: [
       {
         id: 'static-halo', title: 'Static Halo', releaseDate: '2026-07-28',
@@ -111,9 +111,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: spotifyImage('1zYtGI84oTXVPEuT39M1IC'),
     genre: 'Houston Rap',
     tier: 'Pro',
-    campaign: { budgetSpent: 640, startDate: '2026-08-25', endDate: '2026-10-06' },
-    before: { monthlyListeners: 7_400, instagramFollowers: 3_100, tiktokFollowers: 6_200, spotifyFollowers: 1_900 },
-    after:  { monthlyListeners: 13_900, instagramFollowers: 4_450, tiktokFollowers: 10_800, spotifyFollowers: 3_600 },
+    campaign: { budgetSpent: 1470, startDate: '2026-08-25', endDate: '2026-10-06' },
+    before: { monthlyListeners: 215_034, instagramFollowers: 53_758, tiktokFollowers: 75_262, spotifyFollowers: 36_556 },
+    after:  { monthlyListeners: 311_800, instagramFollowers: 77_950, tiktokFollowers: 109_130, spotifyFollowers: 53_006 },
     songs: [
       {
         id: 'v2-protocol', title: 'V2 Protocol', releaseDate: '2026-08-29',
@@ -141,9 +141,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: spotifyImage('1TEhTEzkV3xXcAosSe5l0W'),
     genre: 'Hip-Hop',
     tier: 'Growth',
-    campaign: { budgetSpent: 2100, startDate: '2026-08-01', endDate: '2026-10-03' },
-    before: { monthlyListeners: 18_600, instagramFollowers: 7_900, tiktokFollowers: 15_200, spotifyFollowers: 4_800 },
-    after:  { monthlyListeners: 41_200, instagramFollowers: 13_600, tiktokFollowers: 31_500, spotifyFollowers: 10_400 },
+    campaign: { budgetSpent: 6090, startDate: '2026-08-01', endDate: '2026-10-03' },
+    before: { monthlyListeners: 64_000, instagramFollowers: 19_200, tiktokFollowers: 25_600, spotifyFollowers: 12_800 },
+    after:  { monthlyListeners: 118_400, instagramFollowers: 35_520, tiktokFollowers: 47_360, spotifyFollowers: 23_680 },
     songs: [
       {
         id: 'concrete-bloom', title: 'Concrete Bloom', releaseDate: '2026-08-09',
@@ -171,9 +171,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: spotifyImage('089ASSwOW4Cih3frNuDtUv'),
     genre: 'Plugg / Underground Hip-Hop',
     tier: 'Plant',
-    campaign: { budgetSpent: 4800, startDate: '2026-06-15', endDate: '2026-09-21' },
-    before: { monthlyListeners: 38_000, instagramFollowers: 16_400, tiktokFollowers: 29_800, spotifyFollowers: 11_200 },
-    after:  { monthlyListeners: 102_500, instagramFollowers: 31_900, tiktokFollowers: 68_400, spotifyFollowers: 27_600 },
+    campaign: { budgetSpent: 17280, startDate: '2026-06-15', endDate: '2026-09-21' },
+    before: { monthlyListeners: 148_208, instagramFollowers: 26_677, tiktokFollowers: 74_104, spotifyFollowers: 19_267 },
+    after:  { monthlyListeners: 355_700, instagramFollowers: 64_026, tiktokFollowers: 177_850, spotifyFollowers: 46_241 },
     songs: [
       {
         id: 'one-am-forever', title: 'One AM Forever', releaseDate: '2026-06-22',
@@ -213,9 +213,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: spotifyImage('3V0BdWlUGoiNckM4Ivt8HL'),
     genre: 'UK Rap',
     tier: 'Pro',
-    campaign: { budgetSpent: 480, startDate: '2026-09-10', endDate: '2026-10-15' },
-    before: { monthlyListeners: 4_300, instagramFollowers: 1_950, tiktokFollowers: 3_800, spotifyFollowers: 1_050 },
-    after:  { monthlyListeners: 7_600, instagramFollowers: 2_640, tiktokFollowers: 6_100, spotifyFollowers: 1_980 },
+    campaign: { budgetSpent: 960, startDate: '2026-09-10', endDate: '2026-10-15' },
+    before: { monthlyListeners: 351_667, instagramFollowers: 84_400, tiktokFollowers: 116_050, spotifyFollowers: 56_267 },
+    after:  { monthlyListeners: 527_500, instagramFollowers: 126_600, tiktokFollowers: 174_075, spotifyFollowers: 84_400 },
     songs: [
       {
         id: 'finesse-me', title: 'Finesse Me', releaseDate: '2026-09-14',
@@ -243,9 +243,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: spotifyImage('6Rs7Ufqb4h0FTuVg6wlqOy'),
     genre: 'Trap / Rage / Cloud Rap',
     tier: 'Growth',
-    campaign: { budgetSpent: 1725, startDate: '2026-08-10', endDate: '2026-10-05' },
-    before: { monthlyListeners: 16_800, instagramFollowers: 7_100, tiktokFollowers: 13_900, spotifyFollowers: 4_200 },
-    after:  { monthlyListeners: 35_400, instagramFollowers: 11_800, tiktokFollowers: 27_600, spotifyFollowers: 9_300 },
+    campaign: { budgetSpent: 5180, startDate: '2026-08-10', endDate: '2026-10-05' },
+    before: { monthlyListeners: 571_429, instagramFollowers: 91_429, tiktokFollowers: 274_286, spotifyFollowers: 68_571 },
+    after:  { monthlyListeners: 1_200_000, instagramFollowers: 192_000, tiktokFollowers: 576_000, spotifyFollowers: 144_000 },
     songs: [
       {
         id: 'coffin-dance', title: 'Coffin Dance', releaseDate: '2026-08-17',
@@ -273,9 +273,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: spotifyImage('0N8nXapCBAIztfpKiKwrCj'),
     genre: 'Trap / Rage Rap',
     tier: 'Pro',
-    campaign: { budgetSpent: 590, startDate: '2026-08-20', endDate: '2026-10-01' },
-    before: { monthlyListeners: 6_200, instagramFollowers: 2_700, tiktokFollowers: 5_400, spotifyFollowers: 1_600 },
-    after:  { monthlyListeners: 11_500, instagramFollowers: 3_850, tiktokFollowers: 9_200, spotifyFollowers: 3_050 },
+    campaign: { budgetSpent: 1420, startDate: '2026-08-20', endDate: '2026-10-01' },
+    before: { monthlyListeners: 253_375, instagramFollowers: 65_878, tiktokFollowers: 93_749, spotifyFollowers: 43_074 },
+    after:  { monthlyListeners: 405_400, instagramFollowers: 105_404, tiktokFollowers: 149_998, spotifyFollowers: 68_918 },
     songs: [
       {
         id: 'iyrus-interlude', title: 'Iyrus Interlude', releaseDate: '2026-08-24',
@@ -303,9 +303,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: spotifyImage('7I0vkHapi0O00Yd6BZcl2Z'),
     genre: 'Atlanta Trap',
     tier: 'Plant',
-    campaign: { budgetSpent: 5600, startDate: '2026-05-25', endDate: '2026-09-13' },
-    before: { monthlyListeners: 44_000, instagramFollowers: 22_100, tiktokFollowers: 34_600, spotifyFollowers: 13_800 },
-    after:  { monthlyListeners: 118_900, instagramFollowers: 41_300, tiktokFollowers: 79_200, spotifyFollowers: 33_400 },
+    campaign: { budgetSpent: 21280, startDate: '2026-05-25', endDate: '2026-09-13' },
+    before: { monthlyListeners: 144_346, instagramFollowers: 31_756, tiktokFollowers: 79_390, spotifyFollowers: 21_652 },
+    after:  { monthlyListeners: 375_300, instagramFollowers: 82_566, tiktokFollowers: 206_415, spotifyFollowers: 56_295 },
     songs: [
       {
         id: 'trap-house-anthem', title: 'Trap House Anthem', releaseDate: '2026-06-01',
@@ -345,9 +345,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: spotifyImage('2kW9S4UitOwTQeVOGEOyMF'),
     genre: 'UK Rap / Trap',
     tier: 'Growth',
-    campaign: { budgetSpent: 1980, startDate: '2026-07-28', endDate: '2026-09-29' },
-    before: { monthlyListeners: 19_400, instagramFollowers: 8_300, tiktokFollowers: 16_700, spotifyFollowers: 5_100 },
-    after:  { monthlyListeners: 43_700, instagramFollowers: 14_200, tiktokFollowers: 34_900, spotifyFollowers: 11_800 },
+    campaign: { budgetSpent: 6140, startDate: '2026-07-28', endDate: '2026-09-29' },
+    before: { monthlyListeners: 19_487, instagramFollowers: 6_236, tiktokFollowers: 7_795, spotifyFollowers: 4_092 },
+    after:  { monthlyListeners: 38_000, instagramFollowers: 12_160, tiktokFollowers: 15_200, spotifyFollowers: 7_980 },
     songs: [
       {
         id: 'no-saints-here', title: 'No Saints Here', releaseDate: '2026-08-04',
@@ -375,9 +375,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: spotifyImage('4b2zSLyjiG70vaoFYKuyGk'),
     genre: 'Vamp Jerk',
     tier: 'Pro',
-    campaign: { budgetSpent: 560, startDate: '2026-09-02', endDate: '2026-10-14' },
-    before: { monthlyListeners: 5_800, instagramFollowers: 2_500, tiktokFollowers: 5_100, spotifyFollowers: 1_500 },
-    after:  { monthlyListeners: 10_900, instagramFollowers: 3_600, tiktokFollowers: 8_700, spotifyFollowers: 2_900 },
+    campaign: { budgetSpent: 1230, startDate: '2026-09-02', endDate: '2026-10-14' },
+    before: { monthlyListeners: 300_467, instagramFollowers: 81_126, tiktokFollowers: 138_215, spotifyFollowers: 54_084 },
+    after:  { monthlyListeners: 450_700, instagramFollowers: 121_689, tiktokFollowers: 207_322, spotifyFollowers: 81_126 },
     songs: [
       {
         id: 'bubblegum-static', title: 'Bubblegum Static', releaseDate: '2026-09-06',
@@ -405,9 +405,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: spotifyImage('1XNYNLCPH2kILEL73Kp1y9'),
     genre: 'LA Underground Hip-Hop',
     tier: 'Growth',
-    campaign: { budgetSpent: 1640, startDate: '2026-08-18', endDate: '2026-10-13' },
-    before: { monthlyListeners: 15_600, instagramFollowers: 6_600, tiktokFollowers: 12_800, spotifyFollowers: 3_950 },
-    after:  { monthlyListeners: 33_200, instagramFollowers: 11_100, tiktokFollowers: 26_400, spotifyFollowers: 8_650 },
+    campaign: { budgetSpent: 4430, startDate: '2026-08-18', endDate: '2026-10-13' },
+    before: { monthlyListeners: 47_568, instagramFollowers: 13_795, tiktokFollowers: 18_552, spotifyFollowers: 9_038 },
+    after:  { monthlyListeners: 88_000, instagramFollowers: 25_520, tiktokFollowers: 34_320, spotifyFollowers: 16_720 },
     songs: [
       {
         id: 'cartier-weather', title: 'Cartier Weather', releaseDate: '2026-08-26',
@@ -435,9 +435,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: spotifyImage('6hpztnbgmaneFFGGnEOVjd'),
     genre: 'Southern Rap',
     tier: 'Plant',
-    campaign: { budgetSpent: 5200, startDate: '2026-07-05', endDate: '2026-10-25' },
-    before: { monthlyListeners: 42_000, instagramFollowers: 19_600, tiktokFollowers: 36_200, spotifyFollowers: 14_100 },
-    after:  { monthlyListeners: 114_800, instagramFollowers: 38_200, tiktokFollowers: 76_500, spotifyFollowers: 31_900 },
+    campaign: { budgetSpent: 20280, startDate: '2026-07-05', endDate: '2026-10-25' },
+    before: { monthlyListeners: 1_160_000, instagramFollowers: 197_200, tiktokFollowers: 510_400, spotifyFollowers: 139_200 },
+    after:  { monthlyListeners: 2_900_000, instagramFollowers: 493_000, tiktokFollowers: 1_276_000, spotifyFollowers: 348_000 },
     songs: [
       {
         id: 'sweet-tea-static', title: 'Sweet Tea Static', releaseDate: '2026-07-13',
@@ -468,9 +468,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: 'https://i.scdn.co/image/ab6761610000e5ebd54c60ef91fb3886fd37eef8',
     genre: 'Underground Rap',
     tier: 'Growth',
-    campaign: { budgetSpent: 1980, startDate: '2026-07-15', endDate: '2026-09-18' },
-    before: { monthlyListeners: 22_500, instagramFollowers: 9_100, tiktokFollowers: 17_800, spotifyFollowers: 5_900 },
-    after:  { monthlyListeners: 48_900, instagramFollowers: 15_300, tiktokFollowers: 35_600, spotifyFollowers: 12_400 },
+    campaign: { budgetSpent: 5740, startDate: '2026-07-15', endDate: '2026-09-18' },
+    before: { monthlyListeners: 84_872, instagramFollowers: 26_310, tiktokFollowers: 30_554, spotifyFollowers: 16_974 },
+    after:  { monthlyListeners: 165_500, instagramFollowers: 51_305, tiktokFollowers: 59_580, spotifyFollowers: 33_100 },
     songs: [
       {
         id: 'static-theory', title: 'Static Theory', releaseDate: '2026-07-23',
@@ -498,9 +498,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: 'https://i.scdn.co/image/ab6761610000e5ebbfdf3505cabe5babf25dc8ae',
     genre: 'Underground Rap',
     tier: 'Pro',
-    campaign: { budgetSpent: 540, startDate: '2026-09-05', endDate: '2026-10-17' },
-    before: { monthlyListeners: 8_200, instagramFollowers: 3_400, tiktokFollowers: 7_100, spotifyFollowers: 2_050 },
-    after:  { monthlyListeners: 15_100, instagramFollowers: 4_850, tiktokFollowers: 12_600, spotifyFollowers: 3_900 },
+    campaign: { budgetSpent: 1350, startDate: '2026-09-05', endDate: '2026-10-17' },
+    before: { monthlyListeners: 24_500, instagramFollowers: 8_085, tiktokFollowers: 10_290, spotifyFollowers: 5_390 },
+    after:  { monthlyListeners: 39_200, instagramFollowers: 12_936, tiktokFollowers: 16_464, spotifyFollowers: 8_624 },
     songs: [
       {
         id: 'wrightwood-nights', title: 'Wrightwood Nights', releaseDate: '2026-09-09',
@@ -528,9 +528,9 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
     image: 'https://i.scdn.co/image/ab6761610000e5eb8a9e99eb3d0dd4c6a5b7209b',
     genre: 'Atlanta Hip-Hop',
     tier: 'Plant',
-    campaign: { budgetSpent: 5100, startDate: '2026-06-01', endDate: '2026-09-14' },
-    before: { monthlyListeners: 48_000, instagramFollowers: 24_800, tiktokFollowers: 41_200, spotifyFollowers: 16_700 },
-    after:  { monthlyListeners: 126_300, instagramFollowers: 44_900, tiktokFollowers: 88_600, spotifyFollowers: 35_800 },
+    campaign: { budgetSpent: 18870, startDate: '2026-06-01', endDate: '2026-09-14' },
+    before: { monthlyListeners: 782_609, instagramFollowers: 148_696, tiktokFollowers: 367_826, spotifyFollowers: 101_739 },
+    after:  { monthlyListeners: 1_800_000, instagramFollowers: 342_000, tiktokFollowers: 846_000, spotifyFollowers: 234_000 },
     songs: [
       {
         id: 'decatur-nights', title: 'Decatur Nights', releaseDate: '2026-06-09',
