@@ -1,21 +1,17 @@
 import type { ArtistRosterEntry } from './types'
 
 /**
- * Hotlinked artist photo — Spotify's own "This Is [Artist]" auto-generated
- * cover art, fetched by artist ID (same hotlinking approach already used
- * for YouTube thumbnails in src/data/clientDashboards — no files copied,
- * just a direct CDN URL). Verified live (HTTP 200, image/jpeg) per artist
- * before being used here.
+ * Every `image` below is each artist's actual Spotify profile photo,
+ * hotlinked directly from Spotify's own CDN (i.scdn.co) — same approach
+ * already used for YouTube thumbnails in src/data/clientDashboards, no
+ * files copied. Verified live (HTTP 200, image/jpeg) per artist before
+ * being used here.
  */
-function spotifyImage(artistId: string): string {
-  return `https://pickasso.spotifycdn.com/image/ab67c0de0000deef/dt/v1/img/thisisv3/${artistId}/en`
-}
-
 export const ARTIST_ROSTER: ArtistRosterEntry[] = [
   {
     slug: 'slayr',
     name: 'slayr',
-    image: spotifyImage('0SL3lfuoRP67mrvkdnwIMA'),
+    image: 'https://i.scdn.co/image/ab6761610000e5ebc9af537b072eccabc79257dc',
     genre: 'Hip-Hop / Melodic Rap',
     tier: 'Growth',
     campaign: { budgetSpent: 3770, startDate: '2026-08-15', endDate: '2026-10-10' },
@@ -45,7 +41,7 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
   {
     slug: 'sixbill',
     name: 'sixbill',
-    image: spotifyImage('56MdwFrWGvYtq9wGACLZCK'),
+    image: 'https://i.scdn.co/image/ab6761610000e5eb6b15fe77a5c6b47aac91b0c1',
     genre: 'Rage Rap / Experimental',
     tier: 'Pro',
     campaign: { budgetSpent: 1090, startDate: '2026-09-01', endDate: '2026-10-06' },
@@ -75,7 +71,7 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
   {
     slug: 'bleood',
     name: 'bleood',
-    image: spotifyImage('41GfvEtCZu3KXaThpF01c1'),
+    image: 'https://i.scdn.co/image/ab6761610000e5eb35e3833be479b9091a60a207',
     genre: 'Rage Rap',
     tier: 'Growth',
     campaign: { budgetSpent: 5290, startDate: '2026-07-20', endDate: '2026-09-28' },
@@ -108,7 +104,7 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
   {
     slug: 'rexv2',
     name: 'rexv2',
-    image: spotifyImage('1zYtGI84oTXVPEuT39M1IC'),
+    image: 'https://i.scdn.co/image/ab6761610000e5eb8ba3df59a3fbe924062bd04b',
     genre: 'Houston Rap',
     tier: 'Pro',
     campaign: { budgetSpent: 1470, startDate: '2026-08-25', endDate: '2026-10-06' },
@@ -138,7 +134,7 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
   {
     slug: 'hawsa',
     name: 'Hawsa',
-    image: spotifyImage('1TEhTEzkV3xXcAosSe5l0W'),
+    image: 'https://i.scdn.co/image/ab6761610000e5eb898aee735f78ad255401939b',
     genre: 'Hip-Hop',
     tier: 'Growth',
     campaign: { budgetSpent: 6090, startDate: '2026-08-01', endDate: '2026-10-03' },
@@ -168,7 +164,7 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
   {
     slug: '1oneam',
     name: '1oneam',
-    image: spotifyImage('089ASSwOW4Cih3frNuDtUv'),
+    image: 'https://i.scdn.co/image/ab6761610000e5eb98b7c54dab5aff22a22a0b78',
     genre: 'Plugg / Underground Hip-Hop',
     tier: 'Plant',
     campaign: { budgetSpent: 17280, startDate: '2026-06-15', endDate: '2026-09-21' },
@@ -210,7 +206,7 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
   {
     slug: 'finessekid',
     name: 'FinesseKid',
-    image: spotifyImage('3V0BdWlUGoiNckM4Ivt8HL'),
+    image: 'https://i.scdn.co/image/ab6761610000e5eb2452f34123060598a26b7ad2',
     genre: 'UK Rap',
     tier: 'Pro',
     campaign: { budgetSpent: 960, startDate: '2026-09-10', endDate: '2026-10-15' },
@@ -240,7 +236,7 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
   {
     slug: 'nine-vicious',
     name: 'Nine Vicious',
-    image: spotifyImage('6Rs7Ufqb4h0FTuVg6wlqOy'),
+    image: 'https://i.scdn.co/image/ab6761610000e5eb52b49f674dc05f3773fe45fb',
     genre: 'Trap / Rage / Cloud Rap',
     tier: 'Growth',
     campaign: { budgetSpent: 5180, startDate: '2026-08-10', endDate: '2026-10-05' },
@@ -270,7 +266,7 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
   {
     slug: 'iyrus',
     name: 'iyrus',
-    image: spotifyImage('0N8nXapCBAIztfpKiKwrCj'),
+    image: 'https://i.scdn.co/image/ab6761610000e5eb8a0d0a5f809bce0a55af70ca',
     genre: 'Trap / Rage Rap',
     tier: 'Pro',
     campaign: { budgetSpent: 1420, startDate: '2026-08-20', endDate: '2026-10-01' },
@@ -300,7 +296,7 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
   {
     slug: 'bally-baby',
     name: 'Bally Baby',
-    image: spotifyImage('7I0vkHapi0O00Yd6BZcl2Z'),
+    image: 'https://i.scdn.co/image/ab6761610000e5eb53c2c937e1103ae132496600',
     genre: 'Atlanta Trap',
     tier: 'Plant',
     campaign: { budgetSpent: 21280, startDate: '2026-05-25', endDate: '2026-09-13' },
@@ -342,7 +338,7 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
   {
     slug: 'nosaint',
     name: 'Nosaint',
-    image: spotifyImage('2kW9S4UitOwTQeVOGEOyMF'),
+    image: 'https://i.scdn.co/image/ab6761610000e5eb5cfbbaf6b71d4aa9811f7eda',
     genre: 'UK Rap / Trap',
     tier: 'Growth',
     campaign: { budgetSpent: 6140, startDate: '2026-07-28', endDate: '2026-09-29' },
@@ -372,7 +368,7 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
   {
     slug: 'subiibabii',
     name: 'Subiibabii',
-    image: spotifyImage('4b2zSLyjiG70vaoFYKuyGk'),
+    image: 'https://i.scdn.co/image/ab6761610000e5eb85e60901e3dc42471cc487b5',
     genre: 'Vamp Jerk',
     tier: 'Pro',
     campaign: { budgetSpent: 1230, startDate: '2026-09-02', endDate: '2026-10-14' },
@@ -402,7 +398,7 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
   {
     slug: 'babybartier',
     name: 'BabyBartier',
-    image: spotifyImage('1XNYNLCPH2kILEL73Kp1y9'),
+    image: 'https://i.scdn.co/image/ab6761610000e5eb27edbf417ca7a85d687e3dbc',
     genre: 'LA Underground Hip-Hop',
     tier: 'Growth',
     campaign: { budgetSpent: 4430, startDate: '2026-08-18', endDate: '2026-10-13' },
@@ -432,7 +428,7 @@ export const ARTIST_ROSTER: ArtistRosterEntry[] = [
   {
     slug: 'sosocamo',
     name: 'sosocamo',
-    image: spotifyImage('6hpztnbgmaneFFGGnEOVjd'),
+    image: 'https://i.scdn.co/image/ab6761610000e5eb31d5d1dd784fadb6d06e6d6f',
     genre: 'Southern Rap',
     tier: 'Plant',
     campaign: { budgetSpent: 20280, startDate: '2026-07-05', endDate: '2026-10-25' },
